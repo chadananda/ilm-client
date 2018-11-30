@@ -5,6 +5,7 @@ import hoodie from 'pouchdb-hoodie-api'
 import PouchDB from 'pouchdb'
 import {BookBlock} from './bookBlock'
 import {BookBlocks} from './bookBlocks'
+import {AlignQueue} from './alignQueue'
 const _ = require('lodash')
 import axios from 'axios'
 PouchDB.plugin(hoodie)
@@ -127,7 +128,8 @@ export const store = new Vuex.Store({
     alignWatch: null,
     audiobookWatch: null,
     selectionXHR: null,
-    partOfBookBlocksXHR: null
+    partOfBookBlocksXHR: null,
+    alignQueue: new AlignQueue()
   },
 
   getters: {
@@ -1008,12 +1010,15 @@ export const store = new Vuex.Store({
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
         let metaDB = state.metaRemoteDB;
+        state.alignQueue.startWatch(book_id, (changes) => {
+          dispatch('parseBookAlign', changes);
+        });
         return metaDB.get(book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
           dispatch('setCurrentBookCounters');
-          dispatch('startAlignWatch');
+          
           dispatch('startAudiobookWatch');
           //dispatch('loadBookToc', {bookId: book_id});
           state.filesRemoteDB.getAttachment(book_id, 'coverimg')
@@ -2111,74 +2116,53 @@ export const store = new Vuex.Store({
         }
       }
     },
-    startAlignWatch({state, commit, dispatch}) {
-      if (state.currentBookid) {
-        if (state.alignWatch) {
-          clearInterval(state.alignWatch);
-        }
-        dispatch('getBookAlign');
-        state.alignWatch = setInterval(() => {
-          dispatch('getBookAlign');
-        }, 10000);
-      }
-    },
-    getBookAlign({state, commit, dispatch}) {
-      if (state.currentBookid) {
-        let api_url = state.API_URL + 'align_queue/' + state.currentBookid;
-        axios.get(api_url, {})
-          .then(response => {
-            if (response.status == 200) {
-              let oldBlocks = state.aligningBlocks;
-              let blocks = response.data;
-              let checks = [];
-              if (oldBlocks.length > 0) {
-                oldBlocks.forEach(b => {
-                  let _b = blocks.find(bb => bb._id == b._id);
-                  if (!_b) {
-                    let blockStore = state.storeList.get(b._id);
-                    if (blockStore) {
-                      //blockStore.content+=' realigned';
-                      checks.push(dispatch('getBlock', b._id)
-                        .then(block => {
-                          blockStore._rev = block._rev;
-                          blockStore.content = block.content;
-                          blockStore.setAudiosrc(block.audiosrc, block.audiosrc_ver);
-                          if (blockStore.footnotes && blockStore.footnotes.length > 0 &&
-                                  block.footnotes && block.footnotes.length > 0) {
-                            block.footnotes.forEach((f, idx) => {
-                              if (f.audiosrc && blockStore.footnotes[idx]) {
-                                blockStore.setAudiosrcFootnote(idx, f.audiosrc, f.audiosrc_ver);
-                                blockStore.setContentFootnote(idx, f.content);
-                              }
-                            });
-                          }
-                          return Promise.resolve();
-                        })
-                        .catch(err => {
-                          console.log(err);
-                          return Promise.resolve();
-                        })
-                      );
-                    }
+    parseBookAlign({state, commit, dispatch}, blocks) {
+      let oldBlocks = state.aligningBlocks;
+      
+      let checks = [];
+      if (oldBlocks.length > 0) {
+        oldBlocks.forEach(b => {
+          let _b = blocks.find(bb => bb._id == b._id);
+          if (!_b) {
+            let blockStore = state.storeList.get(b._id);
+            if (blockStore) {
+              //blockStore.content+=' realigned';
+              checks.push(dispatch('getBlock', b._id)
+                .then(block => {
+                  blockStore._rev = block._rev;
+                  blockStore.content = block.content;
+                  blockStore.setAudiosrc(block.audiosrc, block.audiosrc_ver);
+                  if (blockStore.footnotes && blockStore.footnotes.length > 0 &&
+                          block.footnotes && block.footnotes.length > 0) {
+                    block.footnotes.forEach((f, idx) => {
+                      if (f.audiosrc && blockStore.footnotes[idx]) {
+                        blockStore.setAudiosrcFootnote(idx, f.audiosrc, f.audiosrc_ver);
+                        blockStore.setContentFootnote(idx, f.content);
+                      }
+                    });
                   }
-                });
-              }
-              Promise.all(checks)
-                .then(() => {
-                  if (oldBlocks.length != blocks.length) {
-                    dispatch('getAudioBook');
-                  }
-                  commit('set_aligning_blocks', response.data);
-                  if (checks.length > 0) {
-                    dispatch('_setNotMarkedAsDoneBlocksCounter');
-                    dispatch('recountApprovedInRange');
-                  }
+                  return Promise.resolve();
                 })
+                .catch(err => {
+                  console.log(err);
+                  return Promise.resolve();
+                })
+              );
             }
-            return Promise.resolve();
-          })
-          .catch(err => Promise.reject(err));
+          }
+        });
       }
+      Promise.all(checks)
+        .then(() => {
+          if (oldBlocks.length != blocks.length) {
+            dispatch('getAudioBook');
+          }
+          commit('set_aligning_blocks', blocks);
+          if (checks.length > 0) {
+            dispatch('_setNotMarkedAsDoneBlocksCounter');
+            dispatch('recountApprovedInRange');
+          }
+        })
     },
     startAudiobookWatch({state, dispatch}) {
       if (state.audiobookWatch) {
