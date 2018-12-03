@@ -2,7 +2,7 @@
 import io from 'socket.io-client';
 import axios from 'axios';
 
-const socket = io(process.env.ILM_API.replace('3000', '3001'));
+const socket = io(process.env.LIVE_QUERY_URL);
 
 class AlignQueue {
   constructor(store) {
@@ -26,7 +26,8 @@ class AlignQueue {
       .catch(err => Promise.reject(err));
     
     socket.on('data-change', (data) => {
-      console.log(data);
+      //console.log(data);
+      callback.call(this, data);
     });
   }
   
