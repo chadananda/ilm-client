@@ -723,7 +723,6 @@
                 return status == 200 || status == 504;
               }
             }).then(function(response){
-              self.getBookAlign();
               self.$root.$emit('stop-align');
               if (response.status===200) {
                 //self.$root.$emit('bookBlocksUpdates', response.data);
@@ -734,7 +733,6 @@
               }
               self.setCurrentBookCounters();
             }).catch((err) => {
-              self.getBookAlign();
               self.$root.$emit('stop-align');
               console.log('error: '+ err);
               if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
@@ -785,9 +783,9 @@
         let api = this.$store.state.auth.getHttp()
 
         api.delete(api_url, {}, {}).then((response) => {
-          this.getBookAlign();
+          
         }).catch((err) => {
-          this.getBookAlign();
+          
         });
       },
       alignTts(warn = 2) {
@@ -878,7 +876,6 @@
             return status == 200 || status == 504;
           }
         }).then((response)=>{
-          this.getBookAlign();
           this.$root.$emit('stop-align');
           if (response.status===200) {
             //this.$root.$emit('bookBlocksUpdates', response.data);
@@ -889,7 +886,6 @@
           }
           this.setCurrentBookCounters();
         }).catch((err) => {
-          this.getBookAlign();
           this.$root.$emit('stop-align');
           console.log('error11: '+ err);
           if ((err.response && err.response.status == 504) || err.message == 'Network Error') {
@@ -1007,7 +1003,7 @@
           return false;
         }
       },
-      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks', 'getBookAlign', 'getAudioBook'])
+      ...mapActions(['setCurrentBookCounters', 'getTTSVoices', 'addBlockLock', 'clearBlockLock', 'saveChangedBlocks', 'clearLocks', 'getAudioBook'])
     },
     beforeDestroy() {
       this.$root.$off('from-audioeditor:save-positions');

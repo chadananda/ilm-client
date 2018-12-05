@@ -11,24 +11,26 @@ class AlignQueue {
   }
   
   startWatch(bookid, callback) {
-    this.bookid = bookid;
-    
-    let api_url = process.env.ILM_API + '/api/v1/align_queue/' + this.bookid;
-    axios.get(api_url, {})
-      .then(response => {
-        if (response.status == 200) {
-          //this.store.commit('set_aligning_blocks', response.data);
-          callback.call(this, response.data);
-        }
-        socket.emit('start-watch', {class: 'alignQueue', params: {bookid: this.bookid}});
-        return Promise.resolve();
-      })
-      .catch(err => Promise.reject(err));
-    
-    socket.on('data-change', (data) => {
-      //console.log(data);
-      callback.call(this, data);
-    });
+    if (this.bookid !== bookid) {
+      this.bookid = bookid;
+
+      let api_url = process.env.ILM_API + '/api/v1/align_queue/' + this.bookid;
+      axios.get(api_url, {})
+        .then(response => {
+          if (response.status == 200) {
+            //this.store.commit('set_aligning_blocks', response.data);
+            callback.call(this, response.data);
+          }
+          socket.emit('start-watch', {class: 'alignQueue', params: {bookid: this.bookid}});
+          return Promise.resolve();
+        })
+        .catch(err => Promise.reject(err));
+
+      socket.on('data-change', (data) => {
+        //console.log(data);
+        callback.call(this, data);
+      });
+    }
   }
   
   stopWatch() {
