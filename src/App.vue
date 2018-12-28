@@ -50,7 +50,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(['loadBook', 'updateBooksList', 'loadCollection', 'loadLibrary'])
+    ...mapActions(['loadBook', 'loadCollection', 'loadLibrary'])
   }
 }
 </script>

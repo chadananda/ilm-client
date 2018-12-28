@@ -421,10 +421,6 @@ export const store = new Vuex.Store({
       // state.allRolls =
     },
 
-    updateBookMeta (state, meta) {
-      state.currentBookMeta = meta
-    },
-
     ALLOW_BOOK_EDIT_MODE (state, allow) {
       state.allowBookEditMode = allow;
     },
@@ -956,10 +952,9 @@ export const store = new Vuex.Store({
 
     updateBooksList ({state, commit, dispatch}) {
       //console.log('updateBooksList');
-      let ilmLibraryMeta = state.metaDB.hoodieApi()
-      ilmLibraryMeta.findAll(item => (item.type === 'book_meta' && !item.hasOwnProperty('_deleted')))
+      axios.get(state.API_URL + 'content_meta')
         .then(books => {
-          commit('SET_BOOKLIST', books)
+          commit('SET_BOOKLIST', books.data)
           dispatch('tc_loadBookTask')
         })
     },
@@ -1036,8 +1031,7 @@ export const store = new Vuex.Store({
 
       if (book_id) {
         //console.log('state.metaDBcomplete', state.metaDBcomplete);
-        let metaDB = state.metaRemoteDB;
-        return metaDB.get(book_id).then(meta => {
+        return dispatch('getBookMeta', book_id).then(meta => {
           commit('SET_CURRENTBOOK_META', meta)
           commit('TASK_LIST_LOADED')
           dispatch('getTotalBookTasks');
@@ -1065,7 +1059,7 @@ export const store = new Vuex.Store({
 
     reloadBookMeta ({commit, state, dispatch}) {
         if (state.currentBookMeta._id) {
-            state.metaDB.get(state.currentBookMeta._id).then((meta) => {
+            dispatch('getBookMeta', state.currentBookMeta._id).then((meta) => {
                 commit('SET_CURRENTBOOK_META', meta)
                 dispatch('getTotalBookTasks');
                 state.filesRemoteDB.getAttachment(state.currentBookMeta._id, 'coverimg')
@@ -1109,7 +1103,7 @@ export const store = new Vuex.Store({
               versions[0] = (parseInt(versions[0]) + 1);
               versions[1] = 0;
             }
-            state.metaRemoteDB.get(state.currentBookMeta._id)
+            dispatch('getBookMeta', state.currentBookMeta._id)
               .then(meta => {
                 //console.log('FROM REMOTE', meta);
                 //console.log('LOCAL', test);
@@ -1118,7 +1112,7 @@ export const store = new Vuex.Store({
                 meta['published'] = false;
                 meta['status'] = 'staging';
                 meta['demo'] = false;
-                state.metaRemoteDB.put(meta)
+                dispatch('updateBookMeta', {id: state.currentBookMeta._id, update: meta})
                   .then(() => {
                     //dispatch('reloadBookMeta');
                     state.currentBookMeta.version = meta['version'];
@@ -1260,7 +1254,26 @@ export const store = new Vuex.Store({
     },
 
     getBookMeta ({state}, bookid) {
-        return state.metaDB.get(bookid);
+      return axios.get(state.API_URL + 'content_meta/' + bookid)
+        .then(response => {
+          return Promise.resolve(response.data);
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
+    },
+    
+    updateBookMeta({state}, params) {
+      return axios.put(state.API_URL + 'content_meta/' + params.id, params.update)
+        .then(response => {
+          if (response.status == 200) {
+            return Promise.resolve(response.data);
+          }
+          return Promise.reject(response.data)
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        })
     },
 
     getBlock ({commit, state, dispatch}, block_id) {
@@ -1627,9 +1640,8 @@ export const store = new Vuex.Store({
       authors.forEach((item)=>{
         metaAuthors.push({ name: item.text, color: item.color });
       })
-      state.metaDB.get(state.currentBookMeta._id).then(function(doc) {
-        doc.authors = metaAuthors;
-        return state.metaDB.put(doc);
+      dispatch('updateBookMeta', {id: state.currentBookMeta._id, update: {authors: metaAuthors}}).then(function(doc) {
+        return Promise.resolve(doc);
       }).catch((err) =>{
         console.log('Meta save error:', err);
       });
@@ -1839,9 +1851,7 @@ export const store = new Vuex.Store({
         [key]: data.value
       }
 
-      var api = state.metaDB.hoodieApi();
-
-      return api.update(state.currentBookMeta._id, update).then(doc => {
+      return dispatch('updateBookMeta', {id: state.currentBookMeta._id, update: update}).then(doc => {
         //console.log('success DB update: ', doc)
         return dispatch('updateBookVersion', {minor: true})
         .then(() => {

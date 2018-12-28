@@ -1007,9 +1007,6 @@ export default {
     }, 500),
 
     liveUpdate (key, value) {
-      var dbPath = superlogin.getDbUrl('ilm_content_meta')
-      if (process.env.DOCKER) dbPath = dbPath.replace('couchdb', 'localhost')
-
       var keys = key.split('.');
       key = keys[0];
       if (keys.length > 1) {
@@ -1029,11 +1026,8 @@ export default {
 
       //console.log('update', update);
       //if (true) return;
-      var db = new PouchDB(dbPath)
-      var api = db.hoodieApi()
-
       this.freeze('updateBookMeta');
-      return api.update(this.currentBookid, update)
+      return this.updateBookMeta({id: this.currentBookid, update: update})
       .then(doc => {
         if (key == 'numeration') {
           this.unfreeze('updateBookMeta');
@@ -1544,7 +1538,7 @@ export default {
       }
     },
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookBlocksLeft', 'checkAllowSetAudioMastered', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlockO', 'freeze', 'unfreeze', 'blockers', 'updateBookMeta'])
   }
 }
 </script>

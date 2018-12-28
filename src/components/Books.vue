@@ -148,7 +148,7 @@ export default {
       this.$modal.hide('dialog');
     },
 
-    ...mapActions(['loadBook', 'updateBooksList', 'loadTTSVoices', 'setBlockSelection'])
+    ...mapActions(['loadBook', 'loadTTSVoices', 'setBlockSelection'])
   },
 
   destroyed: function () {
