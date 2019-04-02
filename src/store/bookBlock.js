@@ -19,7 +19,7 @@ let defBlock = [
   'parnum',
   'secnum',
   /*'secVal',
-  'secHide',*/
+   'secHide',*/
   'isHidden',
   'isNumber',
   'illustration',
@@ -31,6 +31,7 @@ let defBlock = [
   'status',
   'audiosrc_ver',
   'blockid',
+  'mdRawStyles',
 ]
 
 let BlockTypes = {
@@ -138,13 +139,14 @@ class BookBlock {
     this.content = typeof init.content !== 'undefined' ? init.content : '<p><br></p>';
     this.type = init.type || 'par';
     this.classes = init.classes || {};
-    if (Array.isArray(this.classes)) this.classes = {};
+    if (Array.isArray(this.classes))
+      this.classes = {};
 
     this.parnum = typeof init.parnum !== 'undefined' ? init.parnum : false;
     //this.section = typeof init.section !== 'undefined' ? init.section : false;
 
-    this.secVal  = typeof init.secVal  !== 'undefined' ? init.secVal  : false;
-    this.secnum  = typeof init.secnum  !== 'undefined' ? init.secnum  : (this.type === 'header' ? false : this.secVal);
+    this.secVal = typeof init.secVal !== 'undefined' ? init.secVal : false;
+    this.secnum = typeof init.secnum !== 'undefined' ? init.secnum : (this.type === 'header' ? false : this.secVal);
     this.secHide = typeof init.secHide !== 'undefined' ? init.secHide : false;
 
     this.audiosrc = init.audiosrc || '';
@@ -187,6 +189,8 @@ class BookBlock {
     this.footnoteIdx = init.footnoteIdx || null;
     this.isAudioEditing = init.isAudioEditing || false;
 
+    this.mdRawStyles = init.mdRawStyles || false;
+
     this.history = {};
 
     this.illustration_width = init.illustration_width || false;
@@ -195,18 +199,22 @@ class BookBlock {
   }
 
   clean() {
-    if (this.flags.length) this.flags.forEach ((flag, flagIdx)=>{
-      if (flag.parts.length) flag.parts.forEach ((part)=>{
-        let user_Id = superlogin.getSession().user_id;
-        if (part.newComment.length) part.comments.push ({
-          creator: user_Id,
-          created_at: (new Date()).toJSON(),
-          comment: part.newComment
-        });
-        part.newComment = '';
-      })
-      else this.flags.splice(flagIdx, 1);
-    });
+    if (this.flags.length)
+      this.flags.forEach((flag, flagIdx) => {
+        if (flag.parts.length)
+          flag.parts.forEach((part) => {
+            let user_Id = superlogin.getSession().user_id;
+            if (part.newComment.length)
+              part.comments.push({
+                creator: user_Id,
+                created_at: (new Date()).toJSON(),
+                comment: part.newComment
+              });
+            part.newComment = '';
+          })
+        else
+          this.flags.splice(flagIdx, 1);
+      });
     if (this.audiosrc) {
       this.audiosrc = this.audiosrc.replace(process.env.ILM_API, '');
       this.audiosrc = this.audiosrc.split('?').shift();
@@ -223,45 +231,59 @@ class BookBlock {
       this.illustration = this.illustration.replace(process.env.ILM_API, '');
       this.illustration = this.illustration.split('?').shift();
     }
-    if (Array.isArray(this.classes) && this.classes.length) this.classes = this.classes[0];
+    if (Array.isArray(this.classes) && this.classes.length)
+      this.classes = this.classes[0];
     //if (this.parnum!==false) this.parnum = '';
 
     this.content = this.content.replace(/data-(.*?)="(.*?)"/igm,
-    function(match, $1, $2) {
-      var tmp = document.createElement("DIV");
-      tmp.innerHTML = $2;
-      tmp = tmp.textContent || tmp.innerText || "";
-      return 'data-'+$1+'="'+_.escape(tmp)+'"';
-    })
+            function (match, $1, $2) {
+              var tmp = document.createElement("DIV");
+              tmp.innerHTML = $2;
+              tmp = tmp.textContent || tmp.innerText || "";
+              return 'data-' + $1 + '="' + _.escape(tmp) + '"';
+            })
     this.content = this.content
-    .replace(/(<[^>]+)(selected)/g, '$1')
-    .replace(/(<[^>]+)(audio-highlight)/g, '$1')
-    .replace(/(<sg\s*data-suggestion="[^"]*"[^>]*>\s*<\/sg>)/ig, '') // remove suggestions without text
-    .replace(/(<qq\s*data-author="[^"]*"[^>]*>\s*<\/qq>)/ig, ''); // remove quotes without text
+            .replace(/(<[^>]+)(selected)/g, '$1')
+            .replace(/(<[^>]+)(audio-highlight)/g, '$1')
+            .replace(/(<sg\s*data-suggestion="[^"]*"[^>]*>\s*<\/sg>)/ig, '') // remove suggestions without text
+            .replace(/(<qq\s*data-author="[^"]*"[^>]*>\s*<\/qq>)/ig, ''); // remove quotes without text
     return _.pick(this, defBlock); //<(qq*)\s*[^\/>]*>\s*<\/\1>
   }
 
   cleanField(fieldName) {
-    if (defBlock.indexOf(fieldName)<0) return false;
-    switch(fieldName) {
-      case 'illustration' : {
-      } break;
-      case 'section' : {
-        let result = _.pick(this, ['_id', 'section', 'secnum']);
-        if (!isNaN(parseInt(result.section))) result.section = parseInt(result.section);
-        if (result.section+'' === 'NaN') result.section = '';
-        if (!isNaN(parseInt(result.secnum))) result.secnum = parseInt(result.secnum);
-        return result;
-      } break;
-      default : {
-        return _.pick(this, ['_id'/*, '_rev'*/, fieldName]);
-      } break;
-    };
+    if (defBlock.indexOf(fieldName) < 0)
+      return false;
+    switch (fieldName) {
+      case 'illustration':
+        {
+        }
+        break;
+      case 'section' :
+        {
+          let result = _.pick(this, ['_id', 'section', 'secnum']);
+          if (!isNaN(parseInt(result.section)))
+            result.section = parseInt(result.section);
+          if (result.section + '' === 'NaN')
+            result.section = '';
+          if (!isNaN(parseInt(result.secnum)))
+            result.secnum = parseInt(result.secnum);
+          return result;
+        }
+        break;
+      default :
+        {
+          return _.pick(this, ['_id'/*, '_rev'*/, fieldName]);
+        }
+        break;
+    }
+    ;
   }
 
   genFlagId(isBlockFlag = false) {
-    if (isBlockFlag) return this._id;
-    else return _id(this._id + ':');
+    if (isBlockFlag)
+      return this._id;
+    else
+      return _id(this._id + ':');
   }
 
   newFlag(range, type, isBlockFlag = false) {
@@ -276,7 +298,7 @@ class BookBlock {
       updated_at: _at
     })
 
-    this.flags.push ({
+    this.flags.push({
       _id: _id,
       creator: userId,
       created_at: _at,
@@ -288,7 +310,7 @@ class BookBlock {
   }
 
   addFlag(_id, range, type) {
-    this.flags.forEach((flag, flagIdx)=>{
+    this.flags.forEach((flag, flagIdx) => {
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
         let userId = superlogin.getSession().user_id;
@@ -305,15 +327,15 @@ class BookBlock {
   }
 
   delFlag(_id) {
-    this.flags.forEach((flag, flagIdx)=>{
+    this.flags.forEach((flag, flagIdx) => {
       if (flag._id === _id) {
-        this.flags.splice(flagIdx,1);
+        this.flags.splice(flagIdx, 1);
       }
     });
   }
 
   addPart(_id, content, type) {
-    this.flags.forEach((flag, flagIdx)=>{
+    this.flags.forEach((flag, flagIdx) => {
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
         let userId = superlogin.getSession().user_id;
@@ -338,7 +360,7 @@ class BookBlock {
       let _id = this.genFlagId(true);
       let _at = (new Date()).toJSON();
       let userId = superlogin.getSession().user_id;
-      this.flags.push ({
+      this.flags.push({
         _id: _id,
         creator: userId,
         created_at: _at,
@@ -353,24 +375,29 @@ class BookBlock {
 
   isNeedAlso(_id) {
     let checker = {};
-    this.flags.forEach((flag)=>{
-      if (flag._id === _id) flag.parts.forEach((part)=>{
-        checker[part.type] = true;
-      });
+    this.flags.forEach((flag) => {
+      if (flag._id === _id)
+        flag.parts.forEach((part) => {
+          checker[part.type] = true;
+        });
     });
-    if (Object.keys(checker).length > 1) return false;
+    if (Object.keys(checker).length > 1)
+      return false;
     return true;
   }
 
   calcFlagStatus(_id) {
     let status = {'open': 0, 'resolved': 0, 'hidden': 0};
-    this.flags.forEach((flag)=>{
-      if (flag._id === _id) flag.parts.forEach((part)=>{
-        status[part.status] += 1;
-      });
+    this.flags.forEach((flag) => {
+      if (flag._id === _id)
+        flag.parts.forEach((part) => {
+          status[part.status] += 1;
+        });
     });
-    if (status.open > 0) return 'open';
-    if (status.resolved > 0) return 'resolved';
+    if (status.open > 0)
+      return 'open';
+    if (status.resolved > 0)
+      return 'resolved';
     return 'hidden';
   }
 
@@ -378,34 +405,41 @@ class BookBlock {
     let status = {'open': 0, 'resolved': 0, 'hidden': 0};
     let direction = {'editor': 0, 'narrator': 0};
     if (this.flags && this.flags.length) {
-      this.flags.forEach((flag)=>{
+      this.flags.forEach((flag) => {
         if (flag.parts && flag.parts.length) {
-          flag.parts.forEach((part)=>{
+          flag.parts.forEach((part) => {
             if (!block_level_only || !part.content) {
               status[part.status] += 1;
-              if (part.status == 'open') direction[part.type] += 1;
+              if (part.status == 'open')
+                direction[part.type] += 1;
             }
           });
         }
       });
     }
     let flagsStatus = 'hidden';
-    if (status.resolved > 0) flagsStatus = 'resolved';
-    if (status.open > 0) flagsStatus = 'open';
+    if (status.resolved > 0)
+      flagsStatus = 'resolved';
+    if (status.open > 0)
+      flagsStatus = 'open';
 
     let flagsDirection = 'proofer';
-    if (direction.narrator > 0) flagsDirection = 'narrator';
-    if (direction.editor > 0) flagsDirection = 'editor';
+    if (direction.narrator > 0)
+      flagsDirection = 'narrator';
+    if (direction.editor > 0)
+      flagsDirection = 'editor';
 
     return {stat: flagsStatus, dir: flagsDirection}
   }
 
   countArchParts(_id) {
     let count = 0;
-    this.flags.forEach((flag)=>{
-      if (flag._id === _id) flag.parts.forEach((part)=>{
-        if (part.status === 'hidden') count++;
-      });
+    this.flags.forEach((flag) => {
+      if (flag._id === _id)
+        flag.parts.forEach((part) => {
+          if (part.status === 'hidden')
+            count++;
+        });
     });
     return count;
   }
@@ -417,14 +451,14 @@ class BookBlock {
   }
 
   getAudiosrc(ver = false, full = true) {
-    if (!ver  || !this.audiosrc_ver) {
+    if (!ver || !this.audiosrc_ver) {
       return this.audiosrc;
     }
     let path = typeof this.audiosrc_ver[ver] === 'undefined' ? this.audiosrc : this.audiosrc_ver[ver];
     if (!path) {
       return false;
     }
-    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
+    return full ? process.env.ILM_API + path + '?' + (new Date()).toJSON() : path;
   }
 
   getAudiosrcFootnote(idx, ver = false, full = true) {
@@ -433,7 +467,7 @@ class BookBlock {
       return false;
     }
     let path = false;
-    if (!ver  || !f.audiosrc_ver) {
+    if (!ver || !f.audiosrc_ver) {
       path = f.audiosrc;
     } else {
       path = typeof f.audiosrc_ver[ver] === 'undefined' ? f.audiosrc : f.audiosrc_ver[ver];
@@ -441,7 +475,7 @@ class BookBlock {
     if (!path) {
       return false;
     }
-    return full ? process.env.ILM_API + path +'?'+ (new Date()).toJSON() : path;
+    return full ? process.env.ILM_API + path + '?' + (new Date()).toJSON() : path;
   }
 
   setContent(content) {
@@ -493,8 +527,10 @@ class BookBlock {
     if (this.classes && typeof this.classes === 'object') {
       for (let key in this.classes) {
         if (key) {
-          if (this.classes[key] && this.classes[key] !== '') result += ' '+ this.classes[key];
-          else if (Object.keys(BlockTypes[this.type])[0] === '') result += ' ' + key.replace(/\s/g, '-');
+          if (this.classes[key] && this.classes[key] !== '')
+            result += ' ' + this.classes[key];
+          else if (Object.keys(BlockTypes[this.type])[0] === '')
+            result += ' ' + key.replace(/\s/g, '-');
         }
       }
     }
@@ -521,14 +557,17 @@ class BookBlock {
       }
 
     } else {
-      if (val === '') this.classes = {};
+      if (val === '')
+        this.classes = {};
     }
     return styleCurr;
   }
 
   setClassStyle(classVal, val) {
-    if (typeof val !== 'undefined') this.classes[classVal] = val;
-    if (val === '') delete this.classes[classVal];
+    if (typeof val !== 'undefined')
+      this.classes[classVal] = val;
+    if (val === '')
+      delete this.classes[classVal];
   }
 
   set(field, value) {
@@ -548,7 +587,7 @@ class BookBlock {
           return false;
         }
         o = o[f];
-      } while(path.length > 1);
+      } while (path.length > 1);
       f = path.shift();
       this.history[field].push(o[f]);
       o[f] = value;
@@ -566,7 +605,7 @@ class BookBlock {
         do {
           f = path.shift();
           o = o[f];
-        } while(path.length > 1);
+        } while (path.length > 1);
         f = path.shift();
         o[f] = this.history[field].pop();
       }
@@ -596,62 +635,74 @@ class FootNote {
   }
 }
 
-let setBlockParnum = function(block, parCounter, numMask = 'x_x') {
+let setBlockParnum = function (block, parCounter, numMask = 'x_x') {
   let result = false;
-  switch(block.type) {
-    case 'header' : case 'title' : {
-      // this.parCounter.curr = 1;
+  switch (block.type) {
+    case 'header' :
+    case 'title' :
+      {
+        // this.parCounter.curr = 1;
 
-      if (block.secnum === false) {
-        //this.parCounter.pref = false;
-        break;
+        if (block.secnum === false) {
+          //this.parCounter.pref = false;
+          break;
+        }
+        if (block.secnum.length === 0) {
+          //this.parCounter.curr = 1;
+          parCounter.curr = 1;
+          parCounter.prefCnt++;
+          parCounter.pref = parCounter.prefCnt;
+          result = parCounter.prefCnt;
+          break;
+        }
+        if (!isNaN(block.secnum)) { // Number
+          parCounter.curr = 1;
+          parCounter.prefCnt = parseInt(block.secnum);
+          parCounter.pref = parCounter.prefCnt;
+        } else { // String
+          parCounter.curr = 1;
+          parCounter.pref = block.secnum;
+        }
       }
-      if (block.secnum.length === 0) {
-        //this.parCounter.curr = 1;
-        parCounter.curr = 1;
-        parCounter.prefCnt++;
-        parCounter.pref = parCounter.prefCnt;
-        result = parCounter.prefCnt;
-        break;
-      }
-      if (!isNaN(block.secnum)) { // Number
-        parCounter.curr = 1;
-        parCounter.prefCnt = parseInt(block.secnum);
-        parCounter.pref = parCounter.prefCnt;
-      } else { // String
-        parCounter.curr = 1;
-        parCounter.pref = block.secnum;
-      }
-    } break;
-    case 'par' : {
-      if (block.parnum===false) {
-        break;
-      }
-      if (parCounter.pref === false) {
-        result = '';
-        break;
-      }
-      switch(numMask) {
-        case 'x' : {
-          result = parCounter.curr;
-        } break;
-        case 'x_x' : {
-          result = parCounter.pref+'.'+parCounter.curr;
-        } break;
-        default : {
+      break;
+    case 'par' :
+      {
+        if (block.parnum === false) {
+          break;
+        }
+        if (parCounter.pref === false) {
           result = '';
-        } break;
+          break;
+        }
+        switch (numMask) {
+          case 'x' :
+            {
+              result = parCounter.curr;
+            }
+            break;
+          case 'x_x' :
+            {
+              result = parCounter.pref + '.' + parCounter.curr;
+            }
+            break;
+          default :
+            {
+              result = '';
+            }
+            break;
+        }
+        parCounter.curr++;
       }
-      parCounter.curr++;
-    } break;
-  };
+      break;
+  }
+  ;
   return result;
 }
 
 export {
-  BookBlock,
-  BlockTypes,
-  FootNote,
-  setBlockParnum,
-  BlockTypesAlias
-}
+BookBlock,
+        BlockTypes,
+        FootNote,
+        setBlockParnum,
+        BlockTypesAlias
+        }
