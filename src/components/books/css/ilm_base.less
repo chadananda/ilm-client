@@ -1,6 +1,10 @@
 @import "fonts.less";
 @import "ffa_svg.less";
 
+// Main font
+//@main_font: 'GentiumPlus', 'Georgia', 'serif';
+@main_font: 'Times New Roman', 'Times', 'serif';
+
 // Color: white
 @main_text_color: lighten(black, 10%);
 @main_background_color: darken(white, 1%);
@@ -98,7 +102,7 @@
     .parnum {
       float: left;
       padding-top: 10px;
-      font-family: GentiumPlus, 'Georgia', 'serif';
+      font-family: @main_font;
       padding-left: 5px;
       color: rgba(26, 26, 26, 0.7);
       font-size: 12px;
@@ -108,7 +112,7 @@
     .footnotes {
       margin-left: 70px;
       margin-right: 40px;
-      font-family: GentiumPlus, 'Georgia', 'serif';
+      font-family: @main_font;
       color: rgba(26, 26, 26, 0.7);
       font-size: 80%;
 
@@ -175,7 +179,7 @@
     }
 
     sup[data-idx] {
-      font-family: GentiumPlus, 'Georgia', 'serif';
+      font-family: @main_font;
       color: rgba(26, 26, 26, 0.7);
       cursor: pointer;
 
@@ -187,7 +191,7 @@
 }
 
 .ilm-block {
-  font-family: GentiumPlus, serif;
+  font-family: @main_font;
   font-size: @main_font_size;
 
   width: 100%; padding: 1em;
@@ -250,7 +254,7 @@
       }
 
       &.copyright {
-        font-family: GentiumPlus,"Georgia","serif";
+        font-family: @main_font;
         font-size: @font_title_copyright;
         line-height: @font_title_copyright;
         color: @grayed_color;
@@ -787,7 +791,7 @@
 
   .ilm-block {
 
-    font-family: GentiumPlus,"Georgia","serif";
+    font-family: @main_font;
     font-size: 24px;
     padding: 0;
 
@@ -797,7 +801,7 @@
         .parnum {
           float: left;
           padding-top: 10px;
-          font-family: GentiumPlus, 'Georgia', 'serif';
+          font-family: @main_font;
           padding-left: 15px;
           color: rgba(26, 26, 26, 0.7);
           font-size: 12px;
@@ -812,7 +816,7 @@
         .footnotes {
           margin-left: 70px;
           margin-right: 40px;
-          font-family: GentiumPlus, 'Georgia', 'serif';
+          font-family: @main_font;
           color: rgba(26, 26, 26, 0.7);
           font-size: 80%;
 
@@ -857,7 +861,7 @@
         }
 
         sup[data-idx] {
-          font-family: GentiumPlus, 'Georgia', 'serif';
+          font-family: @main_font;
           color: rgba(26, 26, 26, 0.7);
           cursor: pointer;
 
@@ -972,7 +976,7 @@
       }
 
       &.copyright {
-        font-family: GentiumPlus,"Georgia","serif";
+        font-family: @main_font;
         font-size: @font_title_copyright;
         line-height: @font_title_copyright;
         color: @grayed_color;
@@ -1041,7 +1045,7 @@
 
   .ilm-block {
 
-    font-family: GentiumPlus, "Georgia","serif";
+    font-family: @main_font;
     font-size: 22px;
     padding: 0 60px 2em;
 
@@ -1051,7 +1055,7 @@
         .parnum {
           float: left;
           padding-top: 10px;
-          font-family: GentiumPlus, 'Georgia', 'serif';
+          font-family: @main_font;
           padding-left: 15px;
           color: rgba(26, 26, 26, 0.7);
           font-size: 12px;
@@ -1061,7 +1065,7 @@
         .footnotes {
           margin-left: 70px;
           margin-right: 40px;
-          font-family: GentiumPlus, 'Georgia', 'serif';
+          font-family: @main_font;
           color: rgba(26, 26, 26, 0.7);
           font-size: 80%;
 
@@ -1108,7 +1112,7 @@
         }
 
         sup[data-idx] {
-          font-family: GentiumPlus, 'Georgia', 'serif';
+          font-family: @main_font;
           color: rgba(26, 26, 26, 0.7);
           cursor: pointer;
 
@@ -1212,7 +1216,7 @@
       }
 
       &.copyright {
-        font-family: GentiumPlus,"Georgia","serif";
+        font-family: @main_font;
         font-size: @font_title_copyright;
         line-height: @font_title_copyright;
         color: @grayed_color;
