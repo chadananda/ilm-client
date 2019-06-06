@@ -160,11 +160,16 @@ export default {
     },
     tc_canResolveFlagPart(part) {
       let result = false;
+      if (!this._is('editor', true) && !this._is('narrator', true) && !this._is('proofer', true) && !this.adminOrLibrarian) {
+        return false;
+      }
       if (part.creator === this.auth.getSession().user_id) {
         result = true;
         /*if (part.comments.length) part.comments.forEach((comment)=>{
          if (comment.creator !== part.creator) result = false;
          });*/
+      } else if (part.creator_role && this._is(part.creator_role, true)) {
+        return true;
       } else {
         if (this._is(part.type, true) && this.tc_getBlockTask(this.block._id)) {
           result = true;

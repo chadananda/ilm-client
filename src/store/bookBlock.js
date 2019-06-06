@@ -264,7 +264,19 @@ class BookBlock {
     else return _id(this._id + ':');
   }
 
-  newFlag(range, type, isBlockFlag = false) {
+  newFlag(range, type, isBlockFlag = false, mode = null) {
+    let creator_role = null;
+    switch (mode) {
+      case 'edit':
+        creator_role = 'editor';
+        break;
+      case 'narrate':
+        creator_role = 'narrator';
+        break;
+      case 'proofread':
+        creator_role = 'proofer';
+        break;
+    }
     let _id = this.genFlagId(isBlockFlag);
     let _at = (new Date()).toJSON();
     let userId = superlogin.getSession().user_id;
@@ -273,13 +285,15 @@ class BookBlock {
       created_at: _at,
       type: type,
       content: (isBlockFlag ? false : range.cloneContents().textContent),
-      updated_at: _at
+      updated_at: _at,
+      creator_role: creator_role
     })
 
     this.flags.push ({
       _id: _id,
       creator: userId,
       created_at: _at,
+      creator_role: creator_role,
       parts: [flagPart]
     });
 
@@ -287,7 +301,19 @@ class BookBlock {
     return _id;
   }
 
-  addFlag(_id, range, type) {
+  addFlag(_id, range, type, mode) {
+    let creator_role = null;
+    switch (mode) {
+      case 'edit':
+        creator_role = 'editor';
+        break;
+      case 'narrate':
+        creator_role = 'narrator';
+        break;
+      case 'proofread':
+        creator_role = 'proofer';
+        break;
+    }
     this.flags.forEach((flag, flagIdx)=>{
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
@@ -297,7 +323,8 @@ class BookBlock {
           created_at: _at,
           type: type,
           content: range.cloneContents().textContent,
-          updated_at: _at
+          updated_at: _at,
+          creator_role: creator_role
         })
         flag.parts.push(flagPart);
       }
@@ -312,7 +339,19 @@ class BookBlock {
     });
   }
 
-  addPart(_id, content, type) {
+  addPart(_id, content, type, mode) {
+    let creator_role = null;
+    switch (mode) {
+      case 'edit':
+        creator_role = 'editor';
+        break;
+      case 'narrate':
+        creator_role = 'narrator';
+        break;
+      case 'proofread':
+        creator_role = 'proofer';
+        break;
+    }
     this.flags.forEach((flag, flagIdx)=>{
       if (flag._id === _id) {
         let _at = (new Date()).toJSON();
@@ -322,7 +361,8 @@ class BookBlock {
           created_at: _at,
           type: type,
           content: content,
-          updated_at: _at
+          updated_at: _at,
+          creator_role: creator_role
         })
         flag.parts.push(flagPart);
       }
@@ -586,6 +626,7 @@ class FlagPart {
     this.updated_at = init.updated_at;
     this.newComment = '';
     this.collapsed = false;
+    this.creator_role = init.creator_role || null;
   }
 }
 
