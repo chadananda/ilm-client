@@ -130,8 +130,11 @@ export default {
         return false;
       },
       tc_allowEditingComplete() {
-        if (this._is('editor', true) || this.adminOrLibrarian) {
+        if (this.adminOrLibrarian) {
           return this.currentJobInfo.text_cleanup;
+        }
+        if (this._is('editor', true)) {
+          return this.currentJobInfo.text_cleanup && this.currentJobInfo.workflow.status === 'active';
         }
         return false;
       },

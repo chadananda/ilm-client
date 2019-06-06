@@ -1358,7 +1358,10 @@ export default {
         return axios.get(this.API_URL + 'books/' + this.currentBook._id + '/demo')
                .then(resp => {
                  //this.isExporting = false;
-               });
+               })
+                .catch(err => {
+                  this.checkError(err);
+                });
     },
     deactivateDemoLink() {
       console.log('inside deactivate');
@@ -1482,7 +1485,7 @@ export default {
       this.updateJob({id: this.currentJobInfo.id, description: event.target.value});
     }, 500),
 
-    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection'])
+    ...mapActions(['getAudioBook', 'updateBookVersion', 'setCurrentBookCounters', 'putBlock', 'putBlockO', 'putNumBlock', 'putNumBlockO', 'putNumBlockOBatch', 'freeze', 'unfreeze', 'blockers', 'tc_loadBookTask', 'getCurrentJobInfo', 'updateBookMeta', 'updateJob', 'updateBookCollection', 'checkError'])
   }
 }
 
