@@ -63,7 +63,7 @@
         </template>
     </div>
     <div class="table-cell" :class="{'completed': isCompleted}" >
-        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + (block.language || 'undefined')]"
+        <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
             <div class="table-row-flex controls-top">
@@ -252,7 +252,7 @@
                   </div>
 
                   <div :class="['table-row content-description', block.getClass()]">
-                    <div class="content-wrap-desc description" 
+                    <div class="content-wrap-desc description"
                       ref="blockDescription"
                       @input="commitDescription($event)"
                       v-html="block.description"
@@ -464,7 +464,7 @@
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + footnote.language]"
+                    :class="['js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
                     @input="commitFootnote(ftnIdx, $event)"
                     @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
                     v-html="footnote.content"
@@ -960,6 +960,16 @@ export default {
           return false;
         }
       },
+      getBlockLang: {
+        cache: false,
+        get() {
+          if (this.block.language && this.block.language.length) {
+            return this.block.language;
+          } else {
+            return this.meta.language;
+          }
+        }
+      },
       ...mapGetters({
           auth: 'auth',
           book: 'currentBook',
@@ -1327,7 +1337,7 @@ export default {
           }
     //       this.editor.subscribe('hideToolbar', (data, editable)=>{});
     //       this.editor.subscribe('positionToolbar', ()=>{})
-        }  else if (this.editor) { 
+        }  else if (this.editor) {
           this.editor.setup();
         }
 
@@ -1596,7 +1606,7 @@ export default {
         if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
           this.$root.$emit('from-block:save-and-realign-warning', () => {
                   this.$root.$emit('hide-modal');
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -1605,7 +1615,7 @@ export default {
                       this.assembleBlockProxy(false, false)
                     }
                   }, 50);
-                }, 
+                },
                 () => {
                   this.$root.$emit('hide-modal');
                   let i = setInterval(() => {
@@ -2363,7 +2373,7 @@ export default {
           this.block.footnotes.splice(p - posDecr, 1);
           ++posDecr;
         });
-        
+
         this.isChanged = false; // to be shure to update view
         this.isChanged = true;
         this.pushChange('footnotes');
@@ -3660,6 +3670,13 @@ export default {
           this.$forceUpdate();
           this.pushChange('classes');
         }
+      },
+      getFtnLang: function(ftnLang) {
+        if (ftnLang && ftnLang.length) {
+          return ftnLang;
+        } else {
+          return this.meta.language;
+        }
       }
   },
   watch: {
@@ -3692,7 +3709,7 @@ export default {
               }
             }
           }
-          
+
         }
       },
       'block.isUpdated' (newVal, oldVal) {

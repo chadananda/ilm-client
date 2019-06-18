@@ -9,7 +9,7 @@
     </div>
     <!--<div :class="['table-cell', 'controls-left']">-->
     <div :class="['table-cell', {'completed': isCompleted}]">
-      <div :class="['table-body', '-content']">
+      <div :class="['table-body', '-content', '-langblock-' + getBlockLang]">
         <div class="table-row-flex controls-top"></div>
         <!--<div class="table-row-flex controls-top">-->
         <div :class="['table-row ilm-block']">
@@ -55,7 +55,7 @@
             <div class="table-row">
               <div class="table-cell -num">{{ftnIdx+1}}.</div>
               <div
-                :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}]"
+                :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}, '-langftn-' + getFtnLang(footnote.language)]"
                 v-html="footnote.content">
               </div>
               <div class="table-cell -control"></div>
@@ -93,6 +93,7 @@
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import access             from '../../mixins/access.js';
+import { mapGetters }     from 'vuex';
 
   export default {
     name: 'book-block-preview',
@@ -106,11 +107,11 @@ import access             from '../../mixins/access.js';
     },
     mixins: [access, taskControls, apiConfig],
     computed: {
-      /*...mapGetters({
+      ...mapGetters({
         meta: 'currentBookMeta',
-        parlist: 'storeList',
-        parlistO: 'storeListO'
-      }),*/
+//         parlist: 'storeList',
+//         parlistO: 'storeListO'
+      }),
       blockId: function() {
         return this.blockO.blockid;
       },
@@ -181,9 +182,25 @@ import access             from '../../mixins/access.js';
           return false;
         }
       },
+      getBlockLang: {
+        cache: false,
+        get() {
+          if (this.block.language && this.block.language.length) {
+            return this.block.language;
+          } else {
+            return this.meta.language;
+          }
+        }
+      },
     },
     methods: {
-
+      getFtnLang: function(ftnLang) {
+        if (ftnLang && ftnLang.length) {
+          return ftnLang;
+        } else {
+          return this.meta.language;
+        }
+      }
     }
   }
 </script>

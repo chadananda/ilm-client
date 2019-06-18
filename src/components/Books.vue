@@ -451,16 +451,30 @@ export default {
     direction: ltr;
   }
 }
-
+/* Edit mode */
 .-langblock-ar,
 .-langblock-fa  {
   .ilm-block {
     direction: rtl;
+    .content-wrap, .content-wrap-preview {
+      font-family: 'Times New Roman', 'Liberation Serif';
+      &.title {
+        font-family: 'Times New Roman', 'Liberation Serif';
+      }
+      &.header {
+        &.h1, &.h2, &.h3, &.h4, &.h5 {
+          font-family: 'Times New Roman', 'Liberation Serif';
+        }
+      }
+    }
   }
 }
 /* Display mode */
-.-langblock-ar.ilm-block, .-langblock-fa.ilm-block {
-  direction: rtl;
+.-langblock-ar,
+.-langblock-fa {
+  &.ilm-block, {
+    direction: rtl;
+  }
 }
 
 // for footnote settings:
@@ -488,7 +502,9 @@ export default {
 .-langftn-ar,
 .-langftn-fa  {
   direction: rtl;
+  font-family: 'Times New Roman', 'Liberation Serif';
 }
+
 .alert.top {
   top: 120px;
   p {
@@ -522,7 +538,7 @@ export default {
   width: 100%;
   background-repeat: no-repeat;
   background-position: center;
-  
+
   &.locked-block-cover {
     width: 100%;
     position: absolute;
