@@ -126,13 +126,16 @@
         adminOrLibrarian: 'adminOrLibrarian',
         currentBookCounters: 'currentBookCounters',
         currentBookMeta: 'currentBookMeta',
-        currentCollectionId: 'currentCollectionId'
+        currentCollectionId: 'currentCollectionId',
+        auth: 'auth'
       })
     },
     methods: {
       updateAssignee(role, user){
         let api_url = this.API_URL + 'books/' + this.currentBookMeta._id + '/assignee';
         let api = this.$store.state.auth.getHttp();
+        let loggedUserId = this.auth.getSession().user_id;
+        let reloadJobInfo = loggedUserId === user || loggedUserId === this.currentJobInfo.executors[role];
         return api.post(api_url, {
           bookid: this.currentBookMeta._id,
           role: role,
@@ -140,6 +143,9 @@
         }, {})
           .then(response => {
             if (response.status == 200) {
+              if (reloadJobInfo) {
+                this.getCurrentJobInfo();
+              }
                //console.log(this.tasks_counter); 
                //this.tasks_counter.forEach(function(el, index) {
                //  console.log(el.key, el.data);
@@ -248,7 +254,7 @@
           }
         }
       },
-      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering']),
+      ...mapActions(['updateBookMeta', 'completeTextCleanup', 'completeAudioMastering', 'getCurrentJobInfo']),
     },
     mounted() {
       

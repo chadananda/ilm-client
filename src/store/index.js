@@ -2367,7 +2367,7 @@ export const store = new Vuex.Store({
         dispatch('getAudioBook')
       }, 15000);
     },
-    getCurrentJobInfo({state, commit}, clear) {
+    getCurrentJobInfo({state, commit, dispatch}, clear) {
       /*state.currentJobInfo = {
         can_resolve_tasks: [],
         mastering: null,
@@ -2382,6 +2382,9 @@ export const store = new Vuex.Store({
       //commit('SET_ALLOW_BOOK_PUBLISH', false);
       if (state.currentBookid) {
         state.jobInfoRequest = axios.get(state.API_URL + 'tasks/book/' + state.currentBookid + '/job_info')
+        let old_counter = Object.assign([], state.currentJobInfo.tasks_counter);
+        let old_id = state.currentJobInfo.id;
+        let old_executors = Object.assign({}, state.currentJobInfo.executors);
         if (clear) {
           state.currentJobInfo.tasks_counter = [];
           state.currentJobInfo.workflow = {status: null, archived: null};
@@ -2410,6 +2413,46 @@ export const store = new Vuex.Store({
                 commit('SET_ALLOW_BOOK_PUBLISH', true);
               }
             }
+            if (old_id && old_id === state.currentJobInfo.id) {
+              let updateTasks = false;
+              let new_counter = state.currentJobInfo.tasks_counter;
+              let userId = state.auth.getSession().user_id;
+              old_counter.forEach(cInfo => {
+                if (typeof cInfo.data !== 'undefined') {
+                  let n_counter = new_counter.find(c => {
+                    return c.key === cInfo.key;
+                  });
+                  if (old_executors[cInfo.key] === userId || (cInfo.key === 'editor' && state.adminOrLibrarian) || state.currentJobInfo.executors[cInfo.key] === userId) {
+                    if ((old_executors[cInfo.key] === userId || state.currentJobInfo.executors[cInfo.key] === userId) && old_executors[cInfo.key] !== state.currentJobInfo.executors[cInfo.key]) {
+                      updateTasks = true;
+                    } else if (n_counter) {
+                      if (n_counter.data.tasks.length !== cInfo.data.tasks.length) {
+                        updateTasks = true;
+                      } else {
+                        cInfo.data.tasks.forEach(t => {
+                          if (typeof t.count !== 'undefined') {
+                            let newTasks = n_counter.data.tasks.find(nt => {
+                              return nt.type === t.type;
+                            });
+                            if (!newTasks) {
+                              updateTasks = true;
+                            } else {
+                              if (newTasks.count !== t.count) {
+                                updateTasks = true;
+                              }
+                            }
+                          }
+                        });
+                      }
+                    }
+                  }
+                }
+              });
+              if (updateTasks) {
+                dispatch('tc_loadBookTask', state.currentBookid);
+              }
+            }
+            //console.log(state.currentJobInfo, state.auth.getSession().user_id);
             return Promise.resolve();
           })
           .catch(err => {
