@@ -456,7 +456,7 @@ export default {
 .-langblock-fa  {
   .ilm-block {
     direction: rtl;
-    .content-wrap, .content-wrap-preview {
+    .content-wrap, .content-wrap-preview, .content-wrap-desc {
       font-family: 'Times New Roman', 'Liberation Serif';
       &.title {
         font-family: 'Times New Roman', 'Liberation Serif';
