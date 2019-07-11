@@ -8,8 +8,10 @@ test/e2e/reports
 selenium-debug.log
 config/env.dev.sh
 config/env.prod.sh
+config/env.testcafe.sh
 Dockerfile
 *.orig
 .directory
 *.kate-swp
 *.swp
+.testcaferc.json
