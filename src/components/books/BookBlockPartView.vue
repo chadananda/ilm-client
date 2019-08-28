@@ -1066,6 +1066,17 @@ export default {
                 extensions: extensions,
                 disableEditing: !this.allowEditing
             });
+            let listRegex = new RegExp('<div><p>(.*?<\\/p>)(.*?)<\\/div>', 'ms');
+            this.editor.subscribe('editableInput', (event, editable) => {
+              if (this.block.classes && this.block.classes.whitespace && editable.innerHTML.match(listRegex)) {
+                let selection = this.saveSelection(editable)
+                editable.innerHTML = editable.innerHTML.replace(new RegExp('<br[^>]*>', 'ms'), '');
+                editable.innerHTML = editable.innerHTML.replace('</p>&nbsp;', '</p>');
+                editable.innerHTML = editable.innerHTML.replace(new RegExp('<div><p>(.*?)[\n].*?<\\/p>', 'ms'), `\n$1\n`);
+                editable.innerHTML = editable.innerHTML.replace(new RegExp('<\\/?(p|div)>', 'gms'), ``);
+                this.restoreSelection(editable, selection);
+              }
+            });
           } else if (this.tc_showBlockNarrate(this.block._id) && this.mode === 'narrate') {
             extensions = {
                 'suggestButton': new SuggestButton(),
@@ -2889,6 +2900,75 @@ export default {
           return this.block.getPartContent(this.blockPartIdx);
         } else {
           return this.block.content;
+        }
+      },
+      saveSelection(containerEl) {
+        if (window.getSelection && document.createRange) {
+          var range = window.getSelection().getRangeAt(0);
+          var preSelectionRange = range.cloneRange();
+          preSelectionRange.selectNodeContents(containerEl);
+          preSelectionRange.setEnd(range.startContainer, range.startOffset);
+          var start = preSelectionRange.toString().length;
+
+          return {
+              start: start + 1,
+              end: start + range.toString().length + 1
+          };
+        } else if (document.selection) {
+          var selectedTextRange = document.selection.createRange();
+          var preSelectionTextRange = document.body.createTextRange();
+          preSelectionTextRange.moveToElementText(containerEl);
+          preSelectionTextRange.setEndPoint("EndToStart", selectedTextRange);
+          var start = preSelectionTextRange.text.length;
+
+          return {
+              start: start + 1,
+              end: start + selectedTextRange.text.length + 1
+          }
+        } else {
+          return {
+            start: 0,
+            end: 0
+          }
+        }
+      }, 
+      restoreSelection(containerEl, savedSel) {
+        if (window.getSelection && document.createRange) {
+          var charIndex = 0, range = document.createRange();
+          range.setStart(containerEl, 0);
+          range.collapse(true);
+          var nodeStack = [containerEl], node, foundStart = false, stop = false;
+
+          while (!stop && (node = nodeStack.pop())) {
+              if (node.nodeType == 3) {
+                  var nextCharIndex = charIndex + node.length;
+                  if (!foundStart && savedSel.start >= charIndex && savedSel.start <= nextCharIndex) {
+                      range.setStart(node, savedSel.start - charIndex);
+                      foundStart = true;
+                  }
+                  if (foundStart && savedSel.end >= charIndex && savedSel.end <= nextCharIndex) {
+                      range.setEnd(node, savedSel.end - charIndex);
+                      stop = true;
+                  }
+                  charIndex = nextCharIndex;
+              } else {
+                  var i = node.childNodes.length;
+                  while (i--) {
+                      nodeStack.push(node.childNodes[i]);
+                  }
+              }
+          }
+
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else if (document.selection) {
+          var textRange = document.body.createTextRange();
+          textRange.moveToElementText(containerEl);
+          textRange.collapse(true);
+          textRange.moveEnd("character", savedSel.end);
+          textRange.moveStart("character", savedSel.start);
+          textRange.select();
         }
       }
 
