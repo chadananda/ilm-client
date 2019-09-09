@@ -174,7 +174,8 @@ export const store = new Vuex.Store({
     jobStatusError: '',
     bookMode: null,
     processQueueWatch: null,
-    allowBookSplitPreview: false
+    allowBookSplitPreview: false,
+    userLibraryList: []
   },
 
   getters: {
@@ -332,7 +333,8 @@ export const store = new Vuex.Store({
       } else {
         return null;
       }
-    }
+    },
+    userLibraryList: state => state.userLibraryList
   },
 
   mutations: {
@@ -1025,6 +1027,7 @@ export const store = new Vuex.Store({
             .then(config => {
               state.allowBookSplitPreview = config && config.book_split_preview_users && config.book_split_preview_users.indexOf(state.auth.getSession().user_id) !== -1;
             })
+          dispatch('getUserLibraryList');
     },
 
     destroyDB ({ state, commit, dispatch }) {
@@ -2803,6 +2806,16 @@ export const store = new Vuex.Store({
       .catch(error => {
         return Promise.reject({})
       })
+    },
+    getUserLibraryList({state}) {
+      return axios.get(`${state.API_URL}user_library`)
+        .then(libraries => {
+          state.userLibraryList = libraries.data;
+          return Promise.resolve();
+        })
+        .catch(err => {
+          return Promise.reject(err);
+        });
     }
   }
 })

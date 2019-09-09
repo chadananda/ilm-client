@@ -62,6 +62,13 @@
             @select="updateUser(user._id, 'languages', $event)"
           ></select-languages>
         </div>
+        <div class="t-box">
+          <SelectLibraries
+            :selected="user.user_libraries || []"
+            :isDisabled="!$store.state.isAdmin"
+            @select="updateUser(user._id, 'libraries', $event)"
+          ></SelectLibraries>
+        </div>
         <div class="t-box"><a href="#" v-on:click="workHistoryModal(user._id)"><span><i class="fa fa-calendar-check-o"></i>Work History</span></a></div>
 
         <div class="t-box" v-show="$store.state.isAdmin"><a href="#" v-on:click="resetPassword(user.email)"><span><i class="fa fa-unlock"></i>Reset Password</span></a></div>
@@ -116,6 +123,7 @@
 import axios from 'axios'
 import SelectRoles from './generic/SelectRoles'
 import SelectLanguages from './generic/SelectLanguages'
+import SelectLibraries from './generic/SelectLibraries'
 import UserAddModal from './users/UserAddModal'
 import UserEditModal from './users/UserEditModal'
 import WorkHistoryModal from './users/WorkHistoryModal'
@@ -137,6 +145,7 @@ export default {
     WorkHistoryModal,
     SelectRoles,
     SelectLanguages,
+    SelectLibraries,
     Pagination,
     alert
   },
