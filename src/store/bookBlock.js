@@ -276,7 +276,7 @@ class BookBlock {
     else return _id(this._id + ':');
   }
 
-  newFlag(range, type, isBlockFlag = false, mode = null) {
+  newFlag(selection, type, isBlockFlag = false, mode = null) {
     let creator_role = null;
     switch (mode) {
       case 'edit':
@@ -296,7 +296,7 @@ class BookBlock {
       creator: userId,
       created_at: _at,
       type: type,
-      content: (isBlockFlag ? false : range.cloneContents().textContent),
+      content: (isBlockFlag ? false : selection),
       updated_at: _at,
       creator_role: creator_role
     })
