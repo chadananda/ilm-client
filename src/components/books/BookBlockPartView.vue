@@ -752,7 +752,7 @@ export default {
           try {
             content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
           } catch (e) {// Firefox does not support negative lookbehind
-            
+
           }
           content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
@@ -1058,7 +1058,7 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript','orderedlist', 
+                  //'superscript', 'subscript','orderedlist',
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
@@ -1528,7 +1528,7 @@ export default {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
-          
+
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
@@ -1754,64 +1754,84 @@ export default {
 
           let existsFlag = this.detectExistingFlag();
 
-          let windowSelRange = this.range;
-          // ILM-2108: - because the last tag in the selection was not cropped
-          // and was duplicated after adding a flag
-          let startElementWrapper = windowSelRange.startContainer.parentElement;
-          if (startElementWrapper.nodeName.toLowerCase() !== 'div') {
-            while (startElementWrapper.parentElement && startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
-              startElementWrapper = startElementWrapper.parentElement;
-            }
-            windowSelRange.setStartBefore(startElementWrapper);
-          }
-
-          let endElementWrapper = windowSelRange.endContainer.parentElement;
-          if (endElementWrapper.nodeName.toLowerCase() !== 'div') {
-            while (endElementWrapper.parentElement && endElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
-              endElementWrapper = endElementWrapper.parentElement;
-            }
-            windowSelRange.setEndAfter(endElementWrapper);
-          }
+          let windowSelRange = this.range.cloneRange();
+//           // ILM-2108: - because the last tag in the selection was not cropped
+//           // and was duplicated after adding a flag
+//           let startElementWrapper = windowSelRange.startContainer.parentElement;
+//           if (startElementWrapper.nodeName.toLowerCase() !== 'div') {
+//             while (startElementWrapper.parentElement && startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+//               startElementWrapper = startElementWrapper.parentElement;
+//             }
+//             windowSelRange.setStartBefore(startElementWrapper);
+//           }
+//
+//           let endElementWrapper = windowSelRange.endContainer.parentElement;
+//           if (endElementWrapper.nodeName.toLowerCase() !== 'div') {
+//             while (endElementWrapper.parentElement && endElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
+//               endElementWrapper = endElementWrapper.parentElement;
+//             }
+//             windowSelRange.setEndAfter(endElementWrapper);
+//           }
 
           let flag = document.createElement(this.flagEl);
           if (!existsFlag) {
             flag.dataset.flag = this.block.newFlag(windowSelRange, type, false, this.mode);
             flag.dataset.status = 'open';
-            flag.appendChild(windowSelRange.extractContents());
-            flag.childNodes.forEach((n, i) => {
-              if (n.dataset && n.dataset.map) {
-                let ch = this.$refs.blockContent.querySelector('[data-map="' + n.dataset.map + '"]');
-                if (ch) {
-                  //if (i == 0) {
-                    //n.innerHTML = ch.innerHTML+n.innerHTML
-                  //} else {
-                    //n.innerHTML+= ch.innerHTML
-                  //}
-                  if (!ch.innerHTML) {
-                    this.$refs.blockContent.removeChild(ch);
-                  } else if (!ch.innerHTML.trim()) {
-                    ch.dataset.map = ''
-                  } else {
-                    let map = n.dataset.map.split(',');
-                    map[0] = parseInt(map[0]);
-                    let half = parseInt(map[1]) / 2;
-                    let secondHalf = half;
-                    if (parseInt(secondHalf) != secondHalf) {
-                      half+=0.5;
-                      secondHalf-=0.5
-                    }
-                    if (i == 0) {
-                      ch.dataset.map = map[0] + ',' + half;
-                      n.dataset.map = map[0] + half + ',' + secondHalf;
-                    } else {
-                      n.dataset.map = map[0] + ',' + half;
-                      ch.dataset.map = map[0] + half + ',' + secondHalf;
-                    }
-                  }
+            //flag.appendChild(windowSelRange.extractContents());
+//             flag.childNodes.forEach((n, i) => {
+//               if (n.dataset && n.dataset.map) {
+//                 let ch = this.$refs.blockContent.querySelector('[data-map="' + n.dataset.map + '"]');
+//                 if (ch) {
+//                   //if (i == 0) {
+//                     //n.innerHTML = ch.innerHTML+n.innerHTML
+//                   //} else {
+//                     //n.innerHTML+= ch.innerHTML
+//                   //}
+//                   if (!ch.innerHTML) {
+//                     this.$refs.blockContent.removeChild(ch);
+//                   } else if (!ch.innerHTML.trim()) {
+//                     ch.dataset.map = ''
+//                   } else {
+//                     let map = n.dataset.map.split(',');
+//                     map[0] = parseInt(map[0]);
+//                     let half = parseInt(map[1]) / 2;
+//                     let secondHalf = half;
+//                     if (parseInt(secondHalf) != secondHalf) {
+//                       half+=0.5;
+//                       secondHalf-=0.5
+//                     }
+//                     if (i == 0) {
+//                       ch.dataset.map = map[0] + ',' + half;
+//                       n.dataset.map = map[0] + half + ',' + secondHalf;
+//                     } else {
+//                       n.dataset.map = map[0] + ',' + half;
+//                       ch.dataset.map = map[0] + half + ',' + secondHalf;
+//                     }
+//                   }
+//                 }
+//               }
+//             });
+
+            try {
+              windowSelRange.surroundContents(flag);
+            } catch(err) {
+              //console.log('err1', err);
+              windowSelRange.setEndAfter(windowSelRange.endContainer.parentElement);
+              try {
+                windowSelRange.surroundContents(flag);
+              } catch(err) {
+                //console.log('err2', err);
+                windowSelRange = this.range.cloneRange();
+                windowSelRange.setStartBefore(windowSelRange.startContainer.parentElement);
+                try {
+                  windowSelRange.surroundContents(flag);
+                } catch(err) {
+                  //console.log('err3', err);
                 }
               }
-            });
-            windowSelRange.insertNode(flag);
+            }
+
+
             flag.addEventListener('click', this.handleFlagClick);
             this.handleFlagClick({target: flag, layerY: ev.layerY, clientY: ev.clientY});
           } else {
