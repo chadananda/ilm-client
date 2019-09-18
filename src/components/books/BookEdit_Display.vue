@@ -1,8 +1,8 @@
 <template>
-  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]" @scroll="onScroll" v-hotkey="keymap">
-    <!--<BookDisplayHeader />-->
+  <div :class="['ilm-global-style ilm-book-styles container-fluid', metaStyles]">
+    <!--<BookDisplayHeader  @scroll="onScroll" v-hotkey="keymap"/>-->
     <!--<BookTOC />-->
-    <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
+<!--    <template v-for="(blockRid, listIdx) in parlistO.rIdsArray()">
 
       <book-block-display
         ref="viewBlocks"
@@ -13,7 +13,18 @@
         :loaded = "parlistO.getBlockByRid(blockRid) && parlistO.getBlockByRid(blockRid).loaded"
       ></book-block-display>
 
-    </template>
+    </template>-->
+
+    <SvelteBookDisplayInVue
+      :number="count"
+      :blocks="parlistO.rIdsArray()"
+      :parlistO="parlistO"
+      :parlist="parlist"
+      @magicalclick="handleClick"
+      @watch:number="setCount"
+    />
+    <button @click="handleClick">Increment - {{ count }}</button>
+
   </div>
 </template>
 
@@ -25,6 +36,9 @@ import BookBlockDisplay   from './BookBlockDisplay';
 import { mapGetters, mapState, mapActions } from 'vuex'
 import { BookBlock, setBlockParnum }    from '../../store/bookBlock'
 
+import SvelteBookDisplay from "./BookEdit_Display.svelte";
+import toVue from "svelte-adapter/vue";
+
 export default {
   name: 'BookEditDisplay',
   data () {
@@ -32,11 +46,14 @@ export default {
       page: 0,
       startId: false,
       fntCounter: 0,
-      onScrollEv: false
+      onScrollEv: false,
+
+      count: 0
     }
   },
   components: {
-    BookDisplayHeader, BookBlockDisplay/*InfiniteLoading,  BookTOC,*/
+    BookDisplayHeader, BookBlockDisplay,/*InfiniteLoading,  BookTOC,*/
+    SvelteBookDisplayInVue: toVue(SvelteBookDisplay, {}, "div")
   },
   computed: {
       ...mapGetters({
@@ -127,6 +144,15 @@ export default {
       'loadBook', 'loadBookBlocks', 'loadPartOfBookBlocks',
       'loopPreparedBlocksChain', 'putNumBlockOBatch', 'setCurrentBookCounters', 'loadBookToc'
     ]),
+
+
+    handleClick() {
+      this.count += 1;
+    },
+    setCount(n) {
+      this.count = n;
+    },
+
 
     scrollToBlock(blockId, setStartId = false)
     {
@@ -229,10 +255,10 @@ export default {
       if (bookId) {
         this.putNumBlockOBatch({bookId: bookId, bookNum: numMask, blockRid: blockRid})
         .then((blocks)=>{
-          for (let blockRef of this.$refs.viewBlocks) {
-            //blockRef.blockO = new LookupBlock(this.parlistO.getBlockByRid(blockRef.blockRid));
-            blockRef.$forceUpdate();
-          }
+//           for (let blockRef of this.$refs.viewBlocks) {
+//             //blockRef.blockO = new LookupBlock(this.parlistO.getBlockByRid(blockRef.blockRid));
+//             blockRef.$forceUpdate();
+//           }
         })
         .catch((err)=>{})
       }
@@ -318,9 +344,9 @@ export default {
                     }
                   });
                 }
-                for (let blockRef of this.$refs.viewBlocks) {
-                  blockRef.$forceUpdate();
-                }
+//                 for (let blockRef of this.$refs.viewBlocks) {
+//                   blockRef.$forceUpdate();
+//                 }
                 //console.timeEnd('loadBookMounted');
                 this.getAllBlocks(this.parlistO.meta.bookid, startBlock);
               });
