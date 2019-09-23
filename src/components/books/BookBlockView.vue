@@ -2027,7 +2027,7 @@ export default {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
-          
+
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
@@ -4179,7 +4179,7 @@ export default {
               ref = this;
             }
             if (ref) {// reset flag selection on save
-              
+
               ref.flagsSel = this.block.flags.find((flag)=>{
                 return flag._id === ref.flagsSel._id;
               });
@@ -4217,7 +4217,7 @@ export default {
       position: static;
     }
     &.-marked {
-      background-color: rgba(219, 255, 255, 0.5);
+      //background-color: rgba(219, 255, 255, 0.5);
     }
 }
 
