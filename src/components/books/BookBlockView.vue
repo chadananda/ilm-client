@@ -4217,7 +4217,9 @@ export default {
       position: static;
     }
     &.-marked {
-      //background-color: rgba(219, 255, 255, 0.5);
+      #booksarea:not(.narrate) & {
+         background-color: rgba(219, 255, 255, 0.5);
+      }
     }
 }
 
