@@ -2369,15 +2369,24 @@ export default {
               this.$parent.refreshBlockAudio();
             }
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);*/
-            this.blockPart.manual_boundaries = manual_boundaries;
-            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries);
+            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
+            this.blockPart.manual_boundaries = manual_boundaries.slice();
+            manual_boundaries = null;
             this.pushChange('manual_boundaries');
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
-            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
-            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
+            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
             //this.pushChange('content');
+            
+            
+            //this.blockPart.manual_boundaries = manual_boundaries.slice();
+            //this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
+            //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            //this.blockPart.content = this.$refs.blockContent.innerHTML;
+            //this.blockAudio.map = this.$refs.blockContent.innerHTML;
+            //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
           }
         }
         this.isAudioChanged = true;
@@ -2440,13 +2449,19 @@ export default {
           if (this.isSplittedBlock) {
             this.block.undoPartContent(this.blockPartIdx);
             this.block.undoPartAudiosrc(this.blockPartIdx);
+            this.block.undoPartManualBoundaries(this.blockPartIdx);
+            this.$root.$emit('for-audioeditor:reload-text', this.blockPart.content, this.blockPart);
           } else {
             this.block.undoContent();
             this.block.undoAudiosrc();
+            this.block.undoManualBoundaries();
+            //this.blockPart.content = this.block.content;
+            //this.blockPart.audiosrc = this.block.audiosrc;
+            this.blockPart.manual_boundaries = this.block.manual_boundaries;
+            this.$root.$emit('for-audioeditor:reload-text', this.block.content, this.block);
           }
           this.blockAudio.map = this.blockContent();
           this.blockAudio.src = this.blockAudiosrc('m4a');
-          this.block.undoManualBoundaries();
           this.isAudioChanged = isModified;
           if (!isModified) {
             this.unsetChange('audio');

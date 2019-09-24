@@ -589,6 +589,10 @@ class BookBlock {
   undoManualBoundaries() {
     this.undo('manual_boundaries');
   }
+  
+  undoPartManualBoundaries(partIdx) {
+    this.undo(`parts.${partIdx}.manual_boundaries`);
+  }
 
   setAudiosrcFootnote(idx, path, ver) {
     this.set('footnotes.' + idx + '.audiosrc', path);
