@@ -1598,6 +1598,7 @@
         }, 30),
 
         smoothDrag:_.debounce(function (ev) {
+          let moveIndex = $('.annotations-boxes .annotation-box .resize-handle').index(ev.target);
           $('.annotation-resize-pos').remove();// hide resize marker
           if (!this._isAnnotationsEditable()) {
             this.showModal('onWordRepositionMessage');
@@ -1731,7 +1732,10 @@
             });
           }
           this.audiosourceEditor.drawRequest();
-          this.$root.$emit('from-audioeditor:word-realign', map, this.blockId);
+          this.$root.$emit('from-audioeditor:word-realign', map, this.blockId, {
+            index: parseInt(moveIndex / 2),
+            position: moveIndex % 2
+          });
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
             if (shiftedIndex === this.wordSelectionMode || 

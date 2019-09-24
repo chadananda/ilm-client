@@ -2310,13 +2310,14 @@ export default {
           $('nav.fixed-bottom').removeClass('hidden');
         }
       },
-      evFromAudioeditorWordRealign(map, blockId) {
+      evFromAudioeditorWordRealign(map, blockId, shiftedInfo) {
         if (blockId == this.check_id) {
           this.audStop();
           //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
           if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-            let manual_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
-            this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
+            let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
+            let manual_boundaries = [];
+            this.$refs.blockContent.querySelectorAll('[data-map]').forEach((_w, i) => {
               if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
                 let _m = map.shift();
                 if (_m) {
@@ -2324,17 +2325,34 @@ export default {
                   let currentMap = $(_w).attr('data-map').split(',');
                   currentMap[0] = parseInt(currentMap[0]);
                   currentMap[1] = parseInt(currentMap[1]);
-                  if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
-                    if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
-                      manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+                  if (shiftedInfo.index == i) {
+                    if (shiftedInfo.position == 0) {
+                      //console.log(`PUSH 0 ${_m[0]}, ${currentMap[0]}`, $(_w).text())
+                      manual_boundaries.push(_m[0])
                     }
-                    manual_boundaries.push(_m[0]);
+                    if (shiftedInfo.position == 1) {
+                      //console.log(`PUSH 1 ${_m[1]}, ${currentMap[1]}`, $(_w).text())
+                      //console.log(`PUSH 1 ${_m[0] + _m[1]}, ${currentMap[0] + currentMap[1]}`, $(_w).text())
+                      manual_boundaries.push(_m[0] + _m[1])
+                    }
+                    if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
+                      if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+                      }
+                      //manual_boundaries.push(_m[0]);
+                    }
+                    if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
+                      if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+                      }
+                      //manual_boundaries.push(_m[0] + _m[1]);
+                    }
                   }
-                  if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
-                    if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
-                      manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
-                    }
-                    manual_boundaries.push(_m[0] + _m[1]);
+                  //console.log(current_boundaries, currentMap[0], manual_boundaries, _m[0])
+                  //console.log(current_boundaries.indexOf(currentMap[0]))
+                  if (current_boundaries.indexOf(currentMap[0]) !== -1 && manual_boundaries.indexOf(_m[0]) === -1) {
+                    manual_boundaries.push(_m[0]);
+                    //console.log(`PUSH ${_m[0]}`);
                   }
                   $(_w).attr('data-map', w_map)
                 }
