@@ -711,7 +711,9 @@ class BookBlock {
   undo(field) {
     if (this.history[field]) {
       if (field.indexOf('.') === -1) {
-        this[field] = this.history[field].pop();
+        if (Array.isArray(this.history[field]) && this.history[field].length > 0) {
+          this[field] = this.history[field].pop();
+        }
       } else {
         let f = null;
         let o = this;
@@ -721,7 +723,9 @@ class BookBlock {
           o = o[f];
         } while(path.length > 1);
         f = path.shift();
-        o[f] = this.history[field].pop();
+        if (Array.isArray(this.history[field]) && this.history[field].length > 0) {
+          o[f] = this.history[field].pop();
+        }
       }
     }
   }

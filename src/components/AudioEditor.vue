@@ -248,6 +248,8 @@
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
           let blockId = block ? block._id : null;
 
+          this.$root.$off('for-audioeditor:select', this.select);
+          this.$root.$off('for-audioeditor:reload-text', this._setText);
           this.$root.$on('for-audioeditor:select', this.select);
           this.$root.$on('for-audioeditor:reload-text', this._setText);
 
@@ -978,6 +980,7 @@
           }
         },
         save() {
+          this.history = [];
           if (this.mode == 'block') {
             if (this.isModified) {
               this.setProcessRun(true, 'save');
@@ -1003,6 +1006,7 @@
         },
         saveAndRealign() {
           if (this.isModified) {
+            this.history = [];
             this.setProcessRun(true, 'align');
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
             this.isModified = false;
