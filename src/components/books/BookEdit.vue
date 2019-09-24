@@ -2482,12 +2482,11 @@ export default {
     }
     .controls-bottom {
       display: flex;
-      margin-inline-start: 50px;
+      margin-inline-start: 185px;
     }
     .controls-bottom-wrapper {
-      width: 785px;
-      padding-inline-start: 135px;
 
+      width: 650px;
       margin: 0 auto;
       @media all and (max-width: 1100px) {
         margin: 0;

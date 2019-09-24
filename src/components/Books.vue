@@ -390,7 +390,7 @@ export default {
 
       .container-fluid {
         width: 100%;
-        overflow-x: auto;
+        overflow-x: hidden;
       }
     }
   }

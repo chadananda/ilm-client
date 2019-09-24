@@ -1,4 +1,5 @@
 <template>
+<div>
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
@@ -260,22 +261,6 @@
               </div>
             </div>
             <!--<div class="table-row ilm-block">-->
-            <div class="table-row controls-bottom" v-if="isSplittedBlock">
-              <div class="par-ctrl -hidden -right">
-                  <!--<span>isCompleted: {{isCompleted}}</span>-->
-                  <div class="save-block -right" @click="discardBlock"
-                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
-                    Discard
-                  </div>
-                  <div class="save-block -right"
-                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                  @click="assembleBlockProxy(true)">
-                    {{saveBlockLabel}}
-                  </div>
-              </div>
-              <!--<div class="-hidden">-->
-            </div>
-            <!--<div class="table-row controls-bottom">-->
         </div>
         <!--<div :class="['table-body', '-content',-->
     </div>
@@ -298,6 +283,25 @@
     </div>
     </modal>
   </div>
+  <div class="table-row controls-bottom" v-if="isSplittedBlock">
+    <div class="controls-bottom-wrapper">
+      <div class="par-ctrl -hidden -right">
+        <!--<span>isCompleted: {{isCompleted}}</span>-->
+        <div class="save-block -right" @click="discardBlock"
+             v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
+          Discard
+        </div>
+        <div class="save-block -right"
+        v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+        @click="assembleBlockProxy(true)">
+          {{saveBlockLabel}}
+        </div>
+      </div>
+      <!--<div class="-hidden">-->
+    </div>
+  </div>
+  <!--<div class="table-row controls-bottom">-->
+</div>
 </template>
 
 <script>
