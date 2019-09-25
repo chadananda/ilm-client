@@ -2288,12 +2288,13 @@ export default {
         if (blockId === this.check_id) {
           this.isAudioEditing = false;
           if (this.isAudioChanged) {
-            this.discardAudioEdit(this.footnoteIdx, false)
+            this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
               .then(() => {
                 this.isAudioChanged = false;
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
+                this.unsetChange('manual_boundaries');
 
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
               });
@@ -2470,6 +2471,7 @@ export default {
           if (!isModified) {
             this.unsetChange('audio');
             this.unsetChange('content');
+            this.unsetChange('manual_boundaries');
           }
         }
       },
@@ -2483,6 +2485,7 @@ export default {
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
+                this.unsetChange('manual_boundaries');
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
             });
         }

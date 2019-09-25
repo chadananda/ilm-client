@@ -1600,12 +1600,12 @@ export default {
                   this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, part);
                 }
               } else if (footnoteIdx === null) {
-                this.block.content = response.data.content;
+                this.block.setContent(response.data.content);
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.map = response.data.content;
                 //this.block.audiosrc = this.blockAudio.src;
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
-                this.block.manual_boundaries = response.data.manual_boundaries || [];
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
                 this.isAudioChanged = false;
                 this.unsetChange('audio');
                 if (reload) {
