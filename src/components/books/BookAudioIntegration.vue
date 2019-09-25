@@ -47,7 +47,7 @@
           <h5 v-if="audiobook.info && (!audiobook.importFiles || audiobook.importFiles.length == 0)"><i>{{audiobook.info}}</i></h5>
           <div class="file-catalogue-files-wrapper">
             <draggable v-model="audiobook.importFiles" class="file-catalogue-files" @end="listReorder">
-              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="audiofile.title.includes(filterFilename.trim())" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
+              <div v-for="(audiofile, index) in audiobook.importFiles" v-if="(audiofile.hasOwnProperty('title') && audiofile.title.includes(filterFilename.trim())) || audiofile.name.includes(filterFilename.trim())" :class="['audiofile', {'-selected': isAudiofileHighlighted(audiofile)}, {'-hidden': ((isAudiofileAligned(audiofile) && aad_filter == 'pending') || (!isAudiofileAligned(audiofile) && aad_filter == 'aligned'))}]" >
                 <template v-if="audiofile.title.includes(filterFilename.trim())">
                   <template v-if="audiofile.status == 'processing' && audiofile.title.includes(filterFilename.trim())">
                     <div class="audiofile-info">
@@ -75,12 +75,14 @@
                         <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                       </div>
                       <div class="audiofile-name">
-                        <span v-if="renaming !== audiofile.id"
-                              :class="['audiofile-name-edit']"
+                        <span v-if="audiofile.hasOwnProperty('duplicate')" @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)"><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
+                        <span v-if="renaming !== audiofile.id && !audiofile.hasOwnProperty('duplicate')"
+                              :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
                               @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
-                        <input id="rename-input" type="text" v-model="audiofile.title" class="audiofile-name-edit"
+                        <input id="rename-input" type="text" v-model="audiofile.title" 
+                             class="audiofile-name-edit"
                              @focusout="saveAudiobook()"
-                             v-else />
+                             v-else-if="!audiofile.hasOwnProperty('duplicate')" />
                       </div>
                       <div class="audiofile-player-controls">
                         <i v-if="audiofile.preview && audiofile.preview.end" class="fa fa-play-circle-o" v-on:click="playPreview(audiofile.id, 'end')"></i>
@@ -227,7 +229,8 @@
         audio_element: false,
         aad_sort: '',
         aad_filter: 'all',
-        filterFilename: ''
+        filterFilename: '',
+        highlightDuplicateId: ''
       }
     },
     mixins: [task_controls, api_config, access],
@@ -511,6 +514,13 @@
           }
         }
       }, 500),
+      duplicateAudiofileClick(id, duplicate_id, event) {
+        const el = this.$el.getElementsByClassName(duplicate_id.replace(/\./g, ''))[0];
+          if (el) {
+            this.highlightDuplicateId = duplicate_id.replace(/\./g, '');
+            el.scrollIntoView();
+          }
+      },
       playPreview(id, preview) {
         if (!this.allowEditing) {
           return;
@@ -955,7 +965,6 @@
       listReorder(info) {
         if (info && typeof info.newIndex !== 'undefined' && typeof info.oldIndex !== 'undefined' && info.newIndex !== info.oldIndex) {
           this.saveAudiobook([[info.oldIndex, info.newIndex]]);
-          console.log('indexes: ', info.oldIndex, info.newIndex)
         }
       },
       //field: 'name', 'date'; direction: 'asc', 'desc'
@@ -1087,6 +1096,7 @@
         }
       },
       isAudiofileHighlighted(audiofile) {
+        if (audiofile.id.replace(/\./g, '') == this.highlightDuplicateId) return true;
         if (this.alignCounter && this.alignCounter.blocks && audiofile.blockMap) {
           let hasMap = this.alignCounter.blocks.find(b => {
             return typeof audiofile.blockMap[b.blockid] !== 'undefined';
@@ -1268,6 +1278,7 @@
       },
       'blockSelection': {
         handler(val) {
+          this.highlightDuplicateId = '';
           var openAudio = this.$refs.panelAudiofile ? this.$refs.panelAudiofile.open : false;
           var openTTS = this.$refs.panelTTS ? this.$refs.panelTTS.open : false;
           if (!openAudio && openTTS) {

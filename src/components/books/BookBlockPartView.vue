@@ -705,7 +705,8 @@ export default {
           let parts = [];
           let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
           let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |[\r\n]|<br[^>]*>)(?![\\W]*[a-z])`, 'mg')
-          let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
+          let regExExcl = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
+          let regExAbbr = new RegExp(`[\\. ][A-ZА-Я]\\.$`);
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
           let regExLetters = new RegExp(`[${lettersPattern}]`);
           let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
@@ -718,8 +719,8 @@ export default {
             let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
             //var substrLower = str.substring(match.index);
             //console.log(`CHECK "${substr}"`);
-            //console.log('MATCH: ', substr.match(regExAbbr))
-            if (!substr.match(regExAbbr) && substr.match(regExLetters) && !substr.match(regExNewline)) {
+            //console.log('MATCH: ', substr.match(regExExcl))
+            if (!substr.match(regExExcl) && substr.match(regExLetters) && !substr.match(regExNewline) && !substr.match(regExAbbr)) {
               parts.push(substr);
               shift = pos;
             }
@@ -1327,36 +1328,15 @@ export default {
         } else if (this.mode === 'narrate') {
           return this.assembleBlockNarrate();
         }
-        if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
-          this.$root.$emit('from-block:save-and-realign-warning', () => {
-                  this.$root.$emit('hide-modal');
-                },
-                () => {
-                  this.$root.$emit('hide-modal');
-                  let i = setInterval(() => {
-                    if ($('.align-modal').length == 0) {
-                      clearInterval(i);
-                      this.assembleBlockProxy(false, false)
-                    }
-                  }, 50);
-                },
-                () => {
-                  this.$root.$emit('hide-modal');
-                  let i = setInterval(() => {
-                    if ($('.align-modal').length == 0) {
-                      clearInterval(i);
-                      this.assembleBlockProxy(false, true)
-                    }
-                  }, 50);
-                });
-          return;
-        }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isChanged = false;
         this.isSaving = true;
+        if (this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
+        }
         return this.$emit('save', this.blockPart, this.blockPartIdx, realign);
       },
 
@@ -2310,12 +2290,13 @@ export default {
         if (blockId === this.check_id) {
           this.isAudioEditing = false;
           if (this.isAudioChanged) {
-            this.discardAudioEdit(this.footnoteIdx, false)
+            this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
               .then(() => {
                 this.isAudioChanged = false;
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
+                this.unsetChange('manual_boundaries');
 
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
               });
@@ -2336,13 +2317,14 @@ export default {
           $('nav.fixed-bottom').removeClass('hidden');
         }
       },
-      evFromAudioeditorWordRealign(map, blockId) {
+      evFromAudioeditorWordRealign(map, blockId, shiftedInfo) {
         if (blockId == this.check_id) {
           this.audStop();
           //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
           if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-            let manual_boundaries = this.blockPart.manual_boundaries || [];
-            this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
+            let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
+            let manual_boundaries = [];
+            this.$refs.blockContent.querySelectorAll('[data-map]').forEach((_w, i) => {
               if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
                 let _m = map.shift();
                 if (_m) {
@@ -2350,17 +2332,34 @@ export default {
                   let currentMap = $(_w).attr('data-map').split(',');
                   currentMap[0] = parseInt(currentMap[0]);
                   currentMap[1] = parseInt(currentMap[1]);
-                  if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
-                    if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
-                      manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+                  if (shiftedInfo.index == i) {
+                    if (shiftedInfo.position == 0) {
+                      //console.log(`PUSH 0 ${_m[0]}, ${currentMap[0]}`, $(_w).text())
+                      manual_boundaries.push(_m[0])
                     }
-                    manual_boundaries.push(_m[0]);
+                    if (shiftedInfo.position == 1) {
+                      //console.log(`PUSH 1 ${_m[1]}, ${currentMap[1]}`, $(_w).text())
+                      //console.log(`PUSH 1 ${_m[0] + _m[1]}, ${currentMap[0] + currentMap[1]}`, $(_w).text())
+                      manual_boundaries.push(_m[0] + _m[1])
+                    }
+                    if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
+                      if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+                      }
+                      //manual_boundaries.push(_m[0]);
+                    }
+                    if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
+                      if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+                      }
+                      //manual_boundaries.push(_m[0] + _m[1]);
+                    }
                   }
-                  if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
-                    if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
-                      manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
-                    }
-                    manual_boundaries.push(_m[0] + _m[1]);
+                  //console.log(current_boundaries, currentMap[0], manual_boundaries, _m[0])
+                  //console.log(current_boundaries.indexOf(currentMap[0]))
+                  if (current_boundaries.indexOf(currentMap[0]) !== -1 && manual_boundaries.indexOf(_m[0]) === -1) {
+                    manual_boundaries.push(_m[0]);
+                    //console.log(`PUSH ${_m[0]}`);
                   }
                   $(_w).attr('data-map', w_map)
                 }
@@ -2377,13 +2376,15 @@ export default {
               this.$parent.refreshBlockAudio();
             }
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);*/
-            this.blockPart.manual_boundaries = manual_boundaries;
-            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries);
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
+            this.blockPart.manual_boundaries = manual_boundaries.slice();
+            manual_boundaries = null;
+            this.pushChange('manual_boundaries');
+            this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
-            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
-            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
+            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
             //this.pushChange('content');
 
 
@@ -2455,17 +2456,24 @@ export default {
           if (this.isSplittedBlock) {
             this.block.undoPartContent(this.blockPartIdx);
             this.block.undoPartAudiosrc(this.blockPartIdx);
+            this.block.undoPartManualBoundaries(this.blockPartIdx);
+            this.$root.$emit('for-audioeditor:reload-text', this.blockPart.content, this.blockPart);
           } else {
             this.block.undoContent();
             this.block.undoAudiosrc();
+            this.block.undoManualBoundaries();
+            //this.blockPart.content = this.block.content;
+            //this.blockPart.audiosrc = this.block.audiosrc;
+            this.blockPart.manual_boundaries = this.block.manual_boundaries;
+            this.$root.$emit('for-audioeditor:reload-text', this.block.content, this.block);
           }
           this.blockAudio.map = this.blockContent();
           this.blockAudio.src = this.blockAudiosrc('m4a');
-          this.block.undoManualBoundaries();
           this.isAudioChanged = isModified;
           if (!isModified) {
             this.unsetChange('audio');
             this.unsetChange('content');
+            this.unsetChange('manual_boundaries');
           }
         }
       },
@@ -2479,6 +2487,7 @@ export default {
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
+                this.unsetChange('manual_boundaries');
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
             });
         }
@@ -2523,6 +2532,22 @@ export default {
           }
         }
       },
+      evFromAudioeditorUnpinRight(position, blockId) {
+        if (this.check_id === blockId) {
+          if (Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
+            let oldBoundaries = this.blockPart.manual_boundaries;
+            this.blockPart.manual_boundaries = this.blockPart.manual_boundaries.filter(mb => {
+              return mb <= position;
+            });
+            this.block.setPartManualBoundaries(this.blockPartIdx, this.blockPart.manual_boundaries);
+            this.blockPart.content = this.$refs.blockContent.innerHTML;
+            this.blockAudio.map = this.blockPart.content;
+            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
+            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
+            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, oldBoundaries.length > this.blockPart.manual_boundaries.length ? true : false);
+          }
+        }
+      },
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
@@ -2535,6 +2560,7 @@ export default {
         this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
@@ -2547,6 +2573,7 @@ export default {
         this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
+        this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
       },
       //-- } -- end -- Events --//
 
@@ -2757,7 +2784,7 @@ export default {
             if (!endRange) {
               endRange = this._getClosestAligned(endElement, 1)
             }
-            if (startRange && endRange) {
+            if (startRange && endRange && this.isAudioEditing) {
               //console.log(startRange[0], endRange[0] + endRange[1])
               this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
             }

@@ -21,7 +21,7 @@
         </div>
         <div
           @click="handleFootnote($event)"
-          :class="[getClass, 'hide-archive']"
+          :class="[getClass, 'hide-archive', 'part-0']"
           :id="blockId"
           :data-parnum="parnum"
           :lang="blockView.language"

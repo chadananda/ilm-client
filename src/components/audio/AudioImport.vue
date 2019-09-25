@@ -234,8 +234,10 @@ export default {
               return _f.origName == file.name || _f.group_id === file.name;
             });
           }
+          this.addFileToUpload(file);
+          /*
           if (exist) {
-            this.uploadFilesDuplicates.push(file);
+            //this.uploadFilesDuplicates.push(file);
           } else {
             let existInCurrent = this.audioFiles.find(_f => {
               return _f.name == file.name;
@@ -244,6 +246,7 @@ export default {
               this.addFileToUpload(file);
             }
           }
+          */
       }
       
       /*Array

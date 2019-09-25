@@ -1600,12 +1600,12 @@ export default {
                   this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, part);
                 }
               } else if (footnoteIdx === null) {
-                this.block.content = response.data.content;
+                this.block.setContent(response.data.content);
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.map = response.data.content;
                 //this.block.audiosrc = this.blockAudio.src;
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
-                this.block.manual_boundaries = response.data.manual_boundaries || [];
+                this.block.setManualBoundaries(response.data.manual_boundaries || []);
                 this.isAudioChanged = false;
                 this.unsetChange('audio');
                 if (reload) {
@@ -1639,30 +1639,6 @@ export default {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
           return this.assembleBlockNarrate();
-        }
-        if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
-          this.$root.$emit('from-block:save-and-realign-warning', () => {
-                  this.$root.$emit('hide-modal');
-                },
-                () => {
-                  this.$root.$emit('hide-modal');
-                  let i = setInterval(() => {
-                    if ($('.align-modal').length == 0) {
-                      clearInterval(i);
-                      this.assembleBlockProxy(false, false)
-                    }
-                  }, 50);
-                },
-                () => {
-                  this.$root.$emit('hide-modal');
-                  let i = setInterval(() => {
-                    if ($('.align-modal').length == 0) {
-                      clearInterval(i);
-                      this.assembleBlockProxy(false, true)
-                    }
-                  }, 50);
-                });
-          return;
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -4590,7 +4566,6 @@ export default {
       position: relative;
 
       .par-ctrl {
-        width: 440px;
         /*background: green;*/
 
         display: flex;

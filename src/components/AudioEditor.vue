@@ -3,8 +3,9 @@
     <cntx-menu
       ref="waveformContext"
       dir="bottom">
-      <li v-on:click="setSelectionStart(null, $event)">Selection Start</li>
-      <li v-on:click="setSelectionEnd(null, $event)">Selection End</li>
+      <li v-on:click="setSelectionStart(null, $event)" v-if="mode == 'file'">Selection Start</li>
+      <li v-on:click="setSelectionEnd(null, $event)" v-if="mode == 'file'">Selection End</li>
+      <li v-on:click="unpinRight($event)" v-if="mode == 'block'">Unpin Rightward</li>
     </cntx-menu>
     <div class="waveform-playlist">
       <div class="close-player-container pull-right">
@@ -247,6 +248,8 @@
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
           let blockId = block ? block._id : null;
 
+          this.$root.$off('for-audioeditor:select', this.select);
+          this.$root.$off('for-audioeditor:reload-text', this._setText);
           this.$root.$on('for-audioeditor:select', this.select);
           this.$root.$on('for-audioeditor:reload-text', this._setText);
 
@@ -752,7 +755,7 @@
             saveToHistory = true;
           }
           if (saveToHistory && this.content && this.audiofile) {
-            this._addHistory(this.content, this.audiofile);
+            this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
           }
           this.load(audio, text, block ? block : this.block);
         },
@@ -977,6 +980,7 @@
           }
         },
         save() {
+          this.history = [];
           if (this.mode == 'block') {
             if (this.isModified) {
               this.setProcessRun(true, 'save');
@@ -1000,31 +1004,9 @@
             }
           }
         },
-        saveAndRealign(check_realign = true) {
+        saveAndRealign() {
           if (this.isModified) {
-            if (check_realign && this.block && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
-              this.$root.$emit('from-block:save-and-realign-warning', () => {
-                this.$root.$emit('hide-modal');
-                this.$root.$emit('for-audioeditor:set-process-run', false);
-              }, () => {
-                this.$root.$emit('hide-modal');
-                let i = setInterval(() => {
-                  if ($('.align-modal').length == 0) {
-                    clearInterval(i);
-                    this.save();
-                  }
-                }, 50);
-              }, () => {
-                this.$root.$emit('hide-modal');
-                let i = setInterval(() => {
-                  if ($('.align-modal').length == 0) {
-                    clearInterval(i);
-                    this.saveAndRealign(false);
-                  }
-                }, 50);
-              });
-              return;
-            }
+            this.history = [];
             this.setProcessRun(true, 'align');
             this.$root.$emit('from-audioeditor:save-and-realign', this.blockId);
             this.isModified = false;
@@ -1043,7 +1025,8 @@
               this.isModified = false;
             }
             if (record) {
-              this.setAudio(record.audio, record.text, false);
+              //this.block.manual_boundaries = record.manual_boundaries ? record.manual_boundaries.slice() : [];
+              //this.setAudio(record.audio, record.text, false);
               this.$root.$emit('from-audioeditor:undo', this.blockId, record.audio, record.text, this.isModified);
             }
           } else if (this.mode === 'file') {
@@ -1298,8 +1281,12 @@
             //this._showSelectionBorders(true);
           }
         },
-        _addHistory(text, audio) {
-          this.history.push({text: text, audio: audio});
+        _addHistory(text, audio, manual_boundaries) {
+          this.history.push({
+            text: text, 
+            audio: audio, 
+            manual_boundaries: manual_boundaries
+          });
           if (this.history.length >= 6) {
             this.history.shift();
             this.isHistoryFull = false;
@@ -1314,7 +1301,11 @@
             this._showSelectionBorders();
           }
         },
-        _setText(text, block) {
+        _setText(text, block, saveToHistory = false) {
+          if (saveToHistory && this.content && this.audiofile) {
+            this.isModified = true;
+            this._addHistory(this.content, this.audiofile, block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
+          }
           this.content = text;
           let self = this;
           let annotations = [];
@@ -1494,25 +1485,23 @@
           return false;
         },
         onContext: function(e) {
-          if (this.mode == 'file') {
-            if (this.mode === 'file' &&
-                    typeof this.selection.start !== 'undefined' &&
-                    typeof this.selection.end !== 'undefined') {
-              let t = setInterval(() => {
-                if ($('.selection.point').length > 0) {
-                  this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
-                  clearInterval(t);
-                }
-              }, 50);
-            }
-            this.contextPosition = e.clientX;
-            $('.medium-editor-toolbar').each(function(){
-                $(this).css('display', 'none');
-            });
-            if (this.$refs.waveformContext) {
-              this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
-              $('body').one('click', this.$refs.waveformContext.close);
-            }
+          if (this.mode === 'file' &&
+                  typeof this.selection.start !== 'undefined' &&
+                  typeof this.selection.end !== 'undefined') {
+            let t = setInterval(() => {
+              if ($('.selection.point').length > 0) {
+                this.plEventEmitter.emit('select', this.selection.start, this.selection.end);
+                clearInterval(t);
+              }
+            }, 50);
+          }
+          this.contextPosition = e.clientX;
+          $('.medium-editor-toolbar').each(function(){
+              $(this).css('display', 'none');
+          });
+          if (this.$refs.waveformContext) {
+            this.$refs.waveformContext.open(e, {}, 0, e.layerY - 80);
+            $('body').one('click', this.$refs.waveformContext.close);
           }
         },
         setSelectionStart(val, event) {
@@ -1609,6 +1598,7 @@
         }, 30),
 
         smoothDrag:_.debounce(function (ev) {
+          let moveIndex = $('.annotations-boxes .annotation-box .resize-handle').index(ev.target);
           $('.annotation-resize-pos').remove();// hide resize marker
           if (!this._isAnnotationsEditable()) {
             this.showModal('onWordRepositionMessage');
@@ -1641,7 +1631,7 @@
           let shifted = false;
 
           if (shiftedAnnotation) {
-            this._addHistory(this.content, this.audiofile);
+            this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
             if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
               let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
               let found = false;
@@ -1742,7 +1732,10 @@
             });
           }
           this.audiosourceEditor.drawRequest();
-          this.$root.$emit('from-audioeditor:word-realign', map, this.blockId);
+          this.$root.$emit('from-audioeditor:word-realign', map, this.blockId, {
+            index: parseInt(moveIndex / 2),
+            position: moveIndex % 2
+          });
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
             if (shiftedIndex === this.wordSelectionMode || 
@@ -1768,6 +1761,11 @@
         flush() {
           this.setProcessRun(false);
           this.isModified = false;
+        },
+        
+        unpinRight(event) {
+          let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+          this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
         }
 
       },
