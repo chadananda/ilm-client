@@ -16,10 +16,10 @@
               :class="[getClass]"/>
 
             <div v-else-if="block.type == 'illustration'"
-            :class="['table-body illustration-block']">
+              :class="['table-body illustration-block']">
               <img v-if="block.illustration" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
-              :height="illustrationHeight"
-              :class="[getClass]"/>
+                :height="illustrationHeight"
+                :class="[getClass]"/>
               <div :class="['table-row drag-uploader', 'no-picture', {'__hidden': isChanged && !isIllustrationChanged}]" v-if="allowEditing">
                 <div class="preview-container"></div>
               </div>
@@ -35,8 +35,8 @@
 
             <template v-else>
               <div v-cloak
-              :class="['content-wrap-preview', block.getClass(mode), {'js-hidden': blockO.loaded !== true}]"
-              v-html="blockPart.content">
+                :class="['content-wrap-preview', block.getClass(mode), {'js-hidden': blockO.loaded !== true}]"
+                v-html="blockPart.content">
               </div>
             </template>
             <!--<div class="content-wrap">-->
@@ -44,10 +44,12 @@
         </div>
         <!--<div :class="['table-row ilm-block']">-->
         <div class="table-row controls-bottom" v-if="isSplittedBlock">
-          <div class="-left">
-            <span>
-              <i :class="['glyphicon']"></i>
-            </span>
+          <div class="controls-bottom-wrapper">
+            <div class="-left">
+              <span>
+                <i :class="['glyphicon']"></i>
+              </span>
+            </div>
           </div>
         </div>
 
