@@ -2420,13 +2420,16 @@ export default {
       position: relative;
       .-content {
         width: 785px;
-        margin: 0px auto;
+        margin-left: auto;
+        margin-right: auto;
         @media all and (max-width: 1100px) {
-           margin: 0;
+           margin-left: 0;
+           margin-right: 0;
         }
         .meta-visible & {
            @media all and (max-width: 1540px) {
-              margin: 0;
+              margin-left: 0;
+              margin-right: 0;
            }
         }
       }
@@ -2487,13 +2490,16 @@ export default {
     .controls-bottom-wrapper {
 
       width: 650px;
-      margin: 0 auto;
+      margin-left: auto;
+      margin-right: auto;
       @media all and (max-width: 1100px) {
-        margin: 0;
+        margin-left: 0;
+        margin-right: 0;
       }
       .meta-visible & {
         @media all and (max-width: 1540px) {
-          margin: 0;
+          margin-left: 0;
+          margin-right: 0;
         }
       }
     }

@@ -56,12 +56,14 @@
       <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
     </div>
   </div>
-  <div class="table-row controls-bottom" v-if="isSplittedBlock">
-    <div class="controls-bottom-wrapper">
-      <div class="-left">
-        <span>
-          <i :class="['glyphicon']"></i>
-        </span>
+  <div class="table-body">
+    <div class="table-row controls-bottom" v-if="isSplittedBlock">
+      <div class="controls-bottom-wrapper">
+        <div class="-left">
+          <span>
+            <i :class="['glyphicon']"></i>
+          </span>
+        </div>
       </div>
     </div>
   </div>

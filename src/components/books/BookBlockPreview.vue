@@ -52,17 +52,20 @@
 
         </div>
         <!--<div :class="['table-body', '-content']">-->
-        <div class="table-row controls-bottom">
-          <div class="controls-bottom-wrapper">
-            <div class="-left">
-              <span>
-                <i :class="['glyphicon']"></i>
-              </span>
+        <div class="table-body">
+          <div class="table-row controls-bottom">
+            <div class="controls-bottom-wrapper">
+              <div class="-left">
+                <span>
+                  <i :class="['glyphicon']"></i>
+                </span>
+              </div>
             </div>
           </div>
+          <!--<div :class="['table-cell']">-->
         </div>
       </div>
-      <!--<div :class="['table-cell']">-->
+
       <div class="table-cell controls-right"></div>
 
     </div>

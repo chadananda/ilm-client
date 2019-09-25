@@ -1,7 +1,7 @@
 <template>
 <div>
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
-    :class="['table-body -block -subblock', blockOutPaddings]">
+    :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
       <div class="table-row">
