@@ -283,24 +283,26 @@
     </div>
     </modal>
   </div>
-  <div class="table-row controls-bottom" v-if="isSplittedBlock">
-    <div class="controls-bottom-wrapper">
-      <div class="par-ctrl -hidden -right">
-        <!--<span>isCompleted: {{isCompleted}}</span>-->
-        <div class="save-block -right" @click="discardBlock"
-             v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
-          Discard
+  <div class="table-body">
+    <div class="table-row controls-bottom" v-if="isSplittedBlock">
+      <div class="controls-bottom-wrapper">
+        <div class="par-ctrl -hidden -right">
+          <!--<span>isCompleted: {{isCompleted}}</span>-->
+          <div class="save-block -right" @click="discardBlock"
+               v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
+            Discard
+          </div>
+          <div class="save-block -right"
+          v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+          @click="assembleBlockProxy(true)">
+            {{saveBlockLabel}}
+          </div>
         </div>
-        <div class="save-block -right"
-        v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-        @click="assembleBlockProxy(true)">
-          {{saveBlockLabel}}
-        </div>
+        <!--<div class="-hidden">-->
       </div>
-      <!--<div class="-hidden">-->
     </div>
+    <!--<div class="table-row controls-bottom">-->
   </div>
-  <!--<div class="table-row controls-bottom">-->
 </div>
 </template>
 
@@ -2384,8 +2386,8 @@ export default {
             this.blockAudio.map = this.blockPart.content;
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
             //this.pushChange('content');
-            
-            
+
+
             //this.blockPart.manual_boundaries = manual_boundaries.slice();
             //this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
             //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
