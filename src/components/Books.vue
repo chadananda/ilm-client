@@ -345,7 +345,7 @@ export default {
 
   .metaedit {
     flex-grow: 1;
-    min-width: 440px;
+    min-width: 445px;
     max-width: 27%;
     overflow-y: auto;
   }
