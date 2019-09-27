@@ -360,6 +360,7 @@ export default {
       //this.isUploading = true
       if (!this.audiobook._id) {
         // first upload by editor
+        toUpload.autoAlign = this.autoAlign;
         api.post(api_url, toUpload, {}).then((response) => {
           if (response.status===200) {
             this.uploadFinished = true
