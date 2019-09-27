@@ -855,7 +855,7 @@ export const store = new Vuex.Store({
             return response;
           }, function (error) {
             let session = state.auth.getSession();
-            if ((error.response && error.response.status === 401) && session && session.token) {// if response is absent then it means that server is stopped
+            if ((!error.response || error.response.status === 401) && session && session.token) {// if response is absent then it means that server is stopped
               location.href = '/';
             } else {
               return Promise.reject(error);

@@ -1,5 +1,5 @@
 <template>
-  <div id='booksarea' :class="bookMode"><!-- v-cloak-->
+  <div id='booksarea'><!-- v-cloak-->
     <div :class="['content-meta-wrapper', metaVisible ? 'meta-visible' : '']">
 
       <BookEditToolbar v-if="isEditMode()"
@@ -101,7 +101,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['bookMode', 'bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian']),
+    ...mapGetters(['bookEditMode', 'currentBook', 'currentBookMeta', 'currentBookCounters', 'jobStatusError', 'adminOrLibrarian']),
   },
 
   watch: {
@@ -339,13 +339,10 @@ export default {
   display:flex;
   flex-direction: row;
   overflow-y:auto;
-  &.narrate {
-    overflow-x: auto;
-  }
 
   .metaedit {
     flex-grow: 1;
-    min-width: 445px;
+    min-width: 440px;
     max-width: 27%;
     overflow-y: auto;
   }
@@ -354,12 +351,9 @@ export default {
     flex-grow: 2;
     display:flex;
     flex-direction: column;
-    overflow: hidden;
-    .narrate& {
-      min-width: 860px;
-    }
-    .edit& {
-      min-width: 700px;
+
+    &.meta-visible {
+      max-width: 73%;
     }
 
     .toolbar {
@@ -377,11 +371,6 @@ export default {
         min-width: 460px;
         text-align: right;
       }
-      .title {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
     }
 
     .scroll-wrapper {
@@ -392,7 +381,6 @@ export default {
 
       .container-fluid {
         width: 100%;
-        overflow-x: hidden;
       }
     }
   }

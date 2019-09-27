@@ -1,7 +1,7 @@
 <template>
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
-
+  
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
       <div v-for="(viewObj, listIdx) in getListObjs"
@@ -1893,6 +1893,30 @@ export default {
           this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
         }
       }
+    },
+    saveAndRealignBlockModal(handlerCancel, handlerSave, handlerSaveAndRealign) {
+      this.$root.$emit('show-modal', {
+        title: `Manually adjusted word positions won’t be saved at “Save & Re-align” action.<br>Are you sure you want to save and realign the block?`,
+        text: '',
+        buttons: [
+          {
+            title: 'Cancel',
+            handler: handlerCancel,
+          },
+          {
+            title: 'Save',
+            handler: handlerSave,
+          },
+          {
+            title: 'Save & Re-align',
+            handler: handlerSaveAndRealign,
+            'class': 'btn btn-primary',
+            default: true
+          }
+        ],
+        class: ['align-modal']
+      });
+      return;
     }
   },
   events: {
@@ -1974,6 +1998,7 @@ export default {
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
+      this.$root.$on('from-block:save-and-realign-warning', this.saveAndRealignBlockModal);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -1997,6 +2022,7 @@ export default {
     this.$root.$off('book-reimported', this.bookReimported);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
+    this.$root.$off('from-block:save-and-realign-warning', this.saveAndRealignBlockModal);
   },
   watch: {
     'meta._id': {
@@ -2388,32 +2414,20 @@ export default {
     .-subblock {
       position: relative;
       .-content {
-        width: 785px;
-        margin-left: auto;
-        margin-right: auto;
-        @media all and (max-width: 1100px) {
-           margin-left: 0;
-           margin-right: 0;
-        }
-        .meta-visible & {
-           @media all and (max-width: 1540px) {
-              margin-left: 0;
-              margin-right: 0;
-           }
-        }
+        width: 650px;
+        /*margin: 0px auto;*/
       }
       .controls-left {
         &.sub-parnum {
-          width: 50px;
-          min-width: 50px;
+          width: 5%;
+          max-width: 70px;
           .sub-parnum-main {
             font-size: 24px;
             font-weight: bold;
           }
         }
         &.audio-controls {
-          width: 135px;
-          min-width: 135px;
+          width: 20%;
           .table-body {
             width: 100px;
             margin: 0px 0px 0px auto;
@@ -2453,24 +2467,8 @@ export default {
       }
     }
     .controls-bottom {
-      display: flex;
-      margin-inline-start: 185px;
-    }
-    .controls-bottom-wrapper {
-
       width: 650px;
-      margin-left: auto;
-      margin-right: auto;
-      @media all and (max-width: 1100px) {
-        margin-left: 0;
-        margin-right: 0;
-      }
-      .meta-visible & {
-        @media all and (max-width: 1540px) {
-          margin-left: 0;
-          margin-right: 0;
-        }
-      }
+      margin-left: 25%;
     }
     .-subblock {
       .controls-bottom {
@@ -2507,10 +2505,6 @@ export default {
     [data-author] {
       color: inherit;
       font-style: inherit;
-    }
-    .hr {
-      color: #bebebe;
-      filter: opacity(0.5);
     }
   }
 }

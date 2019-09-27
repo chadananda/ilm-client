@@ -1,82 +1,76 @@
 <template>
-<div>
-  <div ref="viewBlock" class="block-preview">
-    <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
-      :class="['table-body -block -mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework]">
+<div ref="viewBlock" class="block-preview">
+  <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
+    :class="['table-body -block -mode-' + mode, blockOutPaddings, '-voicework-'  +block.voicework]">
 
-      <div :class="['table-cell', 'controls-left']">
-        <div class="table-row"></div>
-        <div class="table-row check-row"></div>
-      </div>
-      <!--<div :class="['table-cell', 'controls-left']">-->
-      <div class="-content-block" :class="['table-cell', {'completed': isCompleted}]">
-        <div :class="['table-body', '-content', '-langblock-' + getBlockLang]">
-          <div class="table-row-flex controls-top"></div>
-          <!--<div class="table-row-flex controls-top">-->
-          <template v-for="(blockPart, blockPartIdx) in blockParts">
-            <BookBlockPartPreview
-              :blockRid = "blockRid"
-              :blockId = "blockId"
-              :blockO = "blockO"
-              :block = "block"
-              :blockPart="blockPart"
-              :blockPartIdx="blockPartIdx"
-              :id="'v-' + blockId + '-' + blockPartIdx"
-              :isSplittedBlock="isSplittedBlock"
-              ></BookBlockPartPreview>
-          </template>
-          <!--<div :class="['table-row ilm-block']">-->
+    <div :class="['table-cell', 'controls-left']">
+      <div class="table-row"></div>
+      <div class="table-row check-row"></div>
+    </div>
+    <!--<div :class="['table-cell', 'controls-left']">-->
+    <div :class="['table-cell', {'completed': isCompleted}]">
+      <div :class="['table-body', '-content', '-langblock-' + getBlockLang]">
+        <div class="table-row-flex controls-top"></div>
+        <!--<div class="table-row-flex controls-top">-->
+        <template v-for="(blockPart, blockPartIdx) in blockParts">
+          <BookBlockPartPreview
+            :blockRid = "blockRid"
+            :blockId = "blockId"
+            :blockO = "blockO"
+            :block = "block"
+            :blockPart="blockPart"
+            :blockPartIdx="blockPartIdx"
+            :id="'v-' + blockId + '-' + blockPartIdx"
+            :isSplittedBlock="isSplittedBlock"
+            ></BookBlockPartPreview>
+        </template>
+        <!--<div :class="['table-row ilm-block']">-->
 
-          <div class="table-row content-footnotes"
-            v-if="block.footnotes.length > 0 && mode !== 'narrate'">
-            <div class="table-body footnote"
-              v-for="(footnote, ftnIdx) in block.footnotes">
+        <div class="table-row content-footnotes"
+          v-if="block.footnotes.length > 0 && mode !== 'narrate'">
+          <div class="table-body footnote"
+            v-for="(footnote, ftnIdx) in block.footnotes">
 
-              <div v-if="allowEditing" :class="['table-row controls-top', {'completed': isCompleted}]">
-              </div>
-
-              <div class="table-row">
-                <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                <div
-                  :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}, '-langftn-' + getFtnLang(footnote.language)]"
-                  v-html="footnote.content">
-                </div>
-                <div class="table-cell -control"></div>
-              </div>
-              <!--<div class="table-row">-->
-
+            <div v-if="allowEditing" :class="['table-row controls-top', {'completed': isCompleted}]">
             </div>
-            <!--<div class="table-body footnote"-->
-          </div>
-          <!--<div class="table-row content-footnotes"-->
 
-        </div>
-        <!--<div :class="['table-body', '-content']">-->
-        <div class="table-body">
-          <div class="table-row controls-bottom">
-            <div class="controls-bottom-wrapper">
-              <div class="-left">
-                <span>
-                  <i :class="['glyphicon']"></i>
-                </span>
+            <div class="table-row">
+              <div class="table-cell -num">{{ftnIdx+1}}.</div>
+              <div
+                :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}, '-langftn-' + getFtnLang(footnote.language)]"
+                v-html="footnote.content">
               </div>
+              <div class="table-cell -control"></div>
             </div>
-          </div>
-          <!--<div :class="['table-cell']">-->
-        </div>
-      </div>
+            <!--<div class="table-row">-->
 
-      <div class="table-cell controls-right"></div>
+          </div>
+          <!--<div class="table-body footnote"-->
+        </div>
+        <!--<div class="table-row content-footnotes"-->
+
+        <div class="table-row controls-bottom">
+          <div class="-left">
+            <span>
+              <i :class="['glyphicon']"></i>
+            </span>
+          </div>
+        </div>
+
+      </div>
+      <!--<div :class="['table-body', '-content']">-->
+    </div>
+    <!--<div :class="['table-cell']">-->
+    <div class="table-cell controls-right"></div>
+
+  </div>
+  <!--<div v-if="loaded === true || blockO.loaded === true"-->
+  <template v-else v-for="(blockPart, blockPartIdx) in blockParts">
+    <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
+    <div :id="'v-' + blockId + '-' + blockPartIdx" :class="['content-process-run', 'preloader-loading']">
 
     </div>
-    <!--<div v-if="loaded === true || blockO.loaded === true"-->
-    <template v-else v-for="(blockPart, blockPartIdx) in blockParts">
-      <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
-      <div :id="'v-' + blockId + '-' + blockPartIdx" :class="['content-process-run', 'preloader-loading']">
-
-      </div>
-    </template>
-  </div>
+  </template>
 </div>
 </template>
 

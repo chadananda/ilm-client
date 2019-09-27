@@ -31,7 +31,7 @@
           </div>
         </div>
     </div>
-    <div class="table-cell -content-block" :class="{'completed': isCompleted}" >
+    <div class="table-cell" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
@@ -411,42 +411,40 @@
             </div>
 
             <div class="table-row controls-bottom">
-              <div class="controls-bottom-wrapper">
-                <div class="-hidden -left">
-                  <span v-if="showBlockFlag">
-                    <i :class="['glyphicon', 'glyphicon-flag']"
-                      ref="blockFlagControl"
-                      @click="handleBlockFlagClick"
-                    ></i>
-                  </span>
-                </div>
-                <div class="par-ctrl -hidden -right">
-                    <div class="save-block -right" @click="discardBlock"
-                        v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
-                      Discard
-                    </div>
-                    <div class="save-block -right"
-                    v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                    @click="assembleBlockProxy(true)">
-                      {{saveBlockLabel}}
-                    </div>
-                    <template v-if="!isCompleted">
-                    <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
-                      @click.prevent="reworkBlock">
-                      Need work</div>
-                    <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
-                      @click.prevent="approveBlock">
-                      Approve</div>
+              <div class="-hidden -left">
+                <span>
+                  <i :class="['glyphicon', 'glyphicon-flag']"
+                    ref="blockFlagControl"
+                    @click="handleBlockFlagClick"
+                  ></i>
+                </span>
+              </div>
+              <div class="par-ctrl -hidden -right">
+                  <div class="save-block -right" @click="discardBlock"
+                       v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
+                    Discard
+                  </div>
+                  <div class="save-block -right"
+                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+                  @click="assembleBlockProxy(true)">
+                    {{saveBlockLabel}}
+                  </div>
+                  <template v-if="!isCompleted">
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
+                    @click.prevent="reworkBlock">
+                    Need work</div>
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
+                    @click.prevent="approveBlock">
+                    Approve</div>
 
-                    <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
-                      @click.prevent="markBlock">
-                      Approve</div>
-                    <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
-                      Spot check
-                    </div>
+                  <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
+                    @click.prevent="markBlock">
+                    Approve</div>
+                  <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
+                    Spot check
+                  </div>
 
-                    </template>
-                </div>
+                  </template>
               </div>
               <!--<div class="-hidden">-->
             </div>
@@ -987,25 +985,6 @@ export default {
           return true;
         }
         return false;
-      },
-      showBlockFlag: {
-        get() {
-          if (this.mode !== 'narrate') {
-            return true;
-          }
-          let task = this.tc_getBlockTask(this.block.blockid);
-          if (task) {
-            return true;
-          }
-          let blockFlag = Array.isArray(this.block.flags) ? this.block.flags.find(blk => {
-            let parts = Array.isArray(blk.parts) ? blk.parts.filter(part => {
-              return part.status !== 'hidden';
-            }) : [];
-            return blk._id === this.block.blockid && parts.length > 0;
-          }) : false;
-          return blockFlag;
-        },
-        cache: false
       }
   },
   mounted: function() {
@@ -1600,12 +1579,12 @@ export default {
                   this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, part);
                 }
               } else if (footnoteIdx === null) {
-                this.block.setContent(response.data.content);
+                this.block.content = response.data.content;
                 this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
                 this.blockAudio.map = response.data.content;
                 //this.block.audiosrc = this.blockAudio.src;
                 this.blockAudio.src = this.block.getAudiosrc('m4a');
-                this.block.setManualBoundaries(response.data.manual_boundaries || []);
+                this.block.manual_boundaries = response.data.manual_boundaries || [];
                 this.isAudioChanged = false;
                 this.unsetChange('audio');
                 if (reload) {
@@ -1639,6 +1618,30 @@ export default {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
           return this.assembleBlockNarrate();
+        }
+        if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
+          this.$root.$emit('from-block:save-and-realign-warning', () => {
+                  this.$root.$emit('hide-modal');
+                },
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockProxy(false, false)
+                    }
+                  }, 50);
+                },
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockProxy(false, true)
+                    }
+                  }, 50);
+                });
+          return;
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -1700,8 +1703,7 @@ export default {
               description: this.block.description,
               voicework: this.block.voicework,
               content: this.block.content,
-              blockid: this.block.blockid,
-              type: this.block.type
+              blockid: this.block.blockid
             });
           }
         } else {
@@ -1962,6 +1964,30 @@ export default {
           });
       },
       assembleBlockNarrate(check_realign = true, realign = false) {
+        if (check_realign === true && this.needsRealignment && Array.isArray(this.block.manual_boundaries) && this.block.manual_boundaries.length > 0) {
+          this.$root.$emit('from-block:save-and-realign-warning', () => {
+                  this.$root.$emit('hide-modal');
+                }, 
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockNarrate(false, false)
+                    }
+                  }, 50);
+                }, 
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockNarrate(false, true)
+                    }
+                  }, 50);
+                });
+          return;
+        }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
@@ -1977,7 +2003,7 @@ export default {
           });
       },
       clearBlockContent: function(content = false) {
-        if (content === false) {
+        if (!content) {
           content = '';
           this.$refs.blocks.forEach((blk, idx) => {
             let cnt = blk.clearBlockContent();
@@ -2003,7 +2029,7 @@ export default {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
-
+          
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
@@ -4155,7 +4181,7 @@ export default {
               ref = this;
             }
             if (ref) {// reset flag selection on save
-
+              
               ref.flagsSel = this.block.flags.find((flag)=>{
                 return flag._id === ref.flagsSel._id;
               });
@@ -4193,9 +4219,7 @@ export default {
       position: static;
     }
     &.-marked {
-      #booksarea:not(.narrate) & {
-         background-color: rgba(219, 255, 255, 0.5);
-      }
+      background-color: rgba(219, 255, 255, 0.5);
     }
 }
 
@@ -4372,6 +4396,7 @@ export default {
     &.completed {
       background: #EFEFEF;
       border-radius: 7px;
+      padding: 0;
     }
 
 }

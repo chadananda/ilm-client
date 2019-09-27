@@ -589,10 +589,6 @@ class BookBlock {
   undoManualBoundaries() {
     this.undo('manual_boundaries');
   }
-  
-  undoPartManualBoundaries(partIdx) {
-    this.undo(`parts.${partIdx}.manual_boundaries`);
-  }
 
   setAudiosrcFootnote(idx, path, ver) {
     this.set('footnotes.' + idx + '.audiosrc', path);
@@ -649,7 +645,7 @@ class BookBlock {
     let result = this.type;
     if (this.classes && typeof this.classes === 'object') {
       for (let key in this.classes) {
-        if (key && (mode !== 'narrate' || key === 'whitespace' || (this.type === 'hr' && key === 'size'))) {
+        if (key && (mode !== 'narrate' || key === 'whitespace')) {
           if (this.classes[key] && this.classes[key] !== '') result += ' '+ this.classes[key];
           else if (Object.keys(BlockTypes[this.type])[0] === '') result += ' ' + key.replace(/\s/g, '-');
         }
@@ -715,9 +711,7 @@ class BookBlock {
   undo(field) {
     if (this.history[field]) {
       if (field.indexOf('.') === -1) {
-        if (Array.isArray(this.history[field]) && this.history[field].length > 0) {
-          this[field] = this.history[field].pop();
-        }
+        this[field] = this.history[field].pop();
       } else {
         let f = null;
         let o = this;
@@ -727,9 +721,7 @@ class BookBlock {
           o = o[f];
         } while(path.length > 1);
         f = path.shift();
-        if (Array.isArray(this.history[field]) && this.history[field].length > 0) {
-          o[f] = this.history[field].pop();
-        }
+        o[f] = this.history[field].pop();
       }
     }
   }

@@ -1,7 +1,6 @@
 <template>
-<div>
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
-    :class="['table-body -block -subblock block-preview', blockOutPaddings]">
+    :class="['table-body -block -subblock', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
     <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'">
       <div class="table-row">
@@ -10,7 +9,39 @@
         </div>
       </div>
     </div>
-    <div class="table-cell" :class="{'completed': isCompleted}">
+    <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
+      <div class="table-body">
+        <div class="table-row">
+          <div class="table-cell -hidden-subblock" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged">
+            <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
+          </div>
+          <template v-if="tc_showBlockNarrate(block.blockid) && !isAudStarted">
+            <div class="table-cell -hidden-subblock">
+              <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
+            </div>
+          </template>
+          <template v-if="player && blockAudio.src && !isRecording">
+            <div class="table-cell -hidden-subblock" v-if="!isAudStarted">
+              <i class="fa fa-play-circle-o"
+                @click="audPlay($event)"></i>
+            </div>
+            <template v-else>
+              <div class="table-cell">
+                <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
+                  @click="audPause(block._id, $event)"></i>
+                <i class="fa fa-play-circle-o paused" v-else
+                  @click="audResume(block._id, $event)"></i>
+              </div>
+              <div class="table-cell">
+                <i class="fa fa-stop-circle-o"
+                  @click="audStop(block._id, $event)"></i>
+              </div>
+            </template>
+          </template>
+        </div>
+      </div>
+    </div>
+    <div class="table-cell" :class="{'completed': isCompleted}" >
         <div :class="['table-body', '-content', {'editing': isAudioEditing}, '-langblock-' + getBlockLang]"
         @mouseleave="onBlur"
         @click="onBlur">
@@ -46,39 +77,6 @@
             </div> -->
 
             <div :class="['table-row ilm-block', block.status.marked && !hasChanges ? '-marked':'']">
-              <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'">
-                <div class="table-body">
-                  <div class="table-row">
-                    <div class="table-cell -hidden-subblock" v-if="blockAudio.src && tc_showBlockNarrate(block.blockid) && !isAudioChanged">
-                      <i class="fa fa-pencil" v-on:click="showAudioEditor()"></i>
-                    </div>
-                    <template v-if="tc_showBlockNarrate(block.blockid) && !isAudStarted">
-                      <div class="table-cell -hidden-subblock">
-                        <i class="fa fa-microphone" v-if="!isChanged" @click="_startRecording($event)"></i>
-                      </div>
-                    </template>
-                    <template v-if="player && blockAudio.src && !isRecording">
-                      <div class="table-cell -hidden-subblock" v-if="!isAudStarted">
-                        <i class="fa fa-play-circle-o"
-                          @click="audPlay($event)"></i>
-                      </div>
-                      <template v-else>
-                        <div class="table-cell">
-                          <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
-                            @click="audPause(block._id, $event)"></i>
-                          <i class="fa fa-play-circle-o paused" v-else
-                            @click="audResume(block._id, $event)"></i>
-                        </div>
-                        <div class="table-cell">
-                          <i class="fa fa-stop-circle-o"
-                            @click="audStop(block._id, $event)"></i>
-                        </div>
-                      </template>
-                    </template>
-                  </div>
-                </div>
-              </div>
-              <div class="table-cell -content-wrapper">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
@@ -258,9 +256,25 @@
                   </template>
                   <!--<li @click="test">test</li>-->
                 </block-cntx-menu>
-              </div>
+
             </div>
             <!--<div class="table-row ilm-block">-->
+            <div class="table-row controls-bottom" v-if="isSplittedBlock">
+              <div class="par-ctrl -hidden -right">
+                  <!--<span>isCompleted: {{isCompleted}}</span>-->
+                  <div class="save-block -right" @click="discardBlock"
+                       v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
+                    Discard
+                  </div>
+                  <div class="save-block -right"
+                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+                  @click="assembleBlockProxy(true)">
+                    {{saveBlockLabel}}
+                  </div>
+              </div>
+              <!--<div class="-hidden">-->
+            </div>
+            <!--<div class="table-row controls-bottom">-->
         </div>
         <!--<div :class="['table-body', '-content',-->
     </div>
@@ -283,27 +297,6 @@
     </div>
     </modal>
   </div>
-  <div class="table-body">
-    <div class="table-row controls-bottom" v-if="isSplittedBlock">
-      <div class="controls-bottom-wrapper">
-        <div class="par-ctrl -hidden -right">
-          <!--<span>isCompleted: {{isCompleted}}</span>-->
-          <div class="save-block -right" @click="discardBlock"
-               v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
-            Discard
-          </div>
-          <div class="save-block -right"
-          v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-          @click="assembleBlockProxy(true)">
-            {{saveBlockLabel}}
-          </div>
-        </div>
-        <!--<div class="-hidden">-->
-      </div>
-    </div>
-    <!--<div class="table-row controls-bottom">-->
-  </div>
-</div>
 </template>
 
 <script>
@@ -692,7 +685,7 @@ export default {
           }*/
           content = content.replace(/<br[^>]*>$/, '');//remove <br> at the end of the block
           content = content.replace(/(<\/?(?:ol|ul|li|u|br)[^>]*>)|<[^>]+>/img, '$1');
-          content = content.replace(/(<\/li>[^<]*?<li[^>]*>)/img, '<br>$1');
+          content = content.replace(/([\.\!\?\…\؟]+[^${lettersPattern}]*?)(<\/li><li[^>]*>)/img, '$1<br>$2');
           let is_list = this.block.content.match(/<br[^>]*>/m) || content.match(/<br[^>]*>/m) || this.block.content.match(/<li[^>]*>/m) || content.match(/<li[^>]*>/m);
           if (this.block.classes && typeof this.block.classes === 'object' && typeof this.block.classes.whitespace !== 'undefined' && this.block.classes.whitespace.length > 0 && content.match(/[\r\n]/)) {
             content = content.replace(/[\r\n]/mg, '<br>');
@@ -759,11 +752,11 @@ export default {
           try {
             content = content.replace(new RegExp('(?<!<split\\/>)<br[^>]*>(?!<split\\/>)', 'gm'), `<br>${separator}`);// lists with br should have empty line
           } catch (e) {// Firefox does not support negative lookbehind
-
+            
           }
           content = content.replace(/<split\/>/gm, '<br>');// replace split with html br
           content = content.replace(/<br><br><br>/gm, '<br><br>');
-          content = content.replace(/<br[^>]*><br[^>]*>/gm, '<br><div class="part-separator"></div>');
+          content = content.replace(/<br><br>/gm, '<br><div class="part-separator"></div>');
           //content = content.replace(, '$1<br>');
           return content;
         },
@@ -1065,7 +1058,7 @@ export default {
             toolbar = {
                 buttons: [
                   'bold', 'italic', 'underline',
-                  //'superscript', 'subscript','orderedlist',
+                  //'superscript', 'subscript','orderedlist', 
                   'unorderedlist',
                   //'html', 'anchor',
                   'quoteButton', 'suggestButton'
@@ -1327,15 +1320,36 @@ export default {
         } else if (this.mode === 'narrate') {
           return this.assembleBlockNarrate();
         }
+        if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
+          this.$root.$emit('from-block:save-and-realign-warning', () => {
+                  this.$root.$emit('hide-modal');
+                },
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockProxy(false, false)
+                    }
+                  }, 50);
+                },
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockProxy(false, true)
+                    }
+                  }, 50);
+                });
+          return;
+        }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
         this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         this.isChanged = false;
         this.isSaving = true;
-        if (this.isAudioEditing) {
-          this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
-        }
         return this.$emit('save', this.blockPart, this.blockPartIdx, realign);
       },
 
@@ -1451,6 +1465,30 @@ export default {
           });
       },
       assembleBlockNarrate(check_realign = true, realign = false) {
+        if (check_realign === true && this.needsRealignment && Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
+          this.$root.$emit('from-block:save-and-realign-warning', () => {
+                  this.$root.$emit('hide-modal');
+                },
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockNarrate(false, false)
+                    }
+                  }, 50);
+                },
+                () => {
+                  this.$root.$emit('hide-modal');
+                  let i = setInterval(() => {
+                    if ($('.align-modal').length == 0) {
+                      clearInterval(i);
+                      this.assembleBlockNarrate(false, true)
+                    }
+                  }, 50);
+                });
+          return;
+        }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
         }
@@ -1470,10 +1508,7 @@ export default {
       },
       clearBlockContent: function(content = false) {
         //console.log(content)
-        if (content === false && !this.$refs.blockContent) {
-          return '';
-        }
-        if (content === false) {
+        if (!content) {
           content = this.$refs.blockContent.innerHTML;
         }
         content = content.replace(/(<[^>]+)(selected)/g, '$1');
@@ -1493,7 +1528,7 @@ export default {
           content = content.replace(new RegExp('(?<!<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '<br/>$1')//paragrapth not preceeded by list
           content = content.replace(new RegExp('(?<=<\\/ul>|<\\/ol>)<p[^>]*>([\\s\\S]*?)<\\/p>', 'gm'), '$1')//paragrapth preceeded by list
         } catch (e) {// Firefox does not support negative lookbehind
-
+          
         }
         content = content.replace(/<p[^>]*><\/p>/gm, '')
         content = content.replace(/^<br[\/]?>/gm, '')
@@ -2265,13 +2300,12 @@ export default {
         if (blockId === this.check_id) {
           this.isAudioEditing = false;
           if (this.isAudioChanged) {
-            this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
+            this.discardAudioEdit(this.footnoteIdx, false)
               .then(() => {
                 this.isAudioChanged = false;
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
-                this.unsetChange('manual_boundaries');
 
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
               });
@@ -2292,14 +2326,13 @@ export default {
           $('nav.fixed-bottom').removeClass('hidden');
         }
       },
-      evFromAudioeditorWordRealign(map, blockId, shiftedInfo) {
+      evFromAudioeditorWordRealign(map, blockId) {
         if (blockId == this.check_id) {
           this.audStop();
           //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
           if (this.$refs.blockContent && this.$refs.blockContent.querySelectorAll) {
-            let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
-            let manual_boundaries = [];
-            this.$refs.blockContent.querySelectorAll('[data-map]').forEach((_w, i) => {
+            let manual_boundaries = this.blockPart.manual_boundaries || [];
+            this.$refs.blockContent.querySelectorAll('[data-map]').forEach(_w => {
               if ($(_w).attr('data-map') && $(_w).attr('data-map').length) {
                 let _m = map.shift();
                 if (_m) {
@@ -2307,34 +2340,17 @@ export default {
                   let currentMap = $(_w).attr('data-map').split(',');
                   currentMap[0] = parseInt(currentMap[0]);
                   currentMap[1] = parseInt(currentMap[1]);
-                  if (shiftedInfo.index == i) {
-                    if (shiftedInfo.position == 0) {
-                      //console.log(`PUSH 0 ${_m[0]}, ${currentMap[0]}`, $(_w).text())
-                      manual_boundaries.push(_m[0])
+                  if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
+                    if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+                      manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
                     }
-                    if (shiftedInfo.position == 1) {
-                      //console.log(`PUSH 1 ${_m[1]}, ${currentMap[1]}`, $(_w).text())
-                      //console.log(`PUSH 1 ${_m[0] + _m[1]}, ${currentMap[0] + currentMap[1]}`, $(_w).text())
-                      manual_boundaries.push(_m[0] + _m[1])
-                    }
-                    if (currentMap[0] != _m[0] && manual_boundaries.indexOf(_m[0]) == -1) {
-                      if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
-                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
-                      }
-                      //manual_boundaries.push(_m[0]);
-                    }
-                    if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
-                      if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
-                        manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
-                      }
-                      //manual_boundaries.push(_m[0] + _m[1]);
-                    }
-                  }
-                  //console.log(current_boundaries, currentMap[0], manual_boundaries, _m[0])
-                  //console.log(current_boundaries.indexOf(currentMap[0]))
-                  if (current_boundaries.indexOf(currentMap[0]) !== -1 && manual_boundaries.indexOf(_m[0]) === -1) {
                     manual_boundaries.push(_m[0]);
-                    //console.log(`PUSH ${_m[0]}`);
+                  }
+                  if (currentMap[0] + currentMap[1] != _m[0] + _m[1] && manual_boundaries.indexOf(_m[0] + _m[1]) == -1) {
+                    if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+                      manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+                    }
+                    manual_boundaries.push(_m[0] + _m[1]);
                   }
                   $(_w).attr('data-map', w_map)
                 }
@@ -2351,24 +2367,14 @@ export default {
               this.$parent.refreshBlockAudio();
             }
             this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);*/
-            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
-            this.blockPart.manual_boundaries = manual_boundaries.slice();
-            manual_boundaries = null;
-            this.pushChange('manual_boundaries');
-            this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
-            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
+            this.blockPart.manual_boundaries = manual_boundaries;
+            this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries);
+            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
+            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
             //this.pushChange('content');
-
-
-            //this.blockPart.manual_boundaries = manual_boundaries.slice();
-            //this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
-            //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
-            //this.blockPart.content = this.$refs.blockContent.innerHTML;
-            //this.blockAudio.map = this.$refs.blockContent.innerHTML;
-            //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
           }
         }
         this.isAudioChanged = true;
@@ -2431,24 +2437,17 @@ export default {
           if (this.isSplittedBlock) {
             this.block.undoPartContent(this.blockPartIdx);
             this.block.undoPartAudiosrc(this.blockPartIdx);
-            this.block.undoPartManualBoundaries(this.blockPartIdx);
-            this.$root.$emit('for-audioeditor:load', this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), false, this.blockPart);
           } else {
             this.block.undoContent();
             this.block.undoAudiosrc();
-            this.block.undoManualBoundaries();
-            //this.blockPart.content = this.block.content;
-            //this.blockPart.audiosrc = this.block.audiosrc;
-            this.blockPart.manual_boundaries = this.block.manual_boundaries;
-            this.$root.$emit('for-audioeditor:load', this.blockAudiosrc('m4a'), this.block.content, false, this.block);
           }
           this.blockAudio.map = this.blockContent();
           this.blockAudio.src = this.blockAudiosrc('m4a');
+          this.block.undoManualBoundaries();
           this.isAudioChanged = isModified;
           if (!isModified) {
             this.unsetChange('audio');
             this.unsetChange('content');
-            this.unsetChange('manual_boundaries');
           }
         }
       },
@@ -2462,7 +2461,6 @@ export default {
                 this.isChanged = false;
                 this.unsetChange('audio');
                 this.unsetChange('content');
-                this.unsetChange('manual_boundaries');
                 this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
             });
         }
@@ -2507,22 +2505,6 @@ export default {
           }
         }
       },
-      evFromAudioeditorUnpinRight(position, blockId) {
-        if (this.check_id === blockId) {
-          if (Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
-            let oldBoundaries = this.blockPart.manual_boundaries;
-            this.blockPart.manual_boundaries = this.blockPart.manual_boundaries.filter(mb => {
-              return mb <= position;
-            });
-            this.block.setPartManualBoundaries(this.blockPartIdx, this.blockPart.manual_boundaries);
-            this.blockPart.content = this.$refs.blockContent.innerHTML;
-            this.blockAudio.map = this.blockPart.content;
-            this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
-            this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), this.blockAudiosrc('m4a', false));
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, oldBoundaries.length > this.blockPart.manual_boundaries.length ? true : false);
-          }
-        }
-      },
       audioEditorEventsOn() {
         this.$root.$on('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
         this.$root.$on('from-audioeditor:word-realign', this.evFromAudioeditorWordRealign);
@@ -2535,7 +2517,6 @@ export default {
         this.$root.$on('from-audioeditor:select', this.evFromAudioeditorSelect);
 
         this.$root.$on('from-audioeditor:closed', this.evFromAudioeditorClosed);
-        this.$root.$on('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
       },
       audioEditorEventsOff() {
         this.$root.$off('from-audioeditor:block-loaded', this.evFromAudioeditorBlockLoaded);
@@ -2548,7 +2529,6 @@ export default {
         this.$root.$off('from-audioeditor:discard', this.evFromAudioeditorDiscard);
         this.$root.$off('from-audioeditor:select', this.evFromAudioeditorSelect);
         this.$root.$off('from-audioeditor:closed', this.evFromAudioeditorClosed);
-        this.$root.$off('from-audioeditor:unpin-right', this.evFromAudioeditorUnpinRight);
       },
       //-- } -- end -- Events --//
 
@@ -2759,7 +2739,7 @@ export default {
             if (!endRange) {
               endRange = this._getClosestAligned(endElement, 1)
             }
-            if (startRange && endRange && this.isAudioEditing) {
+            if (startRange && endRange) {
               //console.log(startRange[0], endRange[0] + endRange[1])
               this.$root.$emit('for-audioeditor:select', this.check_id, startRange[0], endRange[0] + endRange[1], startElement === endElement ? startElement : null);
             }
@@ -3083,18 +3063,6 @@ export default {
 
 <style lang='less'>
 
-   .-content-block {
-      .-mode-narrate & {
-         padding-inline-end: 185px;
-         @media all and (max-width: 1100px) {
-            padding-inline-end: 0;
-         }
-         .meta-visible & {
-            @media all and (max-width: 1540px) {
-               padding-inline-end: 0;
-            }
-         }
-      }
-   }
+
 
 </style>
