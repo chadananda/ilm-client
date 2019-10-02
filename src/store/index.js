@@ -1710,12 +1710,14 @@ export const store = new Vuex.Store({
         block: {
           blockid: block.blockid,
           bookid: block.bookid,
-          flags: block.flags,
-          content: block.content
+          flags: block.flags
         }
       };
       if (typeof block.parts !== 'undefined' && Array.isArray(block.parts) && block.parts.length > 1) {
         update.block.parts = block.parts;
+      }
+      if (typeof block.content !== 'undefined') {
+        update.content = block.content;
       }
       return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
         .then((response) => {

@@ -218,6 +218,7 @@
               :audDeletePart="_audDeletePart"
               :startRecording="startRecording"
               :initRecorder="initRecorder"
+              :saveBlockPart="saveBlockPart"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -228,13 +229,11 @@
               @setRangeSelection="setRangeSelection"
               @blockUpdated="$emit('blockUpdated')"
               @cancelRecording="cancelRecording"
-              @save="saveBlockPart"
               @hasChanges="onPartChanges"
               @addFootnote="addFootnote"
               @partAudioComplete="partAudioComplete"
               @addFlagPart="onAddFlagPart"
               @addFlag="addFlag"
-              @inputFlag="onInputFlag"
               @resolveFlagPart="onResolveFlagPart"
               @reopenFlagPart="onReopenFlagPart"
               @hideFlagPart="onHideFlagPart"
@@ -771,10 +770,24 @@ export default {
           return this.block.flags && this.block.flags.length;
       },
       isNeedWorkDisabled: function () {
-        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged) {
+        if (this.isChanged || this.isAudioChanged || this.isAudioEditing || this.isIllustrationChanged || this.hasChangedPart) {
           return true;
         }
         return this.tc_isNeedWorkDisabled(this.block, this.mode);
+      },
+      hasChangedPart: {
+        get() {
+          if (this.isSplittedBlock) {
+            if (this.$refs && this.$refs.blocks) {
+              let changed = this.$refs.blocks.find(blk => {
+                return blk.isChanged || blk.isAudioChanged || blk.isAudioEditing;
+              });
+              return changed ? true : false;
+            }
+          }
+          return false;
+        },
+        cache: false
       },
       enableMarkAsDone: { cache: false,
         get() {
@@ -2740,8 +2753,10 @@ export default {
           //this.pushChange('flags');
           //this.$emit('delFlagPart');
 
-          this.isChanged = true;
-          this.pushChange('flags');
+          if (blockPartIdx === null) {
+            this.isChanged = true;
+            this.pushChange('flags');
+          }
         }
       },
 

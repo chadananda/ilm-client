@@ -184,7 +184,7 @@
 
                     <a href="#" class="flag-control -right -top"
                       v-if="canDeleteFlagPart(part) && part.status == 'open'"
-                      @click.prevent="delFlagPart($event, partIdx, blockPartIdx)">
+                      @click.prevent="_delFlagPart($event, partIdx)">
                       <i class="fa fa-trash"></i></a>
 
                     <div class="clearfix"></div>
@@ -403,7 +403,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1222,10 +1222,10 @@ export default {
         ev.target.focus();
       },
       onInputFlag: function(ev) {
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('inputFlag');
-        ev.target.focus();
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('inputFlag');
+        //ev.target.focus();
       },
       onFocusoutFlag: function(partIdx, ev) {
         if (ev && ev.target) {
@@ -1323,10 +1323,24 @@ export default {
 //           });
       },
       assembleBlockProxy: function (check_realign = true, realign = false) {
+        let modeUpdate = false;
+        let flagUpdate = this.hasChange('flags');
         if (this.mode === 'proofread') {
-          return this.assembleBlockProofread();
+          modeUpdate = this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate();
+          modeUpdate = this.assembleBlockNarrate();
+        }
+        if (modeUpdate) {
+          return modeUpdate
+            .then(() => {
+              if (flagUpdate) {
+                return this.$parent.assembleBlockProxy(false, false)
+              }
+              return Promise.resolve();
+            })
+            .catch(err => {
+              return Promise.reject(err);
+            });
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -1337,7 +1351,7 @@ export default {
         if (this.isAudioEditing) {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
-        return this.$emit('save', this.blockPart, this.blockPartIdx, realign);
+        return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign);
       },
 
       assembleBlock: function(partUpdate = null, realign = false) {
@@ -1434,6 +1448,18 @@ export default {
           });
       },
       assembleBlockProofread() {
+        if (this.isSplittedBlock) {
+          this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
+          this.isChanged = false;
+          this.isSaving = true;
+          let promise = Promise.resolve();
+          let evt = {};
+          evt.waitUntil = p => promise = p
+          this.$root.$emit(`save-block:${this.block.blockid}`, evt);
+          return promise.then(() => {
+            this.isSaving = false;
+          });
+        }
         if (this.$refs.blockContent) {
           this.block.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
         }
@@ -1446,6 +1472,7 @@ export default {
               this.tc_loadBookTask(this.block.bookid);
               this.getCurrentJobInfo();
             }
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -1464,6 +1491,7 @@ export default {
           .then(() => {
             this.isSaving = false;
             this.isChanged = false;
+            return Promise.resolve();
           })
           .catch(err => {
             return Promise.reject(err);
@@ -1913,9 +1941,9 @@ export default {
             this.handleFlagClick({target: existsFlag, layerY: ev.layerY, clientY: ev.clientY});
           }
           this.$refs.blockFlagPopup.scrollBottom();
-          //this.isChanged = true;
-          //this.pushChange('flags');
-          this.$emit('addFlag');
+          this.isChanged = true;
+          this.pushChange('flags');
+          //this.$emit('addFlag');
         }
       },
 
@@ -1926,9 +1954,15 @@ export default {
         this.$refs.blockFlagPopup.reset();
 
         this.$refs.blockFlagPopup.scrollBottom();
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('addFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('addFlagPart');
+      },
+      
+      _delFlagPart(ev, partIdx) {
+        this.delFlagPart(ev, partIdx, this.blockPartIdx);
+        this.isChanged = true;
+        this.pushChange('flags');
       },
 
       detectExistingFlag: function(ev) {
@@ -2047,9 +2081,9 @@ export default {
         this.flagsSel.parts[partIdx].status = 'resolved';
         this.$refs.blockFlagPopup.reset();
         this.updateFlagStatus(this.flagsSel._id);
-        //this.isChanged = true;
-        //this.pushChange('flags');
-        this.$emit('resolveFlagPart');
+        this.isChanged = true;
+        this.pushChange('flags');
+        //this.$emit('resolveFlagPart');
       },
 
       reopenFlagPart: function(ev, partIdx) {
