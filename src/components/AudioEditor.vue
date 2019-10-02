@@ -188,7 +188,6 @@
         }
       },
       mounted() {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext);
         this.$root.$on('for-audioeditor:load-and-play', this.load);
         this.$root.$on('for-audioeditor:load', this.setAudio);
         //this.$root.$on('for-audioeditor:reload-text', this._setText);
@@ -246,6 +245,11 @@
         },
         load(audio, text, block, autostart = false, bookAudiofile = {}, reloadOnChange = true) {
           //console.log('load', audio, text, block, autostart, bookAudiofile, reloadOnChange);
+
+          if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext);
+          }
+
           let blockId = block ? block._id : null;
 
           this.$root.$off('for-audioeditor:select', this.select);
@@ -1283,8 +1287,8 @@
         },
         _addHistory(text, audio, manual_boundaries) {
           this.history.push({
-            text: text, 
-            audio: audio, 
+            text: text,
+            audio: audio,
             manual_boundaries: manual_boundaries
           });
           if (this.history.length >= 6) {
@@ -1385,7 +1389,7 @@
           $('.playlist-tracks').scrollLeft(0);
           $('.playlist-tracks').scrollLeft(this.playlistScrollPosition || 0);
           Vue.nextTick(() => {
-            
+
             this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
               this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
                 if ($('.annotation-resize-pos').length == 0) {
@@ -1738,8 +1742,8 @@
           });
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
-            if (shiftedIndex === this.wordSelectionMode || 
-                    (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') || 
+            if (shiftedIndex === this.wordSelectionMode ||
+                    (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') ||
                     (shiftedIndex + 1 === this.wordSelectionMode && direction === 'left')) {
               Vue.nextTick(() => {
                 this._setWordSelection(this.wordSelectionMode, true, true);
@@ -1747,7 +1751,7 @@
             }
           }
         }, 30),
-        
+
         setProcessRun(val, type) {
           this.processRun = val;
           this.processRunType = type;
@@ -1757,12 +1761,12 @@
             this.$root.$emit('preloader-toggle', false, '');
           }
         },
-        
+
         flush() {
           this.setProcessRun(false);
           this.isModified = false;
         },
-        
+
         unpinRight(event) {
           let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
           this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
