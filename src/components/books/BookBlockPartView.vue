@@ -1723,12 +1723,17 @@ export default {
           let windowSelRange = this.range;
           // ILM-2108: - because the last tag in the selection was not cropped
           // and was duplicated after adding a flag
+          let fixed_start = false;
+          let fixed_end = false;
           let startElementWrapper = windowSelRange.startContainer.parentElement;
           if (startElementWrapper.nodeName.toLowerCase() !== 'div') {
             while (startElementWrapper.parentElement && startElementWrapper.parentElement.nodeName.toLowerCase() !== 'div') {
               startElementWrapper = startElementWrapper.parentElement;
             }
             windowSelRange.setStartBefore(startElementWrapper);
+            //if (startElementWrapper.nodeName.toLowerCase() !== 'u') {
+              fixed_start = true;
+            //}
           }
 
           let endElementWrapper = windowSelRange.endContainer.parentElement;
@@ -1737,6 +1742,129 @@ export default {
               endElementWrapper = endElementWrapper.parentElement;
             }
             windowSelRange.setEndAfter(endElementWrapper);
+            //if (endElementWrapper.nodeName.toLowerCase() !== 'u') {
+              fixed_end = true;
+            //}
+          }
+          if (!this.$refs.blockContent.innerHTML.match(/<w[^>]*>/)) {// no alignment
+            let lettersPattern = 'a-zA-Zа-яА-ЯÀ-ÿ\\u0600-\\u06FF';
+            let checkWords = new RegExp(`([${lettersPattern}\\d]+?)([^${lettersPattern}\\d]+?)`, 'img');
+            let match = false;
+            let selection = {};
+            let offset = 0;
+            let found = false;
+            let checkNodes = [startElementWrapper];
+            let checkNode;
+            if (fixed_start) {
+              checkNodes = [this.$refs.blockContent];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== startElementWrapper) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offset+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                  if (checkNode.nodeName.toLowerCase() === 'u') {
+                    fixed_start = false;
+                    //fixed_end = false;
+                    //offsetEnd+= checkNode.innerText.length;
+                    //console.log(checkNode)
+                    //return;
+                  } else {
+                    //selection.end = offsetEnd + checkNode.innerText.length;
+                  }
+                }
+              }
+              selection.start = offset;
+            } else {
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== windowSelRange.startContainer) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offset+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                }
+              }
+            }
+            let offsetEnd = 0;
+            found = false;
+            if (fixed_end) {
+              checkNodes = [this.$refs.blockContent];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== endElementWrapper) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offsetEnd+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                  if (checkNode.nodeName.toLowerCase() === 'u') {
+                    fixed_end = false;
+                    offsetEnd+= checkNode.innerText.length;
+                  } else {
+                    selection.end = offsetEnd + checkNode.innerText.length;
+                  }
+                }
+              }
+            } else {
+              checkNodes = [endElementWrapper];
+              while(checkNode = checkNodes.pop()) {
+                if (checkNode !== windowSelRange.endContainer) {
+                  if (!found) {
+                    if (checkNode.nodeType == 3) {
+                      offsetEnd+= checkNode.length;
+                    } else {
+                      let i = checkNode.childNodes.length;
+                      while (i--) {
+                        checkNodes.push(checkNode.childNodes[i]);
+                      }
+                    }
+                  }
+                } else {
+                  found = true;
+                }
+              }
+            }
+            while((match = checkWords.exec(this.$refs.blockContent.innerText))) {
+              if (match.index <= windowSelRange.startOffset + offset && !fixed_start) {
+                selection.start = match.index;
+                if (selection.start + match[0].length <= windowSelRange.startOffset + offset) {
+                  selection.start = match.index + match[0].length;
+                }
+              } else if (typeof selection.start === 'undefined') {
+                selection.start = 0;
+              }
+              if (match.index + match[0].length >= windowSelRange.endOffset + offsetEnd && typeof selection.end === 'undefined') {
+                selection.end = match.index + match[0].length;
+              }
+            }
+            if (typeof selection.end === 'undefined') {
+              selection.end = startElementWrapper.innerText.length;
+            }
+            if (typeof selection.start !== 'undefined' && typeof selection.end !== 'undefined') {
+              windowSelRange = this.restoreSelection(this.$refs.blockContent, selection);
+            }
           }
 
           let flag = document.createElement(this.flagEl);
@@ -2913,6 +3041,45 @@ export default {
           return this.block.getPartContent(this.blockPartIdx);
         } else {
           return this.block.content;
+        }
+      },
+      restoreSelection(containerEl, savedSel) {
+        if (window.getSelection && document.createRange) {
+          var charIndex = 0, range = document.createRange();
+          range.setStart(containerEl, 0);
+          range.collapse(true);
+          var nodeStack = [containerEl], node, foundStart = false, stop = false;
+          while (!stop && (node = nodeStack.pop())) {
+              if (node.nodeType == 3) {
+                  var nextCharIndex = charIndex + node.length;
+                  if (!foundStart && savedSel.start >= charIndex && savedSel.start < nextCharIndex) {
+                      range.setStart(node, savedSel.start - charIndex);
+                      foundStart = true;
+                  }
+                  if (foundStart && savedSel.end >= charIndex && savedSel.end <= nextCharIndex) {
+                      range.setEnd(node, savedSel.end - charIndex);
+                      stop = true;
+                  }
+                  charIndex = nextCharIndex;
+              } else {
+                  var i = node.childNodes.length;
+                  while (i--) {
+                      nodeStack.push(node.childNodes[i]);
+                  }
+              }
+          }
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          return range;
+        } else if (document.selection) {
+          var textRange = document.body.createTextRange();
+          textRange.moveToElementText(containerEl);
+          textRange.collapse(true);
+          textRange.moveEnd("character", savedSel.end);
+          textRange.moveStart("character", savedSel.start);
+          textRange.select();
+          return textRange;
         }
       }
 
