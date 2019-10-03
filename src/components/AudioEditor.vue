@@ -1394,7 +1394,7 @@
           $('.playlist-tracks').scrollLeft(0);
           $('.playlist-tracks').scrollLeft(this.playlistScrollPosition || 0);
           Vue.nextTick(() => {
-            
+
             this.audiosourceEditor.annotationList.resizeHandlers.forEach((rh, i) => {
               this.audiosourceEditor.annotationList.resizeHandlers[i].ondragover = (e) => {
                 if ($('.annotation-resize-pos').length == 0) {
@@ -1745,8 +1745,8 @@
           this.$root.$emit('from-audioeditor:word-realign', map, this.blockId);
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
-            if (shiftedIndex === this.wordSelectionMode || 
-                    (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') || 
+            if (shiftedIndex === this.wordSelectionMode ||
+                    (shiftedIndex - 1 === this.wordSelectionMode && direction === 'right') ||
                     (shiftedIndex + 1 === this.wordSelectionMode && direction === 'left')) {
               Vue.nextTick(() => {
                 this._setWordSelection(this.wordSelectionMode, true, true);
@@ -1754,7 +1754,7 @@
             }
           }
         }, 30),
-        
+
         setProcessRun(val, type) {
           this.processRun = val;
           this.processRunType = type;
@@ -1764,7 +1764,7 @@
             this.$root.$emit('preloader-toggle', false, '');
           }
         },
-        
+
         flush() {
           this.setProcessRun(false);
           this.isModified = false;
