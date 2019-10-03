@@ -1717,7 +1717,7 @@ export const store = new Vuex.Store({
         update.block.parts = block.parts;
       }
       if (typeof block.content !== 'undefined') {
-        update.content = block.content;
+        update.block.content = block.content;
       }
       return axios.put(state.API_URL + 'book/block/' + block.blockid + '/proofread', update)
         .then((response) => {
