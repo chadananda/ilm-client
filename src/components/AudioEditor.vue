@@ -1620,6 +1620,9 @@
 
           let shiftedAnnotation = null;
           let shiftedIndex = null;
+          if (moveIndex === 0 || moveIndex === this.annotations.length * 2 - 1) {// do not pin first and last
+            return;
+          }
 
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {// find the shifted annotation, find shift direction
             if (this.annotations[i]) {
