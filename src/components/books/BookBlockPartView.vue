@@ -1323,24 +1323,16 @@ export default {
 //           });
       },
       assembleBlockProxy: function (check_realign = true, realign = false) {
-        let modeUpdate = false;
-        let flagUpdate = this.hasChange('flags');
-        if (this.mode === 'proofread') {
-          modeUpdate = this.assembleBlockProofread();
-        } else if (this.mode === 'narrate') {
-          modeUpdate = this.assembleBlockNarrate();
+        let modeUpdate = this.mode === 'proofread' || this.mode === 'narrate';
+        let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
+        if (modeUpdate && flagUpdate) {
+          this.isChanged = false;
+          return this.$parent.assembleBlockProxy(false, false)
         }
-        if (modeUpdate) {
-          return modeUpdate
-            .then(() => {
-              if (flagUpdate) {
-                return this.$parent.assembleBlockProxy(false, false)
-              }
-              return Promise.resolve();
-            })
-            .catch(err => {
-              return Promise.reject(err);
-            });
+        if (this.mode === 'proofread') {
+          return this.assembleBlockProofread();
+        } else if (this.mode === 'narrate') {
+          return this.assembleBlockNarrate();
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
