@@ -1,7 +1,7 @@
 <template>
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
-  
+
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
       <div v-for="(viewObj, listIdx) in getListObjs"

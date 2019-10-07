@@ -1,23 +1,35 @@
-<script>
-  import { createEventDispatcher } from 'svelte';
+<template>
+{#each blocks as blockRid}
 
-  export let number = 0;
+<BookBlockDisplay
+  blockRid="{blockRid}"
+  block="{blockView(blockRid)}"
+  isLoaded="{parlistO.getBlockByRid && parlistO.getBlockByRid(blockRid).loaded}"
+  lang="{lang}"
+/>
+
+{/each}
+</template>
+
+<script>
+  import BookBlockDisplay from './BookBlockDisplay.svelte';
   export let lang = 'en';
-  export let fntCounter = 0;
   export let blocks = [];
   export let parlistO = {};
   export let parlist = {};
-  //const dispatch = createEventDispatcher();
+  let fntCounter = 0;
+
   const blockId = (blockRid) => parlistO.getBlockByRid(blockRid).blockid;
-  const blockType = (blockRid) => parlistO.getBlockByRid(blockRid).type;
+
   const blockFull = (blockRid) => {
-    return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)) : false;
+    return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)) : null;
   }
 
   const blockView = (blockRid) => {
     let block = blockFull(blockRid);
     if (block) {
-      let viewObj = { footnotes: block.footnotes, language: block.language || lang };
+      //console.log('blockView', block.blockid);
+      let viewObj = Object.assign(block, { footnotes: block.footnotes, language: block.language || lang });
       viewObj.content = block.content.replace(
         /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
         '<span data-pg="$1"></span>'
@@ -50,65 +62,9 @@
           return `<sup class="service-info" data-idx="${fntCounter++}">[${fntCounter}]</sup>`
         }
       );
+
       return viewObj;
     } else return { footnotes: [], language: lang };
   }
 
-  const getIllustration = (blockRid) => {
-    return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)).getIllustration() : '';
-  }
-
-  const getClass = (blockRid) => {
-    return parlist.has(blockId(blockRid)) ? parlist.get(blockId(blockRid)).getClass() : '';
-  }
-
-  const blockOutPaddings = (blockRid) => {
-    let block = blockFull(blockRid);
-    if (block) {
-      return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
-    } else return '';
-  }
-
-  /*<h1>{ number }</h1>
-    <button on:click={ () => dispatch('magicalclick') }>
-      Click Me
-    </button>*/
-
 </script>
-
-<style lang='less'>
-  .ilm-display {
-    [data-flag] {
-      pointer-events: all;
-      cursor: default;
-      &:before {
-        cursor: default;
-      }
-    }
-  }
-</style>
-
-
-{#each blocks as blockRid}
-<div data-id="{blockId(blockRid)}" data-rid="{blockRid}" id="{blockId(blockRid)}" class="ilm-block ilm-display -langblock-{blockView(blockRid).language} {blockOutPaddings(blockRid)}">
-
-{#if blockFull(blockRid)}
-
-  {#if blockType(blockRid) === 'illustration'}
-  <img alt="blockId(blockRid)" class="{getClass(blockRid)}" src="{getIllustration(blockRid)}"/>
-  {:else if blockType(blockRid) === 'hr'}
-  <hr class="{getClass(blockRid)}"/>
-  {:else}
-  <div class="{getClass(blockRid)} hide-archive">
-  {@html blockView(blockRid).content}
-  </div>
-  {/if}
-
-{:else}
-  <div  data-id="{blockId(blockRid)}" data-rid="{blockRid}" id="{blockId(blockRid)}" class="ilm-block ilm-display content-process-run preloader-loading">
-    <!--{{blockId}}/{{blockRid}}/{{blockO.loaded}}-->
-  </div>
-{/if}
-</div>
-<div class="clearfix"></div>
-{/each}

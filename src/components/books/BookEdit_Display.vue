@@ -16,16 +16,11 @@
     </template>-->
 
     <SvelteBookDisplayInVue
-      :number="count"
       :blocks="parlistO.rIdsArray()"
       :parlistO="parlistO"
       :parlist="parlist"
       :lang="meta.language"
-      :fntCounter = "fntCounter"
-      @magicalclick="handleClick"
-      @watch:number="setCount"
     />
-    <!--<button @click="handleClick">Increment - {{ count }}</button>-->
 
   </div>
 </template>
@@ -45,12 +40,8 @@ export default {
   name: 'BookEditDisplay',
   data () {
     return {
-      page: 0,
       startId: false,
-      fntCounter: 0,
-      onScrollEv: false,
-
-      count: 0
+      onScrollEv: false
     }
   },
   components: {
@@ -228,18 +219,52 @@ export default {
         let scrollId = this.parlistO.idsArray()[0];
         this.parlistO.updateLookupsList(metaId, res);
         console.timeEnd('getAllBlocks');
-        console.log('scrollId', scrollId);
-        console.log('parlist', this.parlist);
+        //console.log('scrollId', scrollId);
+        console.time('getAllBlocks foreach');
+
         if (res.blocks && res.blocks.length > 0) {
-          res.blocks.forEach((el, idx, arr)=>{
+          let i = 0;
+          for (let el of res.blocks) {
+
+            //if (i>500) break;
             if (!this.parlist.has(el._id)) {
-              let newBlock = new BookBlock(el);
-              this.$store.commit('set_storeList', newBlock);
-              //if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
+
+              //window.setTimeout(()=>{
+                let newBlock = new BookBlock(el);
+                this.$store.commit('set_storeList', newBlock);
+                //this.count++;
+                //console.log('i', i);
+              //}, 50);
+
+              i++;
+              //this.parlistO.setLoaded(el.rid);
+            } else {
+              //this.parlistO.setLoaded(el.rid);
             }
-            //this.parlistO.setLoaded(el._id);
-          });
-          console.log('parlist1', this.parlist);
+
+          }
+
+          let $this = this;
+          window.setTimeout(()=>{
+          for (let el of res.blocks) {
+            console.log('res.blocks.length', res.blocks.length);
+            $this.parlistO.setLoaded(el.rid);
+
+          }
+          }, 600);
+
+//           window.setTimeout(()=>{
+//             this.count++;
+//           }, 60);
+//           res.blocks.forEach((el, idx, arr)=>{
+//             if (!this.parlist.has(el._id)) {
+//               let newBlock = new BookBlock(el);
+//               this.$store.commit('set_storeList', newBlock);
+//
+//               //if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
+//             }
+//             //this.parlistO.setLoaded(el._id);
+//           });
           //this.parlistO.refresh();
 //           if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
 //             Vue.nextTick(() => {
@@ -248,6 +273,7 @@ export default {
 //             })
 //           }
         }
+        console.timeEnd('getAllBlocks foreach');
 //         Vue.nextTick(()=>{
 //           this.scrollToBlock(scrollId);
 //         });
@@ -297,7 +323,7 @@ export default {
     loadPreparedBookDown(idsArray) { // mostly first page load
 
       let startId = idsArray[0] || this.meta.startBlock_id;
-      console.log('startId: ', startId);
+      //console.log('startId: ', startId);
       //this.freeze('loadBook');
       return this.loopPreparedBlocksChain({ids: idsArray})
       .then((result)=>{
@@ -337,14 +363,10 @@ export default {
           this.$store.commit('clear_storeListO');
           this.loadBook(bookid)
           .then((meta)=>{
-            console.log('then meta', meta);
-
             let startBlock = this.$route.params.block || false;
             this.startId = startBlock;
             let taskType = this.$route.params.task_type || false;
-
-            console.log('startId', this.$route.params.block, this.startId);
-
+            //console.log('startId', this.$route.params.block, this.startId);
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
               block: startBlock,
@@ -354,7 +376,6 @@ export default {
               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
               this.loopPreparedBlocksChain({ids: this.parlistO.idsArray()})
               .then((result)=>{
-                console.log('result', result);
                 if (result.rows && result.rows.length > 0) {
                   result.rows.forEach((el, idx, arr)=>{
                     if (!this.parlist.has(el._id)) {
@@ -366,9 +387,6 @@ export default {
                     }
                   });
                 }
-//                 for (let blockRef of this.$refs.viewBlocks) {
-//                   blockRef.$forceUpdate();
-//                 }
                 console.timeEnd('loadBookMounted');
                 this.getAllBlocks(this.parlistO.meta.bookid, startBlock);
               });
@@ -430,4 +448,16 @@ export default {
   padding-top: 15px;
   overflow-y: auto;
 }
+</style>
+
+<style lang='less'>
+  .ilm-display {
+    [data-flag] {
+      pointer-events: all;
+      cursor: default;
+      &:before {
+        cursor: default;
+      }
+    }
+  }
 </style>
