@@ -113,7 +113,7 @@
       content: " ";
     }*/
     .part-separator {
-      height: 15px;
+      height: 12px;
     }
   }
 </style>
