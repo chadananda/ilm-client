@@ -1323,31 +1323,34 @@
           let annotations = [];
           let alignedWords = 0;
           this.words = [];
+          let textRg = new RegExp('<w.*?data-map="([^"]+)"[^>]*>(.*?)<\\/w>', 'mig');
+          let match;
+          let tokens = [];
+          let currentLength = 0;
+          while((match = textRg.exec(text))) {
+            let word = match[2];
+            if (currentLength < match.index) {
+              word = text.substr(currentLength, match.index - currentLength) + word;
+            }
+            word = word.replace(/<[^>]+?>/img, '');
+            currentLength = match.index + match[0].length;
+            let map = match[1] && match[1].indexOf(',') !== -1 ? match[1].split(',') : [0, 0]
+            map[0] = parseInt(map[0]) / 1000
+            map[1] = this._round(parseInt(map[1]) / 1000 + map[0], 3)
+            annotations.push({
+              "begin": map[0],
+              "children": [],
+              "end": map[1],
+              "id":word,
+              "language": "eng",
+              "lines": []
+            });
+            this.words.push({start: map[0], end: map[1], index: this.words.length, alignedIndex: alignedWords++});
+          }
           this.contentContainer = $('#content-' + this.blockId);
           if (this.contentContainer.length == 0) {
             this.contentContainer = $('#' + this.blockId);//footnote
           }
-          $('<div>' + this.content + '</div>').find('w').each(function() {
-            let map = $(this).attr('data-map');
-            if (map) {
-              let position = map.split(',');
-              if (position.length == 2) {
-                position[0] = parseInt(position[0]) / 1000;
-                position[1] = parseInt(position[1]) / 1000;
-                annotations.push({
-                  "begin": position[0],
-                  "children": [],
-                  "end": self._round(position[1] + position[0], 3),
-                  "id": $(this).text(),
-                  "language": "eng",
-                  "lines": []
-                });
-                self.words.push({start: position[0], end: self._round(position[0] + position[1], 3), index: self.words.length, alignedIndex: alignedWords++});
-              }
-            } else {
-              self.words.push({start: null, end: null, index: self.words.length});
-            }
-          });
           //console.log(self.audiosourceEditor.annotationList.renderResizeLeft);
           if (self.audiosourceEditor && self.audiosourceEditor.getEventEmitter().__ee__ && self.audiosourceEditor.getEventEmitter().__ee__['dragged']) {
             self.audiosourceEditor.getEventEmitter().off('dragged', self.audiosourceEditor.getEventEmitter().__ee__['dragged']);
