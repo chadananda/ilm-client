@@ -559,6 +559,11 @@ export default {
     height: 100%;
     background-color: #0000006b;
     box-shadow: 205px 0 fade(#000, 42%), -45px 0 fade(#000, 42%);
+
+    .-mode-narrate .-content-block & {
+      box-shadow: 110px 0 fade(#000, 42%), -110px 0 fade(#000, 42%);
+      margin-inline-start: 100px;
+    }
   }
   &.preloader-loading {
     background-image: url(/static/preloader-loading.gif);
