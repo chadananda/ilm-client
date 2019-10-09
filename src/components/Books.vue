@@ -561,7 +561,7 @@ export default {
     box-shadow: 205px 0 fade(#000, 42%), -45px 0 fade(#000, 42%);
 
     .-mode-narrate .-content-block & {
-      box-shadow: 110px 0 fade(#000, 42%), -110px 0 fade(#000, 42%);
+      box-shadow: 110px 0 fade(#000, 42%), -140px 0 fade(#000, 42%);
       margin-inline-start: 100px;
     }
   }
