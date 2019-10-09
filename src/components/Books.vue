@@ -557,6 +557,7 @@ export default {
     position: absolute;
     height: 100%;
     background-color: #0000006b;
+    box-shadow: 205px 0 #0000006b, -45px 0 #0000006b;
   }
   &.preloader-loading {
     background-image: url(/static/preloader-loading.gif);
