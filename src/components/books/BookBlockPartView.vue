@@ -1841,6 +1841,9 @@ export default {
                   if (checkNode.nodeName.toLowerCase() === 'u') {
                     fixed_end = false;
                     offsetEnd+= checkNode.innerText.length;
+                    if (!this.$refs.blockContent.innerText.charAt(offsetEnd) || this.$refs.blockContent.innerText.charAt(offsetEnd).trim().length == 0) {// if u at the end of word - do not make selection bigger
+                      --offsetEnd;
+                    }
                   } else {
                     selection.end = offsetEnd + checkNode.innerText.length;
                   }
