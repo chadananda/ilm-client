@@ -16,10 +16,11 @@
     </template>-->
 
     <SvelteBookDisplayInVue
-      :blocks="parlistO.rIdsArray()"
+      :blocks="parlistO.listObjs"
       :parlistO="parlistO"
       :parlist="parlist"
       :lang="meta.language"
+      :forRefresh="forRefresh"
     />
 
   </div>
@@ -41,7 +42,8 @@ export default {
   data () {
     return {
       startId: false,
-      onScrollEv: false
+      onScrollEv: false,
+      forRefresh: false
     }
   },
   components: {
@@ -214,7 +216,7 @@ export default {
 
     getAllBlocks(metaId, startBlock) {
       console.time('getAllBlocks');
-      this.loadBookBlocks({bookId: metaId})
+      return this.loadBookBlocks({bookId: metaId})
       .then((res)=>{
         let scrollId = this.parlistO.idsArray()[0];
         this.parlistO.updateLookupsList(metaId, res);
@@ -223,49 +225,16 @@ export default {
         console.time('getAllBlocks foreach');
 
         if (res.blocks && res.blocks.length > 0) {
-          let i = 0;
-          for (let el of res.blocks) {
-
-            //if (i>500) break;
+          res.blocks.forEach((el, idx, arr)=>{
             if (!this.parlist.has(el._id)) {
-
-              //window.setTimeout(()=>{
-                let newBlock = new BookBlock(el);
-                this.$store.commit('set_storeList', newBlock);
-                //this.count++;
-                //console.log('i', i);
-              //}, 50);
-
-              i++;
-              //this.parlistO.setLoaded(el.rid);
+              let newBlock = new BookBlock(el);
+              this.$store.commit('set_storeList', newBlock);
+              if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
             } else {
-              //this.parlistO.setLoaded(el.rid);
+              this.parlistO.setLoaded(el.rid);
             }
+          });
 
-          }
-
-          let $this = this;
-          window.setTimeout(()=>{
-          for (let el of res.blocks) {
-            console.log('res.blocks.length', res.blocks.length);
-            $this.parlistO.setLoaded(el.rid);
-
-          }
-          }, 600);
-
-//           window.setTimeout(()=>{
-//             this.count++;
-//           }, 60);
-//           res.blocks.forEach((el, idx, arr)=>{
-//             if (!this.parlist.has(el._id)) {
-//               let newBlock = new BookBlock(el);
-//               this.$store.commit('set_storeList', newBlock);
-//
-//               //if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
-//             }
-//             //this.parlistO.setLoaded(el._id);
-//           });
-          //this.parlistO.refresh();
 //           if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
 //             Vue.nextTick(() => {
 //               this.handleScroll();
@@ -273,7 +242,10 @@ export default {
 //             })
 //           }
         }
+        console.log('parlistO.lookupList', this.parlistO.lookupList);
+        console.log('parlistO.listObjs', this.parlistO.listObjs);
         console.timeEnd('getAllBlocks foreach');
+        return res;
 //         Vue.nextTick(()=>{
 //           this.scrollToBlock(scrollId);
 //         });
@@ -370,7 +342,8 @@ export default {
             return this.loadPartOfBookBlocks({
               bookId: this.$route.params.bookid,
               block: startBlock,
-              taskType: taskType
+              taskType: taskType,
+              onPage: 200
             }).then((answer)=>{
               this.parlistO.setLookupsList(answer.meta.bookid, answer);
               if (this.startId == false) this.startId = this.parlistO.idsArray()[0];
@@ -388,7 +361,10 @@ export default {
                   });
                 }
                 console.timeEnd('loadBookMounted');
-                this.getAllBlocks(this.parlistO.meta.bookid, startBlock);
+                this.getAllBlocks(this.parlistO.meta.bookid, startBlock)
+                .then((result)=>{
+                  console.log('then result.blocks', result.blocks.length);
+                });
               });
             });
           })
