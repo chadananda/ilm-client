@@ -1323,11 +1323,10 @@ export default {
 //           });
       },
       assembleBlockProxy: function (check_realign = true, realign = false) {
-        let modeUpdate = this.mode === 'proofread' || this.mode === 'narrate';
         let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
-        if (modeUpdate && flagUpdate) {
+        if (flagUpdate) {
           this.isChanged = false;
-          return this.$parent.assembleBlockProxy(false, false)
+          return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
         }
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();

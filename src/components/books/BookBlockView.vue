@@ -1642,7 +1642,7 @@ export default {
           });
       },
 
-      assembleBlockProxy: function (check_realign = true, realign = false) {
+      assembleBlockProxy: function (check_realign = true, realign = false, update_fields = []) {
         if (this.isSplittedBlock && this.$refs.blocks) {
           this.$refs.blocks.forEach((blk, blkIdx) => {
             this.block.setPartContent(blkIdx, blk.clearBlockContent());
@@ -1719,13 +1719,14 @@ export default {
           }
         } else {
           if (this.isAudioChanged && !this.isAudioEditing) return this.assembleBlockAudio();
-          else if (this.isChanged) {
+          else if (this.isChanged || update_fields.length > 0) {
             let fullUpdate = false;
             this.block.clean();
             let partUpdate = {blockid: this.block.blockid, bookid: this.block.bookid};
             if (this.isSplittedBlock) {
               partUpdate.parts = this.block.parts;
             }
+            this.changes = this.changes.concat(update_fields);
             if (this.changes && Array.isArray(this.changes)) {
               this.changes.forEach(c => {
                 switch(c) {
