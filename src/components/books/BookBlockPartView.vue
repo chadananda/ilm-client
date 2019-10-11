@@ -1770,7 +1770,7 @@ export default {
             let checkWords = new RegExp(`([${lettersPattern}\\d]+?)([^${lettersPattern}\\d]+?)`, 'img');
             let match = false;
             let selection = {};
-            let offset = 0;
+            let offset = 0;//-1 * windowSelRange.startOffset;
             let found = false;
             let checkNodes = [startElementWrapper];
             let checkNode;
@@ -1792,6 +1792,7 @@ export default {
                   found = true;
                   if (checkNode.nodeName.toLowerCase() === 'u') {
                     fixed_start = false;
+                    offset-= windowSelRange.startOffset;
                     //fixed_end = false;
                     //offsetEnd+= checkNode.innerText.length;
                     //console.log(checkNode)
@@ -1820,7 +1821,7 @@ export default {
                 }
               }
             }
-            let offsetEnd = 0;
+            let offsetEnd = 0;//-1 * windowSelRange.endOffset;
             found = false;
             if (fixed_end) {
               checkNodes = [this.$refs.blockContent];
@@ -1841,9 +1842,10 @@ export default {
                   if (checkNode.nodeName.toLowerCase() === 'u') {
                     fixed_end = false;
                     offsetEnd+= checkNode.innerText.length;
-                    if (!this.$refs.blockContent.innerText.charAt(offsetEnd) || this.$refs.blockContent.innerText.charAt(offsetEnd).trim().length == 0) {// if u at the end of word - do not make selection bigger
-                      --offsetEnd;
-                    }
+                    offsetEnd-=windowSelRange.endOffset;
+                    //if (!this.$refs.blockContent.innerText.charAt(offsetEnd) || this.$refs.blockContent.innerText.charAt(offsetEnd).trim().length == 0) {// if u at the end of word - do not make selection bigger
+                      //--offsetEnd;
+                    //}
                   } else {
                     selection.end = offsetEnd + checkNode.innerText.length;
                   }
@@ -1868,7 +1870,7 @@ export default {
                 }
               }
             }
-            while((match = checkWords.exec(this.$refs.blockContent.innerText))) {
+            while((match = checkWords.exec(this.$refs.blockContent.textContent))) {
               if (match.index <= windowSelRange.startOffset + offset && !fixed_start) {
                 selection.start = match.index;
                 if (selection.start + match[0].length <= windowSelRange.startOffset + offset) {
