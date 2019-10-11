@@ -1990,6 +1990,7 @@ export default {
       },
 
       handleFlagClick: function(ev) {
+        ev.cancelBubble = true;
         let flagId = ev.target.dataset.flag;
         this.flagsSel = this.block.flags.filter((flag)=>{
           return flag._id === flagId;
