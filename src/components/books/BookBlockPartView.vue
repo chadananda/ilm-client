@@ -403,7 +403,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -988,21 +988,6 @@ export default {
         }
 
         return canFlag && !this.tc_hasTask('content_cleanup') && (!this.range.collapsed || !range_required);
-      },
-      isCanReopen(flag, partIdx) {
-        if (typeof flag !== 'undefined' && typeof partIdx !== 'undefined') {
-          let part = flag.parts && flag.parts[partIdx] ? flag.parts[partIdx] : false;
-          if (part) {
-            if (this.mode !== 'proofread' && part.type === 'editor') {
-              return false;
-            }
-            if (this.mode === 'narrate' && part.type === 'narrator') {
-              return false;
-            }
-            return part.status == 'resolved' && !part.collapsed && (!this.isCompleted || this.isProofreadUnassigned());
-          }
-        }
-        return false;
       },
       isProofreadUnassigned: function() {
         if (this._is('proofer', true) && this.mode === 'proofread') {
