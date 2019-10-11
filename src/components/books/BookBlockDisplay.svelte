@@ -60,7 +60,7 @@
 
   const blockOutPaddings = () => {
     if (block) {
-      //console.log('blockOutPaddings');
+      console.log('blockOutPaddings');
       return (block.classes && block.classes.hasOwnProperty('outsize-padding')) ? block.classes['outsize-padding'] : ''
     } else return '';
   }

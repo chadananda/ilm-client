@@ -231,7 +231,7 @@ export default {
               this.$store.commit('set_storeList', newBlock);
               if (el.type !== 'par') this.parlistO.setLoaded(el.rid);
             } else {
-              this.parlistO.setLoaded(el.rid);
+              //this.parlistO.setLoaded(el.rid);
             }
           });
 
@@ -242,8 +242,8 @@ export default {
 //             })
 //           }
         }
-        console.log('parlistO.lookupList', this.parlistO.lookupList);
-        console.log('parlistO.listObjs', this.parlistO.listObjs);
+        //console.log('parlistO.lookupList', this.parlistO.lookupList);
+        //console.log('parlistO.listObjs', this.parlistO.listObjs);
         console.timeEnd('getAllBlocks foreach');
         return res;
 //         Vue.nextTick(()=>{
