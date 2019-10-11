@@ -2850,9 +2850,7 @@ export default {
       },
 
       startRecording(blockPartIdx) {
-        if (this.$refs.blockFlagPopup) {
-          this.$refs.blockFlagPopup.close();
-        }
+        this.$root.$emit('closeFlagPopup', null);
         return this.recordTimer()
           .then(() => {
             //this.recordStartCounter = 0;
