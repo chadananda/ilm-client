@@ -116,6 +116,8 @@
                         </optgroup>
                       </template>
                     </select>
+                    <select class="form-control library-categories" v-model="libraryCategory">
+                    </select>
                   </td>
                 </tr>
 
@@ -454,6 +456,9 @@ import BookAssignments from './details/BookAssignments';
 import BookWorkflow from './details/BookWorkflow';
 import BookPublish from './details/BookPublish';
 import SplitPreview from './details/SplitPreview';
+import $ from 'jquery'
+import 'select2'
+import 'select2/dist/css/select2.css'
 var BPromise = require('bluebird');
 
 //Vue.use(VueTextareaAutosize)
@@ -531,7 +536,40 @@ export default {
         'engineer': [],
         'reader': [],
         'narrator': []
-      }
+      },
+      libraryCategories: [
+        {
+          text: 'Library 1',
+          id: 'library-1',
+          children: [
+            {
+              text: 'Category 1.1', id: 'cat1.1'
+            },
+            {
+              text: 'Category 1.2', id: 'cat1.2'
+            },
+            {
+              text: 'Category 1.3', id: 'cat1.3'
+            }
+          ]
+        },
+        {
+          text: 'Library 2',
+          id: 'library-2',
+          children: [
+            {
+              text: 'Category 2.1', id: 'cat2.1'
+            },
+            {
+              text: 'Category 2.2', id: 'cat2.2'
+            },
+            {
+              text: 'Category 2.3', id: 'cat2.3'
+            }
+          ]
+        }
+      ],
+      libraryCategory: []
 
     }
   },
@@ -636,6 +674,29 @@ export default {
   mixins: [task_controls, api_config, access],
 
   mounted() {
+    let $this = this;
+    $(this.$el).ready(() => {
+      $(this.$el).find('.library-categories')
+      .select2({
+        data: this.libraryCategories,
+        //...this.config,
+        multiple: true
+      })
+      //.val(this.value)
+      //.trigger('change')
+      // emit event on change.
+      .on('select2:select', (e) => {
+        console.log('select2:select', e.target.value);
+        console.log(this.libraryCategory)
+      })
+      .on('select2:unselecting', function () {
+        // according to https://github.com/select2/select2/issues/3320
+        $(this).one('select2:opening', function(ev) { ev.preventDefault(); });
+        //console.log('select2:unselecting', this.value);
+        $this.value = '';
+        $this.$emit('onSelect', '');
+      });
+    })
     let self = this;
     self.getTaskUsers();
 
@@ -1916,6 +1977,11 @@ Vue.filter('prettyBytes', function (num) {
 
   .outline-0 {
     outline: 0;
+  }
+  
+  span.select2-container {
+    min-width: 134px;
+    max-width: 100%;
   }
 
 </style>
