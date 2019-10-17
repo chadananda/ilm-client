@@ -350,8 +350,46 @@ export const store = new Vuex.Store({
     },
 
     set_currentAudiobook (state, audiobook) {
-      state.currentAudiobook = audiobook;
-      //console.log('CURRENT AUDIOBOOK', state.currentAudiobook)
+      if (!audiobook.bookid || !state.currentAudiobook.bookid || audiobook.bookid !== state.currentAudiobook.bookid) {
+        state.currentAudiobook = audiobook;
+      } else {
+        state.currentAudiobook.sortDirection = audiobook.sortDirection;
+        let oldFiles = state.currentAudiobook.importFiles.slice();
+        let newFiles = [];
+        audiobook.importFiles.forEach((f, i) => {
+          if (typeof state.currentAudiobook.importFiles[i] === 'undefined') {
+            state.currentAudiobook.importFiles.push(f);
+          } else if (f.id !== state.currentAudiobook.importFiles[i].id) {
+            let found = state.currentAudiobook.importFiles.find(_f => {
+              return _f.id === f.id;
+            });
+            if (found) {
+              let index = state.currentAudiobook.importFiles.indexOf(found);
+              state.currentAudiobook.importFiles.splice(index, 1);
+              state.currentAudiobook.importFiles.splice(i, 0, found);
+            } else {
+              state.currentAudiobook.importFiles.splice(i, 0, f);
+            }
+          } else {
+            if (state.currentAudiobook.importFiles[i].status !== f.status) {
+              state.currentAudiobook.importFiles[i].title = f.title;
+            }
+            state.currentAudiobook.importFiles[i].status = f.status;
+            state.currentAudiobook.importFiles[i].tstamp = f.tstamp;
+            state.currentAudiobook.importFiles[i].duration = f.duration;
+            state.currentAudiobook.importFiles[i].preview = f.preview;
+          }
+        });
+        state.currentAudiobook.importFiles.forEach((f, i) => {
+          let found = audiobook.importFiles.find(_f => {
+            return _f.id === f.id;
+          });
+          if (!found) {
+            state.currentAudiobook.importFiles.splice(i, 1);
+          }
+        });
+      }
+      console.log('CURRENT AUDIOBOOK', state.currentAudiobook)
     },
 
     SET_CURRENTBOOK_FILTER (state, obj) { // replace any property of bookFilters
@@ -1914,6 +1952,7 @@ export const store = new Vuex.Store({
           }
         })
         .catch(error => {
+          console.log(error)
           if (set) {
             commit('set_currentAudiobook', {});
           }
