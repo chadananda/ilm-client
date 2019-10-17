@@ -381,9 +381,8 @@ class BookBlock {
     });
   }
 
-  mergeFlags(fromIdx) {
+  mergeFlags(fromBlock) {
 
-    let fromBlock = this.flags[fromIdx];
     let blockFlagIdx = this.flags.map(f => f._id).indexOf(this._id);
 
     if (blockFlagIdx < 0) {
@@ -400,7 +399,7 @@ class BookBlock {
       this.flags[blockFlagIdx].parts = this.flags[blockFlagIdx].parts.concat(fromBlock.parts);
     }
 
-    this.flags.splice(fromIdx, 1);
+    this.flags.splice(this.flags.indexOf(fromBlock), 1);
   }
 
   isNeedAlso(_id) {

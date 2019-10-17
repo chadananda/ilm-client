@@ -177,9 +177,11 @@ import Vue from 'vue';
     font-size: 16px;
     width: 340px;
     text-align: left;
+    max-height: 358px;
+    overflow-y: hidden;
 
     .flag-wrapper {
-      max-height: 330px;
+      max-height: 292px;
       overflow:auto;
       overflow-x:hidden;
       padding: 5px 10px;

@@ -403,7 +403,7 @@ export default {
       //'modal': modal,
       'vue-picture-input': VuePictureInput
   },
-  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen'],
+  props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'insertSilence', 'audDeletePart', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'checkBlockContentFlags'],
   mixins: [taskControls, apiConfig, access],
   computed: {
       isLocked: function () {
@@ -1307,6 +1307,9 @@ export default {
 //           });
       },
       assembleBlockProxy: function (check_realign = true, realign = false) {
+        if (this.checkBlockContentFlags()) {
+          this.pushChange('flags');
+        }
         let flagUpdate = this.hasChange('flags') ? this.block.flags : null;
         if (flagUpdate) {
           this.isChanged = false;
@@ -1327,84 +1330,6 @@ export default {
           this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
         }
         return this.saveBlockPart(this.blockPart, this.blockPartIdx, realign);
-      },
-
-      assembleBlock: function(partUpdate = null, realign = false) {
-        let update = partUpdate ? partUpdate : this.block;
-        if (update.status && update.status.marked === true) {
-          update.status.marked = false;
-        }
-
-        this.checkBlockContentFlags();
-        this.updateFlagStatus(this.block._id);
-        let is_content_changed = this.hasChange('content');
-        let is_type_changed = this.hasChange('type');
-        this.isSaving = true;
-        if (this.isAudioEditing) {
-          this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
-        }
-        return this.putBlock([update, realign]).then((updated)=>{
-          //this.block.manual_boundaries = updated.manual_boundaries
-          if (realign) {
-            this.getBookAlign()
-              .then(() => {
-                this.isSaving = false;
-              });
-          } else {
-            this.isSaving = false;
-          }
-          if (this.isCompleted) {
-            this.tc_loadBookTask(this.block.bookid);
-            this.getCurrentJobInfo();
-          }
-          this.isChanged = false;
-          if (this.blockAudio.map) {
-            this.blockAudio.map = this.block.content;
-          }
-          if (this.isAudioEditing && !realign) {
-            this.$root.$emit('for-audioeditor:flush');
-            this.$root.$emit('for-audioeditor:reload-text', this.block.content, this.block);
-          }
-          this.$refs.blockContent.dataset.has_suggestion = false;
-          if (is_content_changed) {
-            if (['title', 'header'].indexOf(this.block.type) !== -1) {
-              this.updateBlockToc({blockid: this.block._id, bookid: this.block.bookid});
-            }
-          } else if (is_type_changed) {
-            this.loadBookToc({bookId: this.block.bookid, isWait: true});
-          }
-
-          /*this.blockO.status = Object.assign(this.blockO.status, {
-            marked: this.block.markedAsDone,
-            assignee: this.block.status.assignee,
-            proofed: this.block.status.proofed,
-            stage: this.block.status.stage
-          })
-          let upd = {
-            rid: this.blockO.rid,
-            type: this.block.type,
-            status: this.blockO.status,
-          }*/
-          //this.putBlockO(upd).then(()=>{
-            if (is_type_changed) {
-              //if (this.block.type == 'header' || this.block.type == 'par') {
-                this.putNumBlockO({
-                  bookId: this.block.bookid,
-                  rid: this.blockO.rid,
-                  type: this.block.type,
-                  secnum: this.blockO.secnum,
-                  parnum: this.blockO.parnum,
-                  isManual: true,
-                }).then((blocks)=>{
-                  //console.log('assembleBlock putNumBlockO', blocks[0]);
-                  this.storeListO.updBlockByRid(this.blockO.rid, {
-                    type: this.block.type
-                  })
-                });
-              //}
-            }
-          //});
-        });
       },
       assembleBlockPart: function(update) {
         update.blockid = this.block.blockid;
@@ -1505,15 +1430,6 @@ export default {
         content = content.replace(/<br[\/]?><br[\/]?>/gm, '<br>');
         content = content.replace(/^<br[\/]?>/, '');
         return content;
-      },
-
-      checkBlockContentFlags: function() {
-        if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
-          if (flag._id !== this.block._id) {
-            let node = this.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
-            if (!node) this.block.mergeFlags(flagIdx);
-          }
-        });
       },
 
       assembleBlockAudio: function() {

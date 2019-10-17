@@ -220,6 +220,7 @@
               :initRecorder="initRecorder"
               :saveBlockPart="saveBlockPart"
               :isCanReopen="isCanReopen"
+              :checkBlockContentFlags="checkBlockContentFlags"
               @insertBefore="insertBlockBefore"
               @insertAfter="insertBlockAfter"
               @deleteBlock="deleteBlock"
@@ -1748,6 +1749,10 @@ export default {
               partUpdate.parts = this.block.parts;
             }
             this.changes = this.changes.concat(update_fields);
+            if (this.checkBlockContentFlags()) {
+              this.pushChange('flags');
+            }
+        
             if (this.changes && Array.isArray(this.changes)) {
               this.changes.forEach(c => {
                 switch(c) {
@@ -1784,7 +1789,7 @@ export default {
                     partUpdate['footnotes'] = this.block.footnotes;
                     break;
                   case 'flags':
-                    this.checkBlockContentFlags();
+                    //this.checkBlockContentFlags();
                     this.updateFlagStatus(this.block._id);
                     partUpdate['flags'] = this.block.flags;
                     partUpdate['content'] = this.block.content;
@@ -1821,7 +1826,6 @@ export default {
           update.status.marked = false;
         }
 
-        this.checkBlockContentFlags();
         this.updateFlagStatus(this.block._id);
         let is_content_changed = this.hasChange('content');
         let is_type_changed = this.hasChange('type');
@@ -2049,14 +2053,19 @@ export default {
       },
 
       checkBlockContentFlags: function() {
-        if (this.block.flags) this.block.flags.forEach((flag, flagIdx)=>{
+        let merged = false;
+        if (this.block.flags) this.block.flags.slice().forEach((flag)=>{
           if (flag._id !== this.block._id) {
             let node = this.$refs.blocks.find(blk => {
               return blk.$refs.blockContent.querySelector(`[data-flag="${flag._id}"]`);
             });
-            if (!node) this.block.mergeFlags(flagIdx);
+            if (!node) {
+              merged = true;
+              this.block.mergeFlags(flag);
+            }
           }
         });
+        return merged;
       },
 
       assembleBlockAudio: function() {
