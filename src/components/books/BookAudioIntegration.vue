@@ -75,7 +75,7 @@
                         <i class="fa fa-stop-circle-o" v-on:click="stop()" v-if="playing === audiofile.id"></i> -->
                       </div>
                       <div class="audiofile-name">
-                        <span v-if="audiofile.hasOwnProperty('duplicate')" @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)"><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
+                        <span v-if="audiofile.hasOwnProperty('duplicate')" @click="duplicateAudiofileClick(audiofile.id, audiofile.duplicate, $event)" :title="audiofile.title ? audiofile.title : audiofile.name"><i>Duplicate: {{audiofile.title ? audiofile.title : audiofile.name}}</i></span>
                         <span v-if="renaming !== audiofile.id && !audiofile.hasOwnProperty('duplicate')"
                               :class="['audiofile-name-edit', audiofile.id.replace(/\./g, '')]"
                               @click="audiofileClick(audiofile.id, false, $event)"  :title="audiofile.title ? audiofile.title : audiofile.name" v-on:dblclick="renaming = audiofile.id">{{audiofile.title ? audiofile.title : audiofile.name}}</span>
