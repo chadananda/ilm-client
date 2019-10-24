@@ -2231,7 +2231,7 @@ export default {
   .container-block-wrapper {
     display: flex;
     flex-grow: 1;
-    min-width: 700px;
+    min-width: 395px;
   }
 
   .infinite-loading-container {
