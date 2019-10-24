@@ -160,7 +160,8 @@ export default {
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
-      isNeedDown: true
+      isNeedDown: true,
+      scrollToId: null
 
     }
   },
@@ -1628,6 +1629,7 @@ export default {
         if (firstId) {
           firstId = firstId.blockRid;
         }
+        this.scrollToId = blockId;
         vBlock.scrollIntoView();
         if (firstId) {
           let i = 0;
@@ -1684,7 +1686,7 @@ export default {
     checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < initialTopOffset+1 || rect.top - viewHeight >= 0);
+      return !(rect.bottom < initialTopOffset+30 || rect.top - viewHeight >= 0);
     },
 
     updatePositions() {
@@ -1709,6 +1711,7 @@ export default {
         return false;
       }
       //console.log('handleScroll', (new Date()).toJSON());
+      let scrolledBottom = this.$refs.contentScrollWrapRef.offsetHeight + this.$refs.contentScrollWrapRef.scrollTop >= this.$refs.contentScrollWrapRef.scrollHeight;
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
@@ -1716,7 +1719,9 @@ export default {
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         //let loadCount = 5;
-        for (var i = 0; i < this.parlistO.listObjs.length; i++) {
+        let startFrom = this.scrollToId ? this.parlistO.listIds.indexOf(this.scrollToId) : 0;
+        this.scrollToId = null;
+        for (var i = startFrom; i < this.parlistO.listObjs.length; i++) {
           let blockRef = this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
@@ -1743,6 +1748,9 @@ export default {
               blockRef.$forceUpdate();
             }*/
           } else if (firstVisible) break;
+        }
+        if (scrolledBottom) {
+          this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
         }
 
         /*if (fixJump !== 'true' && fixJump !== 'false') {
@@ -1777,6 +1785,11 @@ export default {
 //           });
 //         }
      } else this.onScrollEv = false;
+      this.parlistO.idsViewArray().forEach(l => {
+        let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
+        this.parlistO.setLoaded(l.blockRid);
+        blockRef.$forceUpdate();
+      });
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
@@ -1858,6 +1871,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.$store.commit('set_taskBlockMap');
                 }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
                 //this.lazyLoad();
@@ -1936,6 +1950,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.$store.commit('set_taskBlockMap');
                   //this.parlistO.refresh();
                   if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
                     Vue.nextTick(() => {

@@ -174,7 +174,8 @@ export const store = new Vuex.Store({
     jobStatusError: '',
     bookMode: null,
     processQueueWatch: null,
-    allowBookSplitPreview: false
+    allowBookSplitPreview: false,
+    taskBlockMap: {map: {}, refresh: null}
   },
 
   getters: {
@@ -332,6 +333,9 @@ export const store = new Vuex.Store({
       } else {
         return null;
       }
+    },
+    taskBlockMap: state => {
+      return state.taskBlockMap;
     }
   },
 
@@ -560,6 +564,7 @@ export const store = new Vuex.Store({
         }
       }
       state.tc_userTasks.total = tc_userTasks;
+      this.commit('set_taskBlockMap');
     },
     PREPARE_BOOK_COLLECTIONS(state) {
       if (state.isAdmin || state.isLibrarian) {
@@ -838,6 +843,20 @@ export const store = new Vuex.Store({
 
     set_book_mode(state, mode) {
       state.bookMode = mode || null;
+    },
+    
+    set_taskBlockMap(state) {
+      
+      let taskMap = {};
+      [...state.tc_currentBookTasks.tasks, ...state.currentJobInfo.can_resolve_tasks].forEach(t => {
+        //console.log(`${t.blockid}, ${t.type}`)
+        if (typeof taskMap[t.type] === 'undefined') {
+          taskMap[t.type] = {next: null, prev: null, blocks: []};
+        }
+        taskMap[t.type].blocks.push({blockId: t.blockid, blockRid: t.block});
+      });
+      state.taskBlockMap.map = taskMap;
+      state.taskBlockMap.refresh = Date.now();
     }
   },
 
@@ -879,73 +898,6 @@ export const store = new Vuex.Store({
         //commit('set_remoteDB', { dbProp: 'tasksRemoteDB', dbName: ILM_TASKS });
         commit('set_remoteDB', { dbProp: 'collectionsRemoteDB', dbName: ILM_COLLECTIONS });
         commit('set_remoteDB', { dbProp: 'librariesRemoteDB', dbName: ILM_LIBRARIES });
-
-
-//         state.metaDB.replicate.from(state.metaRemoteDB)
-//         .on('complete', (info)=>{
-//             state.metaDBcomplete = true;
-//             dispatch('updateBooksList');
-//             state.metaDB.sync(state.metaRemoteDB, {live: true, retry: true})
-//             .on('change', (change)=>{
-//                 console.log('metaDB change', change);
-//                 dispatch('updateBooksList');
-//                 // try to avoid meta glitches while update
-//                 if (state.blockers.indexOf('updateBookMeta') > -1) {
-//                   commit('clear_blocker', 'updateBookMeta');
-//                 }// else {
-//                   dispatch('reloadBookMeta');
-//                 //}
-//             })
-//             .on('error', (err)=>{
-//               // handle errors
-//             })
-//         });
-
-//         state.contentDB.replicate.from(state.contentRemoteDB)
-//         .on('complete', (info)=>{
-//             state.contentDBcomplete = true;
-//             state.contentDB.sync(state.contentRemoteDB, {live: true, retry: true})
-//             .on('change', (change)=>{
-//                 //console.log('contentDB change', change);
-//             })
-//             .on('error', (err)=>{
-//               // handle errors
-//             })
-//         });
-        /*state.replicatingDB.ilm_tasks = false;
-        state.tasksDB.replicate.from(state.tasksRemoteDB)
-        .on('complete', (info) => {
-          state.replicatingDB.ilm_tasks = true;
-          console.log('REPLICATION COMPLETE TASKS')
-          state.tasksDB.sync(state.tasksRemoteDB, {live: true, retry: true})
-          .on('change', (change) => {
-            //console.log('Tasks DB change', change.change.docs);
-            if (change.change && change.change.docs && Array.isArray(change.change.docs)) {
-              let isReload = change.change.docs.filter(d => {
-                //console.log('COMPARE', d, d.executor, state.auth.getSession().user_id);
-                return d.executor === state.auth.getSession().user_id
-              });
-              if (isReload) {
-                //console.log('LOAD')
-                isReload.forEach(task => {
-                  if (!task.time_completed) {
-                    //console.log('PUSH', task)
-                    state.tc_currentBookTasks.tasks.push(task);
-                  } else {
-                    let _t = state.tc_currentBookTasks.tasks.find(t => t._id == task._id);
-                    //console.log('COMPLETED', _t);
-                    if (_t) {
-                      //console.log(state.tc_currentBookTasks.tasks.length);
-                      state.tc_currentBookTasks.tasks.splice(state.tc_currentBookTasks.tasks.indexOf(_t), 1);
-                      //console.log(state.tc_currentBookTasks.tasks.length);
-                    }
-                  }
-                });
-                dispatch('tc_loadBookTask');
-              }
-            }
-          })
-        });*/
 
         state.collectionsDB.replicate.from(state.collectionsRemoteDB)
         .on('complete', (info) => {
@@ -1696,6 +1648,9 @@ export const store = new Vuex.Store({
                   dispatch('updateBookVersion', {major: true});
                 }
               });
+            state.storeListO.updBlockByRid(response.data.id, {
+              status: response.data.status
+            });
             return Promise.resolve(response.data);
           })
           .catch(err => {
@@ -1816,6 +1771,9 @@ export const store = new Vuex.Store({
           .then(response => {
             commit('clear_blocker', 'putBlock');
             dispatch('getCurrentJobInfo');
+            state.storeListO.updBlockByRid(response.data.id, {
+              status: response.data.status
+            });
             return Promise.resolve(response.data);
           })
           .catch(err => {
@@ -1961,23 +1919,6 @@ export const store = new Vuex.Store({
           console.log(err)
         })
     },
-
-    tc_setCurrentBookTasks({state}) {
-      state.tc_currentBookTasks = {"tasks": [], "job": {}, "assignments": [], "can_resolve_tasks": [], "is_proofread_unassigned": false};
-      for (let jobid in state.tc_userTasks.list) {
-        let job = state.tc_userTasks.list[jobid]
-        if (job.bookid == state.currentBookid) {
-          /*if (t.comment) {
-            t.comment = t.comment.replace('\n', '<br>');
-          }
-          if (t.blockid) {
-            state.tc_tasksByBlock[t.blockid] = t
-          }*/
-          state.tc_currentBookTasks = {job: job, tasks: job.tasks, can_resolve_tasks: job.can_resolve_tasks ? job.can_resolve_tasks : [], is_proofread_unassigned: job.is_proofread_unassigned ? job.is_proofread_unassigned : false}
-        }
-      }
-    },
-
     tc_approveBookTask({state, commit, dispatch}, task) {
       if (task.blockid) {
         state.approveBlocksList.push(task.blockid);
@@ -2450,6 +2391,7 @@ export const store = new Vuex.Store({
                 commit('SET_ALLOW_BOOK_PUBLISH', true);
               }
             }
+            commit('set_taskBlockMap');
             Vue.prototype.globalJobInfo = state.currentJobInfo;
             return Promise.resolve();
           })
