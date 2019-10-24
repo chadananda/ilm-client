@@ -2388,7 +2388,8 @@ export default {
     .-subblock {
       position: relative;
       .-content {
-        width: 785px;
+        max-width: 785px;
+        min-width: 480px;
         margin-left: auto;
         margin-right: auto;
         @media all and (max-width: 1100px) {
@@ -2458,7 +2459,8 @@ export default {
     }
     .controls-bottom-wrapper {
 
-      width: 650px;
+      max-width: 650px;
+      min-width: 345px;
       margin-left: auto;
       margin-right: auto;
       @media all and (max-width: 1100px) {
