@@ -374,8 +374,9 @@ export default {
       margin-bottom: 3px;
 
       .pull-right {
-        min-width: 460px;
-        text-align: right;
+        display: flex;
+        flex-shrink: 0;
+        justify-content: flex-end;
       }
       .title {
         white-space: nowrap;
@@ -388,7 +389,7 @@ export default {
       flex-grow: 2;
       display: flex;
       flex-direction: row;
-      overflow-y: hidden;
+      overflow: hidden;
 
       .container-fluid {
         width: 100%;
@@ -557,6 +558,12 @@ export default {
     position: absolute;
     height: 100%;
     background-color: #0000006b;
+    box-shadow: 205px 0 fade(#000, 42%), -45px 0 fade(#000, 42%);
+
+    .-mode-narrate .-content-block & {
+      box-shadow: 110px 0 fade(#000, 42%), -140px 0 fade(#000, 42%);
+      margin-inline-start: 100px;
+    }
   }
   &.preloader-loading {
     background-image: url(/static/preloader-loading.gif);

@@ -5,8 +5,8 @@
     <div>
       Version #{{ currentBookMeta.version ? currentBookMeta.version : '1.0' }}
     </div>
-    <div v-if="publicationStatus" >
-      Status #{{ publicationStatus }}
+    <div v-if="currentBookMeta.publicationStatus" >
+      Status #{{ currentBookMeta.publicationStatus }}
     </div>
     <div v-if="currentBookMeta.publishedVersion">
       Published version {{currentBookMeta.publishedVersion}}
@@ -29,7 +29,6 @@
     name: 'BookPublish',
     data() {
       return {
-        publicationStatus: false,
         isPublishing: false,
         isPublishingQueue: false
       }
@@ -96,11 +95,6 @@
       }
     },
     watch: {
-      'currentBookMeta.publicationStatus': {
-        handler(val) {
-          this.publicationStatus = val;
-        }
-      },
       'currentBookMeta.isIntheProcessOfPublication': {
         handler(val) {
           console.log(val)
@@ -112,7 +106,7 @@
           this.isPublishingQueue = !!val;
         }
       }
-    
+
     }
   }
 </script>

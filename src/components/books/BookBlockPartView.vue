@@ -705,7 +705,8 @@ export default {
           let parts = [];
           let lettersPattern = 'a-zA-Zа-яА-Я\\u0600-\\u06FF';
           let regEx = new RegExp(`[\.\!\?\…\؟]+[^${lettersPattern}]*?( |[\r\n]|<br[^>]*>)(?![\\W]*[a-z])`, 'mg')
-          let regExAbbr = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
+          let regExExcl = new RegExp(`(?=\\b)(St|Mr|Mrs|Dr|Hon|Ms|Messrs|Mmes|Msgr|Prof|Rev|Rt|Hon|cf|Cap|ca|cca|fl|gen|gov|vs|v|i\\.e|i\\.a|e\\.g|n\\.b|p\\.s|p\\.p\\.s|scil|ed|p|viz|[^\\wáíú’][A-Z])([\.\!\?\…\؟])$`, 'img');
+          let regExAbbr = new RegExp(`[\\. ][A-ZА-Я]\\.$`);
           let regExColon = new RegExp(`[\:\;\؛]\\W* `, 'mg');
           let regExLetters = new RegExp(`[${lettersPattern}]`);
           let regExNewline = new RegExp(`[^\.\!\?\…\؟]<br[^>]*>[^${lettersPattern}]*$`);
@@ -718,8 +719,8 @@ export default {
             let substr = content.substring(shift, match.index < content.length ? pos : null).trim();
             //var substrLower = str.substring(match.index);
             //console.log(`CHECK "${substr}"`);
-            //console.log('MATCH: ', substr.match(regExAbbr))
-            if (!substr.match(regExAbbr) && substr.match(regExLetters) && !substr.match(regExNewline)) {
+            //console.log('MATCH: ', substr.match(regExExcl))
+            if (!substr.match(regExExcl) && substr.match(regExLetters) && !substr.match(regExNewline) && !substr.match(regExAbbr)) {
               parts.push(substr);
               shift = pos;
             }

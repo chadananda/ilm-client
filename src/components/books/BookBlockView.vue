@@ -4579,7 +4579,6 @@ export default {
       position: relative;
 
       .par-ctrl {
-        width: 440px;
         /*background: green;*/
 
         display: flex;

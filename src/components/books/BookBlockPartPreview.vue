@@ -3,7 +3,6 @@
   <div ref="viewBlock" class="block-preview">
     <div v-if="block && (block.type != 'par' || (loaded === true || blockO.loaded === true))"
       :class="['table-body -block -subblock', blockOutPaddings]">
-
       <div class="table-cell controls-left sub-parnum" v-if="mode === 'narrate'"></div>
       <div :class="['table-cell', {'completed': isCompleted}]">
         <div :class="['table-body', '-content']">

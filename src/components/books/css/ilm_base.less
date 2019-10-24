@@ -95,6 +95,18 @@
       margin-bottom: @outer_padding-vertical-extra;
     }
 
+    .dropcap:first-letter {
+      float: left; padding-left:0;
+      font-style: normal; text-indent:0;
+      color: @secondary_color;
+      font-family: Romantik;
+      margin-right: .1em;
+      font-size: 3em;
+      line-height: 68px;
+      /*margin-top: 5px;
+      margin-bottom: -5px;*/
+    }
+
     .parnum {
       float: left;
       padding-top: 10px;
@@ -636,6 +648,7 @@
   @normal_img_height: 65vh;
 
   img {
+    max-width: 100%;
     max-height: @normal_img_height;
     margin: 10px auto;
     /*margin: 10px auto !important;*/

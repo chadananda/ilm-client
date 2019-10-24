@@ -1,102 +1,102 @@
 <template>
 <div :class="['content-scroll-wrapper']"
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
-
-  <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
+  <div class="container-block-wrapper">
+    <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
-      <div v-for="(viewObj, listIdx) in getListObjs"
-        :class="['row content-scroll-item back']"
-        :key = "viewObj.blockRid"
-        :id="'v-'+ viewObj.blockId"
-        :data-rid="viewObj.blockRid">
+        <div v-for="(viewObj, listIdx) in getListObjs"
+          :class="['row content-scroll-item back']"
+          :key = "viewObj.blockRid"
+          :id="'v-'+ viewObj.blockId"
+          :data-rid="viewObj.blockRid">
 
-        <div class='col'>
-        <BookBlockPreview
-          ref="viewBlocks"
-          :blockRid = "viewObj.blockRid"
-          :blockId = "viewObj.blockId"
-          :blockO = "parlistO.get(viewObj.blockRid)"
-          :block = "parlist.get(viewObj.blockId)"
-          :mode = "mode"
-        ></BookBlockPreview>
+          <div class='col'>
+          <BookBlockPreview
+            ref="viewBlocks"
+            :blockRid = "viewObj.blockRid"
+            :blockId = "viewObj.blockId"
+            :blockO = "parlistO.get(viewObj.blockRid)"
+            :block = "parlist.get(viewObj.blockId)"
+            :mode = "mode"
+          ></BookBlockPreview>
+          </div>
+          <!--<div class='col'>-->
+
         </div>
-        <!--<div class='col'>-->
-
-      </div>
-      <!--<div class="row"-->
+        <!--<div class="row"-->
       </div>
       <!--<div class="content-background">-->
-  </div>
-  <!--<div class="container-block">-->
+    </div>
+    <!--<div class="container-block">-->
 
-  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
-    :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
-      <div class="content-background">
-      <div class="row content-scroll-item front"
-        v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
-        v-bind:id="'s-'+ viewObj.blockId"
-        v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
-        <div class='col' v-if="parlist.has(viewObj.blockId)">
-          <BookBlockView ref="blocks"
-              :block="parlist.get(viewObj.blockId)"
-              :blockO="parlistO.get(viewObj.blockRid)"
-              :blockId = "viewObj.blockId"
-              :putBlock ="putBlockProxy"
-              :getBlock ="getBlockProxy"
-              :putBlockPart ="putBlockPartProxy"
-              :putBlockO ="putBlockOProxy"
-              :putNumBlockO ="putNumBlockOProxy"
-              :recorder ="recorder"
-              :blockReindexProcess="blockReindexProcess"
-              :getBloksUntil="getBloksUntil"
-              :allowSetStart="allowSetStart"
-              :allowSetEnd="allowSetEnd"
-              :prevId="parlistO.getInId(viewObj.blockRid)"
-              :mode="mode"
-              :putBlockProofread="putBlockProofreadProxy"
-              :putBlockNarrate="putBlockNarrateProxy"
-              :initRecorder="initRecorder"
-              @stopRecordingAndNext="stopRecordingAndNext"
-              @insertBefore="insertBlockBefore"
-              @insertAfter="insertBlockAfter"
-              @deleteBlock="deleteBlock"
-              :joinBlocks="joinBlocks"
-              @setRangeSelection="setRangeSelection"
-              @blockUpdated="blockUpdated"
-          /></BookBlockView>
+    <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
+      :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
+        <div class="content-background">
+        <div class="row content-scroll-item front"
+          v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
+          v-bind:id="'s-'+ viewObj.blockId"
+          v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
+          <div class='col' v-if="parlist.has(viewObj.blockId)">
+            <BookBlockView ref="blocks"
+                :block="parlist.get(viewObj.blockId)"
+                :blockO="parlistO.get(viewObj.blockRid)"
+                :blockId = "viewObj.blockId"
+                :putBlock ="putBlockProxy"
+                :getBlock ="getBlockProxy"
+                :putBlockPart ="putBlockPartProxy"
+                :putBlockO ="putBlockOProxy"
+                :putNumBlockO ="putNumBlockOProxy"
+                :recorder ="recorder"
+                :blockReindexProcess="blockReindexProcess"
+                :getBloksUntil="getBloksUntil"
+                :allowSetStart="allowSetStart"
+                :allowSetEnd="allowSetEnd"
+                :prevId="parlistO.getInId(viewObj.blockRid)"
+                :mode="mode"
+                :putBlockProofread="putBlockProofreadProxy"
+                :putBlockNarrate="putBlockNarrateProxy"
+                :initRecorder="initRecorder"
+                @stopRecordingAndNext="stopRecordingAndNext"
+                @insertBefore="insertBlockBefore"
+                @insertAfter="insertBlockAfter"
+                @deleteBlock="deleteBlock"
+                :joinBlocks="joinBlocks"
+                @setRangeSelection="setRangeSelection"
+                @blockUpdated="blockUpdated"
+            /></BookBlockView>
+          </div>
+          <!--<div class='col'>-->
         </div>
-        <!--<div class='col'>-->
+        <!--<div class="row"-->
+        </div>
+        <!--<div class="content-background">-->
+        <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
+          <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
+          <div slot="modal-footer" class="modal-footer">
+            <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
+            <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+            <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
+          </div>
+        </modal>
+        <modal v-model="doJoinBlocks.showAudio" effect="fade" cancel-text="Cancel" title="Join blocks saving">
+          <div slot="modal-body" class="modal-body">Discard unsaved audio changes?</div>
+          <div slot="modal-footer" class="modal-footer">
+            <button type="button" class="btn btn-default" @click="doJoinBlocks.showAudio = false;">Cancel</button>
+            <button type="button" class="btn btn-primary" @click="joinBlocks()">Discard</button>
+          </div>
+        </modal>
+
+        <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
+
+    </div>
+    <!--<div class="container-block">   -->
+
+    <div id="narrateStartCountdown" class="modal fade in">
+      <div>
+        <strong>3</strong>
       </div>
-      <!--<div class="row"-->
-      </div>
-      <!--<div class="content-background">-->
-      <modal v-model="doJoinBlocks.show" effect="fade" cancel-text="Close" title="Join blocks saving">
-        <div slot="modal-body" class="modal-body">Save changes and join blocks?</div>
-        <div slot="modal-footer" class="modal-footer">
-          <button type="button" class="btn btn-default" @click="doJoinBlocks.show = false;">Cancel</button>
-          <button v-if="doJoinBlocks.direction == 'previous'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
-          <button v-if="doJoinBlocks.direction == 'next'" type="button" class="btn btn-primary" @click="joinBlocks()">Save &amp; Join</button>
-        </div>
-      </modal>
-      <modal v-model="doJoinBlocks.showAudio" effect="fade" cancel-text="Cancel" title="Join blocks saving">
-        <div slot="modal-body" class="modal-body">Discard unsaved audio changes?</div>
-        <div slot="modal-footer" class="modal-footer">
-          <button type="button" class="btn btn-default" @click="doJoinBlocks.showAudio = false;">Cancel</button>
-          <button type="button" class="btn btn-primary" @click="joinBlocks()">Discard</button>
-        </div>
-      </modal>
-
-      <!--<infinite-loading v-if="autoload" @infinite="onScrollBookDown" ref="scrollBookDown"></infinite-loading>-->
-
-  </div>
-  <!--<div class="container-block">   -->
-
-  <div id="narrateStartCountdown" class="modal fade in">
-    <div>
-      <strong>3</strong>
     </div>
   </div>
-
 </div>
 <!--<div class="content-scroll-wrapper">-->
 </template>
@@ -160,7 +160,8 @@ export default {
 
       lazyLoaderDir: 'up',
       isNeedUp: true,
-      isNeedDown: true
+      isNeedDown: true,
+      scrollToId: null
 
     }
   },
@@ -1628,6 +1629,7 @@ export default {
         if (firstId) {
           firstId = firstId.blockRid;
         }
+        this.scrollToId = blockId;
         vBlock.scrollIntoView();
         if (firstId) {
           let i = 0;
@@ -1684,7 +1686,7 @@ export default {
     checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < initialTopOffset+1 || rect.top - viewHeight >= 0);
+      return !(rect.bottom < initialTopOffset+30 || rect.top - viewHeight >= 0);
     },
 
     updatePositions() {
@@ -1709,6 +1711,7 @@ export default {
         return false;
       }
       //console.log('handleScroll', (new Date()).toJSON());
+      let scrolledBottom = this.$refs.contentScrollWrapRef.offsetHeight + this.$refs.contentScrollWrapRef.scrollTop >= this.$refs.contentScrollWrapRef.scrollHeight;
       if (!this.onScrollEv) {
         let firstVisible = false;
         let lastVisible = false;
@@ -1716,7 +1719,9 @@ export default {
         let loadIdsArray = [];
         let viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
         //let loadCount = 5;
-        for (var i = 0; i < this.parlistO.listObjs.length; i++) {
+        let startFrom = this.scrollToId ? this.parlistO.listIds.indexOf(this.scrollToId) : 0;
+        this.scrollToId = null;
+        for (var i = startFrom; i < this.parlistO.listObjs.length; i++) {
           let blockRef = this.$refs.viewBlocks.find(v => v.blockId === this.parlistO.listObjs[i].blockId);
           let visible = this.checkVisible(blockRef.$refs.viewBlock, viewHeight);
           if (visible) {
@@ -1743,6 +1748,9 @@ export default {
               blockRef.$forceUpdate();
             }*/
           } else if (firstVisible) break;
+        }
+        if (scrolledBottom) {
+          this.parlistO.setFirstVisibleId(this.parlistO.listIds[this.parlistO.listIds.length - 1]);
         }
 
         /*if (fixJump !== 'true' && fixJump !== 'false') {
@@ -1777,6 +1785,11 @@ export default {
 //           });
 //         }
      } else this.onScrollEv = false;
+      this.parlistO.idsViewArray().forEach(l => {
+        let blockRef = this.$refs.viewBlocks.find(v => v.blockId === l.blockId);
+        this.parlistO.setLoaded(l.blockRid);
+        blockRef.$forceUpdate();
+      });
     },
 
     moveEditWrapper(firstVisible, lastVisible, force) {
@@ -1858,6 +1871,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.$store.commit('set_taskBlockMap');
                 }
                 this.loadBookToc({bookId: this.meta._id, isWait: true});
                 //this.lazyLoad();
@@ -1936,6 +1950,7 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.$store.commit('set_taskBlockMap');
                   //this.parlistO.refresh();
                   if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
                     Vue.nextTick(() => {
@@ -2212,6 +2227,11 @@ export default {
         position: relative;
       }
     }
+  }
+  .container-block-wrapper {
+    display: flex;
+    flex-grow: 1;
+    min-width: 395px;
   }
 
   .infinite-loading-container {
