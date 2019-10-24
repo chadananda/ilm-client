@@ -356,7 +356,7 @@ export default {
     flex-direction: column;
     overflow: hidden;
     .narrate& {
-      min-width: 860px;
+      min-width: 555px;
     }
     .edit& {
       min-width: 700px;
