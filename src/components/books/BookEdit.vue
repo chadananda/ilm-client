@@ -2481,6 +2481,7 @@ export default {
 
       max-width: 650px;
       min-width: 345px;
+      width: 100%;
       margin-left: auto;
       margin-right: auto;
       @media all and (max-width: 1100px) {
