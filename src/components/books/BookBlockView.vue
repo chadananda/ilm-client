@@ -4488,6 +4488,12 @@ export default {
         }
         .label-block {
           margin-right: 10px;
+          padding: 2px 0;
+        }
+        .-disabled ~ {
+          .label-block  {
+            display: none;
+          }
         }
         .save-block {
           cursor: pointer;
