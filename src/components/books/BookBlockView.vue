@@ -4487,12 +4487,13 @@ export default {
           }
         }
         .label-block {
+          display: none;
           margin-right: 10px;
           padding: 2px 0;
         }
-        .-disabled {
+        .save-block:not(.-disabled) {
           ~ .label-block  {
-            display: none;
+            display: block;
           }
         }
         .save-block {
