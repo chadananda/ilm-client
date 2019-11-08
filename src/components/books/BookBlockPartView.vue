@@ -297,6 +297,9 @@
           @click="assembleBlockProxy(true)">
             {{saveBlockLabel}}
           </div>
+          <div class="label-block -right">
+            Sub-block
+          </div>
         </div>
         <!--<div class="-hidden">-->
       </div>
@@ -1938,7 +1941,7 @@ export default {
         this.pushChange('flags');
         //this.$emit('addFlagPart');
       },
-      
+
       _delFlagPart(ev, partIdx) {
         this.delFlagPart(ev, partIdx, this.blockPartIdx);
         this.isChanged = true;

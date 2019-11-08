@@ -444,6 +444,9 @@
                     <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
                       Spot check
                     </div>
+                    <div class="label-block -right">
+                      Block
+                    </div>
 
                     </template>
                 </div>
@@ -4482,6 +4485,9 @@ export default {
               color: lightgray;
             }
           }
+        }
+        .label-block {
+          margin-right: 10px;
         }
         .save-block {
           cursor: pointer;
