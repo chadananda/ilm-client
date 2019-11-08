@@ -4494,7 +4494,9 @@ export default {
         }
         .save-block:not(.-disabled) {
           ~ .label-block  {
-            display: block;
+            .-voicework-narration & {
+              display: block;
+            }
           }
         }
         .save-block {
