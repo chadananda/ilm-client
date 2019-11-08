@@ -4490,8 +4490,8 @@ export default {
           margin-right: 10px;
           padding: 2px 0;
         }
-        .-disabled ~ {
-          .label-block  {
+        .-disabled {
+          ~ .label-block  {
             display: none;
           }
         }
