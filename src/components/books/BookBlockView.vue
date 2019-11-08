@@ -4490,6 +4490,7 @@ export default {
           display: none;
           margin-right: 10px;
           padding: 2px 0;
+          opacity: .5;
         }
         .save-block:not(.-disabled) {
           ~ .label-block  {
