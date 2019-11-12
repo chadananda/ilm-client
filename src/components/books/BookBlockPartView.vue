@@ -23,7 +23,7 @@
                     <template v-if="!isAudStarted">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block._id) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
-                        @click="audPlay($event)"></i>
+                        @click="audPlay($event, mode === 'edit' ? 1000 : 0)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
                     </template>
                     <template v-else>
@@ -1537,11 +1537,15 @@ export default {
         }
         this.isAudioChanged = false;
       },
-      audPlay: function(ev) {
+      audPlay: function(ev, timeout = 0) {
         if (this.player) {
+          this.isAudPaused = false;
           this.isAudPartStarted = false;
           this.audCleanClasses(this.block.blockid, ev);
-          this.player.playBlock('content-'+this.block.blockid+'-part-'+this.blockPartIdx);
+          this.isAudStarted = true;
+          setTimeout(() => {
+            this.player.playBlock('content-'+this.block.blockid+'-part-'+this.blockPartIdx);
+          }, timeout);
         }
       },
       audPlayFromSelection() {
@@ -1590,10 +1594,12 @@ export default {
       audStop: function(block_id, ev) {
         if (this.player) {
           this.isAudPartStarted = false;
-          this.player.pause();
-          this.isAudStarted = false;
-          this.isAudPaused = false;
-          this.audCleanClasses(block_id, ev);
+          this.player.pause()
+          Vue.nextTick(() => {
+            this.isAudStarted = false;
+            this.isAudPaused = false;
+            this.audCleanClasses(block_id, ev);
+          });
         }
       },
       audCleanClasses: function(block_id, ev) {
