@@ -17,7 +17,11 @@
         Publish
       </button>
       <span v-if="isPublishing" class="align-preloader -small"></span>
-
+    </div>
+    <div v-else-if="currentBookMeta.job_status === 'archived'">
+      <button class=" disable btn btn-primary">
+        Publish
+      </button>
     </div>
   </fieldset>
 </template>
@@ -112,7 +116,7 @@
           this.isPublishingQueue = !!val;
         }
       }
-    
+
     }
   }
 </script>
