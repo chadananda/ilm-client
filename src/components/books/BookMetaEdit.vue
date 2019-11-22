@@ -1250,10 +1250,12 @@ export default {
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
               if (pBlock && blockType == 'title') { // ILM-2533
-                if (styleKey == 'style' && styleVal != '') {
-                  pBlock.classes['table of contents'] = {isInToc: 'off'};
-                } else {
-                  pBlock.classes['table of contents'] = {isInToc: 'on'};
+                if (styleKey == 'style') {
+                  if (styleVal != '') {
+                    pBlock.classes['table of contents'] = {isInToc: 'off'};
+                  } else {
+                    pBlock.classes['table of contents'] = {isInToc: 'on'};
+                  }
                 }
                 if (styleKey == 'table of contents' && styleVal == 'on') {
                   pBlock.classes['style'] = '';
@@ -1274,7 +1276,10 @@ export default {
                       pBlock.classes['table of contents'] = {isInToc: 'off', tocLevel: 'toc4'};
                     } break;
                   };
-                if (styleKey == 'table of contents')
+                if (styleKey == 'table of contents') {
+                  if (typeof pBlock.classes['table of contents'] !== 'object') {
+                    pBlock.classes['table of contents'] = {};
+                  }
                   switch(styleVal) {
                     case 'toc4' : {
                       pBlock.classes['table of contents']['isInToc'] = 'off'
@@ -1283,6 +1288,7 @@ export default {
                       pBlock.classes['table of contents']['isInToc'] = 'on'
                     }
                   };
+                }
               }
 
               if (this.styleNotNumbered.indexOf(pBlock.classes[styleKey]) == -1 && this.styleNotNumbered.indexOf(styleVal) != -1){

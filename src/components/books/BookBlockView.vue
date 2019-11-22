@@ -3139,15 +3139,15 @@ export default {
         this.$modal.hide(name + this.block._id);
       },
       setChanged(val, type = null, event = null) {
-        //console.log('setChanged', val);
+        //console.log('setChanged', val, type, event, this.block.classes);
         this.isChanged = val;
         if (val && type) {
           this.pushChange(type);
-          if (this.block) {
-            this.block.classes = {};
+          //if (this.block) {
+            //this.block.classes = {};
             //this.block.secnum = false;
             //this.block.parnum = false;
-          }
+          //}
           this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
