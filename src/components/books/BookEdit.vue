@@ -3,33 +3,43 @@
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
-      <div class="content-background">
-      <div v-for="(viewObj, listIdx) in getListObjs"
-        :class="['row content-scroll-item back']"
-        :key = "viewObj.blockRid"
-        :id="'v-'+ viewObj.blockId"
-        :data-rid="viewObj.blockRid">
+    <div class="content-background">
 
-        <div class='col'>
-        <BookBlockPreview
-          ref="viewBlocks"
-          :blockRid = "viewObj.blockRid"
-          :blockId = "viewObj.blockId"
-          :blockO = "parlistO.get(viewObj.blockRid)"
-          :block = "parlist.get(viewObj.blockId)"
+        <SvelteBookPreviewInVue
+          :parlistO="parlistO"
+          :parlist="parlist"
+          :lang="meta.language"
+          :startId="startId"
           :mode = "mode"
-        ></BookBlockPreview>
-        </div>
-        <!--<div class='col'>-->
+        />
 
-      </div>
-      <!--<div class="row"-->
-      </div>
-      <!--<div class="content-background">-->
+        <!--<div v-for="(viewObj, listIdx) in getListObjs"
+          :class="['row content-scroll-item back']"
+          :key = "viewObj.blockRid"
+          :id="'v-'+ viewObj.blockId"
+          :data-rid="viewObj.blockRid">
+
+          <div class='col'>
+          <BookBlockPreview
+            ref="viewBlocks"
+            :blockRid = "viewObj.blockRid"
+            :blockId = "viewObj.blockId"
+            :blockO = "parlistO.get(viewObj.blockRid)"
+            :block = "parlist.get(viewObj.blockId)"
+            :mode = "mode"
+          ></BookBlockPreview>
+          </div>-->
+          <!--<div class='col'>-->
+
+        <!--</div>-->
+        <!--<div class="row"-->
+
+    </div>
+    <!--<div class="content-background">-->
   </div>
   <!--<div class="container-block">-->
 
-  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
+  <div v-if="false" v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
       <div class="row content-scroll-item front"
@@ -103,6 +113,9 @@ import vueSlider from 'vue-slider-component';
 
 import VueHotkey from 'v-hotkey';
 Vue.use(VueHotkey);
+
+import SvelteBookPreview from "./BookPreview.svelte";
+import toVue from "svelte-adapter/vue";
 
 const initialTopOffset = 84;
 
@@ -240,7 +253,8 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, BookBlockPreview, vueSlider
+      BookBlockView, BookBlockPreview, vueSlider,
+      SvelteBookPreviewInVue: toVue(SvelteBookPreview, {height: '100%'}, "div")
   },
   methods: {
     ...mapActions([
@@ -2140,7 +2154,7 @@ export default {
       width: 100%;
 
       &.back {
-        margin-right: -50%;
+        /*margin-right: -50%;*/
       }
       &.front {
         position: relative;
