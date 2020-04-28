@@ -636,7 +636,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        if (this.audioTasksQueue.blockId === this.block.blockid && this.audioTasksQueue.running) {
+        if (this.audioTasksQueue.block.checkId === this.block.blockid && this.audioTasksQueue.running) {
           return true;
         }
         return this.hasLock;
@@ -654,7 +654,7 @@ export default {
           if (this.isUpdating) {
             return 'editing-audio';
           }
-          if (this.audioTasksQueue.blockId === this.block.blockid && this.audioTasksQueue.running) {
+          if (this.audioTasksQueue.block.checkId === this.block.blockid && this.audioTasksQueue.running) {
             return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
@@ -1080,7 +1080,7 @@ export default {
       },
       isAudioEditing: {
         get() {
-          return this.audioTasksQueue.blockId === this.block.blockid;
+          return this.audioTasksQueue.block.blockId === this.block.blockid;
         },
         cache: false
       }
@@ -2114,13 +2114,15 @@ Save audio changes and realign the Block?`,
             return Promise.reject(err);
           });
       },
-      clearBlockContent: function(content = false) {
+      clearBlockContent: function(content = false, partIdx = null) {
         if (content === false) {
           content = '';
           this.$refs.blocks.forEach((blk, idx) => {
-            let cnt = blk.clearBlockContent();
-            content+= cnt;
-            this.block.setPartContent(idx, cnt);
+            if (partIdx === null || partIdx === idx) {
+              let cnt = blk.clearBlockContent();
+              content+= cnt;
+              this.block.setPartContent(idx, cnt);
+            }
           });
         }
         //console.log(content)

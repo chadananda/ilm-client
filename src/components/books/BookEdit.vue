@@ -153,7 +153,8 @@ export default {
           parlist: 'storeList',
           parlistO: 'storeListO',
           blockSelection: 'blockSelection',
-          currentJobInfo: 'currentJobInfo'
+          currentJobInfo: 'currentJobInfo',
+          audioTasksQueue: 'audioTasksQueue'
       }),
       metaStyles: function () {
           let result = '';
@@ -248,7 +249,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'insertSilenceAudio', 'shiftAudioTask', 'cutAudio', 'eraseAudio']),
 
     test(ev) {
         console.log('test', ev);
@@ -1872,6 +1873,150 @@ export default {
           this.$router.push({name: params.collectionid ? 'CollectionBookEditDisplay' : 'BookEditDisplay', params: params});
         }
       }
+    },
+    insertSilenceSilent(position, length) {
+      let blockRef = this.$refs.blocks.find(v => {
+        return v.$el.id === this.audioTasksQueue.block.blockId;
+      });
+      let content = null;
+      if (blockRef) {
+        content = blockRef.clearBlockContent(false, this.audioTasksQueue.partIdx);
+      } else {
+        
+      }
+      return this.insertSilenceAudio([position, length, content])
+        .then(response => {
+          if (blockRef) {
+            blockRef.$forceUpdate();
+          }
+          return Promise.resolve(response);
+        });
+    },
+    cutAudioSilent(start, end) {
+      let blockRef = this.$refs.blocks.find(v => {
+        return v.$el.id === this.audioTasksQueue.block.blockId;
+      });
+      let content = null;
+      if (blockRef) {
+        content = blockRef.clearBlockContent(false, this.audioTasksQueue.partIdx);
+      } else {
+        
+      }
+      return this.cutAudio([start, end, content])
+        .then(response => {
+          if (blockRef) {
+            blockRef.$forceUpdate();
+          }
+          return Promise.resolve(response);
+        });
+    },
+    eraseAudioSilent(start, end) {
+      let blockRef = this.$refs.blocks.find(v => {
+        return v.$el.id === this.audioTasksQueue.block.blockId;
+      });
+      let content = null;
+      if (blockRef) {
+        content = blockRef.clearBlockContent(false, this.audioTasksQueue.partIdx);
+      } else {
+        
+      }
+      return this.eraseAudio([start, end, content])
+        .then(response => {
+          if (blockRef) {
+            blockRef.$forceUpdate();
+          }
+          return Promise.resolve(response);
+        });
+    },
+    runAudioTasksQueue() {
+      if (!this.audioTasksQueue.running && this.audioTasksQueue.queue.length > 0) {
+        let task = null;
+        let record = this.audioTasksQueue.queue[0];
+        this.audioTasksQueue.running = record;
+        switch (record.type) {
+          case 'cut':
+            /*if (this.isSplittedBlock) {
+              this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+            } else {
+              this.block.setContent(this.clearBlockContent());
+            }*/
+            task = this.cutAudioSilent(...record.options);
+            break;
+          case 'insert_silence':
+            /*if (this.isSplittedBlock) {
+              this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+            } else {
+              this.block.setContent(this.clearBlockContent());
+            }*/
+            task = this.insertSilenceSilent(...record.options);
+            break;
+          case 'erase':
+            task = this.eraseAudioSilent(...record.options);
+            break;
+          case 'save-audio':
+            task = this.$parent.assembleBlockAudioEdit(...record.options, false);
+            break;
+          case 'save-audio-then-block':
+            task = new Promise((resolve, reject) => {
+              return this.$parent.assembleBlockAudioEdit(...record.options.concat([{content: this.clearBlockContent()}]))
+                .then(() => {
+                  return this.$parent.assembleBlockProxy(false, true, [], false);
+                })
+                .then(() => {
+                  return resolve();
+                })
+                .catch(err => {
+                  console.log(err);
+                  return reject(err);
+                });
+            });
+            break;
+          case 'save-part-then-audio':
+            task = new Promise((resolve, reject) => {
+              let preparedData = {content: this.clearBlockContent(), audiosrc: this.blockAudiosrc(null, false)};
+              return this.assembleBlockProxy(false, false, false)
+                .then(() => {
+                  return this.assembleBlockPartAudioEdit(...record.options.concat(preparedData));
+                })
+                .then(() => {
+                  return resolve();
+                })
+                .catch(err => {
+                  console.log(err);
+                  return reject(err);
+                });
+            });
+            break;
+          case 'save-part-audio':
+            task = this.assembleBlockPartAudioEdit(...record.options);
+            break;
+          case 'manual_boundaries':
+            task = new Promise((resolve, reject) => {
+              this.evFromAudioeditorWordRealign(...record.options);
+              return resolve();
+            });
+            break;
+          default:
+            task = Promise.resolve();
+            console.log('Not implemented type', record.type, record);
+            break;
+        }
+        //this.audStop();
+        //this.isAudioChanged = true;
+        return task
+          .then((response) => {
+            this.audioTasksQueue.running = null;
+            if (Array.isArray(response)) {
+              this.$root.$emit('for-audioeditor:load-silent', record, ...response);
+            }
+            //this.blockAudio.map = this.blockContent();
+            //this.blockAudio.src = this.blockAudiosrc('m4a');
+            this.shiftAudioTask();
+          })
+          .catch(err => {
+            this.audioTasksQueue.running = null;
+          });
+      }
     }
   },
   events: {
@@ -2078,6 +2223,26 @@ export default {
       handler(val) {
         if (val) {
           this.checkMode();
+        }
+      }
+    },
+    'audioTasksQueue.time': {
+      handler(val, oldVal) {
+        //console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
+        if (oldVal === null && val !== null) {
+          console.log('START ', this.check_id);
+          this.runAudioTasksQueue();
+        }
+      }
+    },
+    'audioTasksQueue.running': {
+      handler(val) {
+        //console.log(`audioTasksQueue.running: ${val}`, val);
+        if (val === null) {
+          console.log('CONTINUE', this.check_id);
+          if (this.audioTasksQueue.queue.length > 0) {
+            this.runAudioTasksQueue();
+          }
         }
       }
     }

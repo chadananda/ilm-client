@@ -318,7 +318,7 @@
             if (block._id !== this.blockId) {
               this._clearHistoryLocal();
             }
-            this.setAudioTasksBlockId(block._id);
+            this.setAudioTasksBlockId([block.blockid, block._id, block.partIdx]);
           }
           if (this.audiosourceEditor) {
             this.audiosourceEditor.tracks.forEach(t => {

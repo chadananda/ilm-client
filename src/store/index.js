@@ -210,7 +210,11 @@ export const store = new Vuex.Store({
       queue: [],
       running: null,
       log: [],
-      blockId: null
+      block: {
+        blockId: null,
+        partIdx: null,
+        checkId: null
+      }
     }
   },
 
@@ -430,7 +434,7 @@ export const store = new Vuex.Store({
       return state.audioTasksQueue;
     },
     checkRunningAudioTask: state => (check_id) => {
-      if (!state.audioTasksQueue.running || check_id !== state.audioTasksQueue.blockId || (state.audioTasksQueue.running && state.audioTasksQueue.log.indexOf(state.audioTasksQueue.running.time) === -1)) {
+      if (!state.audioTasksQueue.running || check_id !== state.audioTasksQueue.block.blockId || (state.audioTasksQueue.running && state.audioTasksQueue.log.indexOf(state.audioTasksQueue.running.time) === -1)) {
         return false;
       }
       return true;
@@ -3144,11 +3148,13 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    setAudioTasksBlockId({state, dispatch}, blockId) {
-      if (blockId !== state.audioTasksQueue.blockId) {
+    setAudioTasksBlockId({state, dispatch}, [blockId, checkId, partIdx]) {
+      if (blockId !== state.audioTasksQueue.block.blockId) {
         dispatch('clearAudioTasks', true);
         state.audioTasksQueue.running = null;
-        state.audioTasksQueue.blockId = blockId;
+        state.audioTasksQueue.block.blockId = blockId;
+        state.audioTasksQueue.block.checkId = checkId;
+        state.audioTasksQueue.block.partIdx = partIdx;
       }
     },
     addAudioTask({state}, [type, options]) {
@@ -3177,7 +3183,7 @@ export const store = new Vuex.Store({
       if (cancel_running) {
         state.audioTasksQueue.running = null;
       }
-      state.audioTasksQueue.blockId = null;
+      state.audioTasksQueue.block.blockId = null;
     },
     shiftAudioTask({state}) {
       state.audioTasksQueue.queue.shift();
@@ -3186,6 +3192,172 @@ export const store = new Vuex.Store({
       } else {
         state.audioTasksQueue.time = null;
       }
+    },
+    insertSilenceAudio({state, dispatch, commit}, [position, length, content]) {
+      
+      let blockInfo = state.audioTasksQueue.block;
+      let api_url = `${state.API_URL}book/block/${blockInfo.blockId}/audio/insert_silence`;
+      
+      let block = state.storeList.get(blockInfo.blockId);
+      let partIdx = blockInfo.partIdx;
+      
+      let formData = {
+        content: content ? content : block.getPartContent(partIdx),
+        position: position,
+        length: length
+      };
+      
+      if (partIdx !== null) {
+        formData.audio = block.getPartAudiosrc(partIdx, null, false);
+        formData.modified = block.parts[partIdx].isAudioChanged;
+        formData.manual_boundaries = block.getPartManualBoundaries(partIdx);
+        formData.part_idx = partIdx;
+      } else {
+        formData.audio = block.getAudiosrc(null, false);
+        formData.modified = block.isAudioChanged;
+        formData.manual_boundaries = block.manual_boundaries || [];
+      }
+      return axios.post(api_url, formData, {})
+        .then(response => {
+          //if (!state.checkRunningAudioTask(state.audioTasksQueue.checkId)) {
+            //return Promise.resolve();
+          //}
+          let response_params = [];
+          if (response.status === 200 && response.data && response.data.content && response.data.audiosrc) {
+            if (partIdx !== null) {
+              block.setPartContent(partIdx, response.data.content);
+              block.setPartAudiosrc(partIdx, response.data.audiosrc, response.data.audiosrc_ver);
+              block.setPartManualBoundaries(partIdx, response.data.manual_boundaries || []);
+              let part = block.parts[partIdx];
+              part._id = state.audioTasksQueue.checkId;
+              response_params = [block.getPartAudiosrc(partIdx, 'm4a'), block.getPartContent(partIdx), true, part];
+            } else {
+              block.setContent(response.data.content);
+              block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+              block.setManualBoundaries(response.data.manual_boundaries || []);
+              response_params = [block.getAudiosrc('m4a'), response.data.content, true, block];
+              block.isAudioChanged = true;
+            }
+            commit('set_storeList', block);
+          } else {
+            return Promise.reject(new Error('set-error-alert', 'Failed to apply your correction. Please try again.'));
+          }
+          return Promise.resolve(response_params);
+        })
+        .catch(err => {
+          dispatch('checkError', err);
+          return Promise.reject(err);
+        });
+    },
+    cutAudio({state}, [start, end, content]) {
+      
+      let blockInfo = state.audioTasksQueue.block;
+      let api_url = `${state.API_URL}book/block/${blockInfo.blockId}/audio_remove`;
+      
+      let block = state.storeList.get(blockInfo.blockId);
+      let partIdx = blockInfo.partIdx;
+      
+      let formData = {
+        content: content ? content : block.getPartContent(partIdx),
+        position: [start, end]
+      };
+      
+      if (partIdx !== null) {
+        formData.modified = block.parts[partIdx].isAudioChanged;
+        formData.audio = block.getPartAudiosrc(partIdx, null, false);
+        formData.manual_boundaries = block.getPartManualBoundaries(partIdx);
+        formData.part_idx = partIdx;
+      } else {
+        formData.modified = block.isAudioChanged;
+        formData.audio = block.getAudiosrc(null, false);
+        formData.manual_boundaries = block.manual_boundaries || [];
+      }
+      return axios.post(api_url, formData, {})
+        .then(response => {
+          //if (!this.checkRunningAudioTask(this.check_id)) {
+            //return Promise.resolve();
+          //}
+          let response_params = [];
+          if (response.status === 200 && response.data && response.data.content && response.data.audiosrc) {
+
+            if (partIdx !== null) {
+              let part = response.data;
+              block.setPartContent(partIdx, part.content);
+              block.setPartAudiosrc(partIdx, part.audiosrc, part.audiosrc_ver);
+              block.setPartManualBoundaries(partIdx, part.manual_boundaries || []);
+              response_params = [block.getPartAudiosrc(partIdx, 'm4a'), block.getPartContent(partIdx), true, Object.assign({_id: state.audioTasksQueue.checkId}, part)];
+            } else {
+              block.setContent(response.data.content);
+              block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+              block.setManualBoundaries(response.data.manual_boundaries || []);
+              block.isAudioChanged = true;
+              response_params = [block.getAudiosrc('m4a'), response.data.content, true, block];
+            }
+            commit('set_storeList', block);
+          } else {
+            return Promise.reject();
+          }
+          
+          return Promise.resolve(response_params);
+        })
+        .catch(err => {
+          dispatch('checkError', err);
+          return Promise.reject(err);
+        });
+    },
+    eraseAudio({state, dispatch, commit}, [start, end, content]) {
+      
+      let blockInfo = state.audioTasksQueue.block;
+      let api_url = `${state.API_URL}book/block/${blockInfo.blockId}/audio_erase`;
+      
+      let block = state.storeList.get(blockInfo.blockId);
+      let partIdx = blockInfo.partIdx;
+      
+      let formData = {
+        content: content ? content : block.getPartContent(partIdx),
+        position: [start, end]
+      };
+      if (partIdx !== null) {
+        formData.modified = block.isAudioChanged;
+        formData.audio = block.getPartAudiosrc(partIdx, null, false);
+        formData.manual_boundaries = block.getPartManualBoundaries(partIdx);
+        formData.part_idx = partIdx;
+      } else {
+        formData.modified = block.isAudioChanged;
+        formData.audio = block.getAudiosrc(null, false);
+        formData.manual_boundaries = block.manual_boundaries || [];
+      }
+      return axios.post(api_url, formData, {})
+        .then(response => {
+          //if (!this.checkRunningAudioTask(this.check_id)) {
+            //return Promise.resolve();
+          //}
+          let response_params = [];
+          if (response.status === 200 && response.data && response.data.content && response.data.audiosrc) {
+
+            if (partIdx !== null) {
+              let part = response.data;
+              block.setPartContent(partIdx, part.content);
+              block.setPartAudiosrc(partIdx, part.audiosrc, part.audiosrc_ver);
+              block.setPartManualBoundaries(partIdx, part.manual_boundaries || []);
+              response_params = [this.block.getPartAudiosrc(partIdx, 'm4a'), this.block.getPartContent(partIdx), true, Object.assign({_id: this.audioTasksQueue.checkId}, part)];
+            } else {
+              block.setContent(response.data.content);
+              block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+              block.setManualBoundaries(response.data.manual_boundaries || []);
+              block.isAudioChanged = true;
+              response_params = [block.getAudiosrc('m4a'), response.data.content, true, block];
+            }
+            commit('set_storeList', block);
+          } else {
+            return Promise.reject(err);
+          }
+          return Promise.resolve(response_params);
+        })
+        .catch(err => {
+          dispatch('checkError', err);
+          return Promise.reject(err);
+        });
     }
   }
 })

@@ -644,7 +644,7 @@ class BookBlock {
       !(
         Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined'
       ) &&
-      partIdx === 0
+      (partIdx === 0 || partIdx === null)
     ) {
       return this.content;
     } else {

@@ -393,7 +393,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        if (this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
+        if (this.audioTasksQueue.block.checkId === this.check_id && this.audioTasksQueue.running) {
           return true;
         }
         return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
@@ -415,7 +415,7 @@ export default {
           if (this.isUpdating) {
             return 'editing-audio';
           }
-          if (this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
+          if (this.audioTasksQueue.block.checkId === this.check_id && this.audioTasksQueue.running) {
             return 'audio-positioning';
           }
           let lockType = this.blockLockType(this.block.blockid);
@@ -802,7 +802,7 @@ export default {
       },
       isAudioEditing: {
         get() {
-          return this.check_id && this.audioTasksQueue.blockId === this.check_id;
+          return this.check_id && this.audioTasksQueue.block.blockId === this.check_id;
         },
         cache: false
       }
@@ -2455,8 +2455,10 @@ Save audio changes and realign the Block?`,
         Vue.nextTick(() => {
           let audiosrc = this.blockAudio.src;
           let text = this.blockAudio.map;
-          let loadBlock = this.blockPart;
+          let loadBlock = Object.assign({}, this.blockPart);
           loadBlock._id = this.check_id;
+          loadBlock.blockid = this.block.blockid;
+          loadBlock.partIdx = this.isSplittedBlock ? this.blockPartIdx : null;
           this.$root.$emit('for-audioeditor:load-and-play', audiosrc, text, loadBlock);
 
           this.audioEditorEventsOn();
@@ -3766,11 +3768,11 @@ Save text changes and realign the Block?`,
           this.destroyEditor();
           this.initEditor(true);
         }
-      },
+      }/*,
       'audioTasksQueue.time': {
         handler(val, oldVal) {
           //console.log(`audioTasksQueue.time: ${val}`, Object.assign({}, this.audioTasksQueue));
-          if (oldVal === null && val !== null && this.audioTasksQueue.blockId === this.check_id) {
+          if (oldVal === null && val !== null && this.audioTasksQueue.block.blockId === this.check_id) {
             //console.log('START ', this.check_id);
             this.evFromAudioEditorTasksQueuePush(this.check_id);
           }
@@ -3779,14 +3781,14 @@ Save text changes and realign the Block?`,
       'audioTasksQueue.running': {
         handler(val) {
           //console.log(`audioTasksQueue.running: ${val}`, val);
-          if (val === null && this.audioTasksQueue.blockId === this.check_id) {
+          if (val === null && this.audioTasksQueue.block.blockId === this.check_id) {
             //console.log('CONTINUE', this.check_id);
             if (this.audioTasksQueue.queue.length > 0) {
               this.evFromAudioEditorTasksQueuePush(this.check_id);
             }
           }
         }
-      }
+      }*/
   }
 }
 </script>
