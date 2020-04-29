@@ -2071,9 +2071,80 @@ Save text changes and realign the Block?`,
         return Promise.resolve();
       } else {
         this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
-        this.addAudioTask(['save-audio', [footnoteIdx, realign]]);
+        this.addAudioTask(['save-audio', [realign]]);
         return Promise.resolve();
       }
+    },
+    saveBlockAudioEdit(blockId, realign, preparedData) {
+      let block = this.parlist.get(blockId);
+      this.$root.$emit('closeFlagPopup', true);
+      //let manual_boundaries = block.manual_boundaries || [];
+      let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
+      let api = this.$store.state.auth.getHttp();
+      let data = {
+        audiosrc: preparedData.audiosrc || block.getPartAudiosrc(0, null, false),
+        content: block.getPartContent(0),
+        manual_boundaries: preparedData.manual_boundaries || block.getPartManualBoundaries(0),
+        mode: this.mode
+      };
+      this.isSaving = true;
+      if (realign) {
+        api_url+= '?realign=true';
+      }
+      this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+      return api.post(api_url, data, {})
+        .then(response => {
+          this.$root.$emit('for-audioeditor:flush');
+          if (!realign) {
+            this.isSaving = false;
+          } else {
+            this.getBookAlign()
+              .then(() => {
+                this.$root.$emit('for-audioeditor:set-process-run', true, 'align');
+                this.isSaving = false;
+              })
+          }
+          if (response.status == 200) {
+            if (this.isCompleted) {
+              this.tc_loadBookTask();
+            }
+            this.getCurrentJobInfo();
+
+            if (this.block.status.marked != response.data.status.marked) {
+              this.block.status.marked = response.data.status.marked;
+            }
+            //this.$emit('blockUpdated', this.block._id);
+            this.isAudioChanged = false;
+            //this.isChanged = false;
+            this.block.isAudioChanged = false;
+            //this.block.isChanged = false;
+            
+            this.block.content = response.data.content;
+            this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+            this.blockAudio.map = response.data.content;
+            this.blockAudio.src = this.block.getAudiosrc('m4a');
+            this.block.manual_boundaries = response.data.manual_boundaries || [];
+            this.block.audiosrc_original = response.data.audiosrc_original;
+            Vue.nextTick(() => {
+              if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
+                this.block.flags.forEach(f => {
+                  this.updateFlagStatus(f._id);
+                });
+                //console.log(this.$refs.blockContent.innerHTML)
+              }
+            })
+            //return this.putBlock(this.block);
+            if (!realign) {
+              this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
+            }
+            return BPromise.resolve();
+          }
+        })
+        .catch(err => {
+          this.isSaving = false;
+          this.checkError(err);
+          BPromise.reject(err)
+        });
     }
   },
   events: {
