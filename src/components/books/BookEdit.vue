@@ -249,7 +249,7 @@ export default {
     'loopPreparedBlocksChain', 'putBlockO', 'putNumBlockO',
     'putNumBlockOBatch',
 
-    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'insertSilenceAudio', 'shiftAudioTask', 'cutAudio', 'eraseAudio']),
+    'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'insertSilenceAudio', 'shiftAudioTask', 'cutAudio', 'eraseAudio', 'addAudioTask']),
 
     test(ev) {
         console.log('test', ev);
@@ -2017,6 +2017,63 @@ export default {
             this.audioTasksQueue.running = null;
           });
       }
+    },
+    evFromAudioeditorSave (realign = false) {
+      if (this.audioTasksQueue.block.partIdx === null) {
+        //this.block.setAudiosrc(this.blockAudiosrc(null, false));
+        //this.block.setAudiosrc(this.block.getPartAudiosrc(this.blockPartIdx, null, false), {'m4a': this.block.getPartAudiosrc(this.blockPartIdx, 'm4a', false)});
+        //this.block.setContent(this.blockContent());
+        //this.block.setContent(this.blockContent());
+        return this.addToQueueBlockAudioEdit(null, realign)
+          .then(() => {
+            //this.isAudioChanged = false;
+            //this.blockAudio.map = this.blockContent();
+            //this.blockAudio.src = this.blockAudiosrc('m4a');
+            //this.showPinnedInText();
+            return Promise.resolve();
+          });
+      } else {
+        this.addToQueueBlockPartAudioEdit(realign);
+      }
+    },
+    addToQueueBlockAudioEdit(realign = false) {
+      let block = this.parlist.get(this.audioTasksQueue.block.blockId);
+      if (block.isChanged) {
+        this.$root.$emit('show-modal', {
+          title: 'Unsaved Changes',
+          text: `Block text has been modified and not saved.<br>
+Save text changes and realign the Block?`,
+          buttons: [
+            {
+              title: 'Cancel',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+              },
+              class: ['btn btn-default']
+            },
+            {
+              title: 'Save & Realign',
+              handler: () => {
+                this.$root.$emit('hide-modal');
+                /*return this.assembleBlockAudioEdit(footnoteIdx, false, {content: this.clearBlockContent()})
+                  .then(() => {
+                    return this.assembleBlockProxy(false, true, [], false);
+                  });*/
+                //console.log('ADD TO QUEUE');
+                this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+                this.addAudioTask(['save-audio-then-block', [realign]]);
+              },
+              class: ['btn btn-primary']
+            }
+          ],
+          class: ['align-modal']
+        });
+        return Promise.resolve();
+      } else {
+        this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        this.addAudioTask(['save-audio', [footnoteIdx, realign]]);
+        return Promise.resolve();
+      }
     }
   },
   events: {
@@ -2100,6 +2157,7 @@ export default {
       this.$root.$on('bookBlocksUpdates', this.bookBlocksUpdates);
       this.$root.$on('from-meta-edit:set-num', this.listenSetNum);
       this.$root.$on('from-toolbar:toggle-meta', this.correctEditWrapper);
+      this.$root.$on('from-audioeditor:save', this.evFromAudioeditorSave);
 
 
       $('body').on('click', '.medium-editor-toolbar-anchor-preview-inner, .ilm-block a', (e) => {// click on links in blocks
@@ -2124,6 +2182,7 @@ export default {
     this.$root.$off('book-reloaded', this.bookReloaded);
     this.$root.$off('from-meta-edit:set-num', this.listenSetNum);
     this.$root.$off('from-toolbar:toggle-meta', this.correctEditWrapper);
+    this.$root.$off('from-audioeditor:save', this.evFromAudioeditorSave);
   },
   watch: {
     'meta._id': {
