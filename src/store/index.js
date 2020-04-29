@@ -3249,7 +3249,7 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    cutAudio({state}, [start, end, content]) {
+    cutAudio({state, dispatch, commit}, [start, end, content]) {
       
       let blockInfo = state.audioTasksQueue.block;
       let api_url = `${state.API_URL}book/block/${blockInfo.blockId}/audio_remove`;
