@@ -2079,7 +2079,7 @@ Save text changes and realign the Block?`,
       let block = this.parlist.get(blockId);
       this.$root.$emit('closeFlagPopup', true);
       //let manual_boundaries = block.manual_boundaries || [];
-      let api_url = this.API_URL + 'book/block/' + this.block._id + '/audio_edit';
+      let api_url = `${this.API_URL}book/block/${block.blockid}/audio_edit`;
       let api = this.$store.state.auth.getHttp();
       let data = {
         audiosrc: preparedData.audiosrc || block.getPartAudiosrc(0, null, false),
@@ -2110,21 +2110,21 @@ Save text changes and realign the Block?`,
             }
             this.getCurrentJobInfo();
 
-            if (this.block.status.marked != response.data.status.marked) {
-              this.block.status.marked = response.data.status.marked;
+            if (block.status.marked != response.data.status.marked) {
+              block.status.marked = response.data.status.marked;
             }
             //this.$emit('blockUpdated', this.block._id);
-            this.isAudioChanged = false;
+            //this.isAudioChanged = false;
             //this.isChanged = false;
-            this.block.isAudioChanged = false;
+            block.isAudioChanged = false;
             //this.block.isChanged = false;
             
-            this.block.content = response.data.content;
-            this.block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
-            this.blockAudio.map = response.data.content;
-            this.blockAudio.src = this.block.getAudiosrc('m4a');
-            this.block.manual_boundaries = response.data.manual_boundaries || [];
-            this.block.audiosrc_original = response.data.audiosrc_original;
+            block.content = response.data.content;
+            block.setAudiosrc(response.data.audiosrc, response.data.audiosrc_ver);
+            //this.blockAudio.map = response.data.content;
+            //this.blockAudio.src = this.block.getAudiosrc('m4a');
+            block.manual_boundaries = response.data.manual_boundaries || [];
+            block.audiosrc_original = response.data.audiosrc_original;
             Vue.nextTick(() => {
               if (Array.isArray(this.block.flags) && this.block.flags.length > 0) {
                 this.block.flags.forEach(f => {
