@@ -814,7 +814,8 @@ export default {
         this.recorder = new mediaStreamRecorder(stream, {
           recorderType: mediaStreamRecorder.MediaStreamRecorder,
           mimeType: 'audio/ogg',
-          disableLogs: true
+          disableLogs: true,
+          type: 'audio'
         });
       } else {
         //console.log(this.recorder, this.recorder.getInternalRecorder());
@@ -827,8 +828,10 @@ export default {
             audio: {
               echoCancellation: false,
               noiseSuppression: false,
-              autoGainControl: false
-            }
+              autoGainControl: false,
+              channelCount: 1
+            },
+            video: false
           })
           .then((stream) => {
             this.onMediaSuccess_msr(stream);
