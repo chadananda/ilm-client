@@ -482,7 +482,7 @@
             <div class="modal-content-flex-block">
             <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
             <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating || !adminOrLibrarian"/>all {{blockTypeLabel}}s</label>
             <!--v-if="!block.status.marked"-->
             </div>
             <div class="modal-content-flex-block">
