@@ -1880,7 +1880,7 @@ export default {
       });
       let content = null;
       if (blockRef) {
-        content = blockRef.clearBlockContent(false, this.audioTasksQueue.partIdx);
+        content = blockRef.clearBlockContent(false, this.audioTasksQueue.block.partIdx);
       } else {
         
       }
@@ -1898,7 +1898,7 @@ export default {
       });
       let content = null;
       if (blockRef) {
-        content = blockRef.clearBlockContent(false, this.audioTasksQueue.partIdx);
+        content = blockRef.clearBlockContent(false, this.audioTasksQueue.block.partIdx);
       } else {
         
       }
@@ -1916,7 +1916,7 @@ export default {
       });
       let content = null;
       if (blockRef) {
-        content = blockRef.clearBlockContent(false, this.audioTasksQueue.partIdx);
+        content = blockRef.clearBlockContent(false, this.audioTasksQueue.block.partIdx);
       } else {
         
       }
@@ -1927,6 +1927,91 @@ export default {
           }
           return Promise.resolve(response);
         });
+    },
+    moveBoundaries(map, pinnedIndex) {
+      let queueBlock = this.audioTasksQueue.block;
+      let block = this.parlist.get(queueBlock.blockId);
+      let blockRef = this.$refs.blocks.find(v => {
+        return v.$el.id === queueBlock.blockId;
+      });
+      let content = null;
+      if (blockRef) {
+        content = blockRef.clearBlockContent(false, queueBlock.partIdx);
+      } else {
+        content = queueBlock.partIdx === null ? block.content : block.parts[queueBlock.partIdx].content;
+      }
+      let response_params = null;
+      let current_boundaries = queueBlock.partIdx === null ? block.manual_boundaries.slice() || [] : block.parts[queueBlock.partIdx].manual_boundaries.slice() || [];
+      let tempContainer = $(`<container>${content}</container>`)
+      let w_maps = tempContainer.find('[data-map]');
+
+      let currentMap = w_maps[map[pinnedIndex].index].getAttribute('data-map').split(',');
+      currentMap[0] = parseInt(currentMap[0]);
+      currentMap[1] = parseInt(currentMap[1]);
+
+      let manual_boundaries = [map[pinnedIndex].map[0]];
+      map.forEach(m => {
+        let cMap = w_maps[m.index].getAttribute('data-map');
+        if (cMap) {
+          cMap = cMap.split(',');
+          cMap[0] = parseInt(cMap[0]);
+          cMap[1] = parseInt(cMap[1]);
+          if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+            manual_boundaries.push(m.map[0]);
+            current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
+          }
+        }
+        w_maps[m.index].setAttribute('data-map', m.map.join());
+        if (m.map[1] > 50) {
+          w_maps[m.index].classList.remove('alignment-changed');
+        }
+      });
+      if (currentMap[0] !== map[pinnedIndex].map[0] && manual_boundaries.indexOf(map[pinnedIndex].map[0]) === -1) {
+        if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
+          manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
+        }
+        //manual_boundaries.push(_m[0]);
+      }
+      if (currentMap[0] + currentMap[1] !== map[pinnedIndex].map[0] + map[pinnedIndex].map[1] && manual_boundaries.indexOf(map[pinnedIndex].map[0] + map[pinnedIndex].map[1]) === -1) {
+        if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
+          manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
+        }
+        //manual_boundaries.push(_m[0] + _m[1]);
+      }
+      current_boundaries.forEach(_m => {
+        if (manual_boundaries.indexOf(_m) === -1) {
+          manual_boundaries.push(_m);
+          //console.log(`PUSH ${_m[0]}`);
+        }
+      });
+      manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
+      block.setPartManualBoundaries(queueBlock.partIdx, manual_boundaries.slice());
+      //this.blockPart.manual_boundaries = manual_boundaries.slice();
+      //manual_boundaries = null;
+      //this.pushChange('manual_boundaries');
+      block.setPartContent(queueBlock.partIdx, tempContainer.html());
+      block.setPartAudiosrc(queueBlock.partIdx, block.getPartAudiosrc(queueBlock.partIdx, null, false), {m4a: block.getPartAudiosrc(queueBlock.partIdx, 'm4a', false)});
+      //this.blockPart.content = this.$refs.blockContent.innerHTML;
+      //this.blockAudio.map = this.blockPart.content;
+      //if (this.audioTasksQueue.queue.length === 0) {
+        //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+      //} else {
+      response_params = [block.getPartAudiosrc(queueBlock.partIdx, 'm4a'), block.getPartContent(queueBlock.partIdx), true, queueBlock.partIdx === null ? block : block.parts[queueBlock.partIdx]];
+      //}
+      if (blockRef) {
+        blockRef.$refs.blocks[queueBlock.partIdx || 0].showPinnedInText();
+      }
+      //this.pushChange('content');
+
+
+      //this.blockPart.manual_boundaries = manual_boundaries.slice();
+      //this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
+      //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+      //this.blockPart.content = this.$refs.blockContent.innerHTML;
+      //this.blockAudio.map = this.$refs.blockContent.innerHTML;
+      //this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
+      block.isAudioChanged = true;
+      return response_params;
     },
     runAudioTasksQueue() {
       if (!this.audioTasksQueue.running && this.audioTasksQueue.queue.length > 0) {
@@ -1992,8 +2077,8 @@ export default {
             break;
           case 'manual_boundaries':
             task = new Promise((resolve, reject) => {
-              this.evFromAudioeditorWordRealign(...record.options);
-              return resolve();
+              let response_params = this.moveBoundaries(...record.options);
+              return resolve(response_params);
             });
             break;
           default:
@@ -2014,7 +2099,9 @@ export default {
             this.shiftAudioTask();
           })
           .catch(err => {
+            console.log(err);
             this.audioTasksQueue.running = null;
+            //this.shiftAudioTask();
           });
       }
     },

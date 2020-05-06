@@ -694,7 +694,7 @@ class BookBlock {
       Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.content`, content);
-    } else if (partIdx === 0) {
+    } else if (partIdx === 0 || partIdx === null) {
       this.setContent(content);
     }
   }
@@ -724,7 +724,7 @@ class BookBlock {
       Array.isArray(this.parts) && typeof this.parts[partIdx] !== 'undefined';
     if (partCheck) {
       this.set(`parts.${partIdx}.manual_boundaries`, boundaries);
-    } else if (partIdx === 0) {
+    } else if (partIdx === 0 || partIdx === null) {
       this.setManualBoundaries(boundaries);
     }
   }
