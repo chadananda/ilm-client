@@ -208,7 +208,8 @@ export const store = new Vuex.Store({
       queue: [],
       running: null,
       log: [],
-      blockId: null
+      blockId: null,
+      partIdx: null
     }
   },
 
@@ -3177,14 +3178,15 @@ export const store = new Vuex.Store({
           return Promise.reject(err);
         });
     },
-    setAudioTasksBlockId({state, dispatch}, blockId) {
+    setAudioTasksBlockId({state, dispatch}, [blockId, partIdx]) {
       if (blockId !== state.audioTasksQueue.blockId) {
         dispatch('clearAudioTasks', true);
         state.audioTasksQueue.running = null;
         state.audioTasksQueue.blockId = blockId;
+        state.audioTasksQeueu.partIdx = partIdx;
       }
     },
-    addAudioTask({state}, [type, options]) {
+    addAudioTask({state, dispatch}, [type, options]) {
       let time = Date.now();
       state.audioTasksQueue.queue.push({
         type: type,
@@ -3194,6 +3196,16 @@ export const store = new Vuex.Store({
       state.audioTasksQueue.time = time;
       state.audioTasksQueue.log.push(time);
       //this.$root.$emit('from-audioeditor:tasks-queue-push', this.blockId, this.audioTasksQueue.queue);
+      return axios.post(`${state.API_URL}books/${state.currentBookMeta.bookid}/${state.audioTasksQueue.blockid}${state.audioTasksQueue.partIdx === null ? '' : '/' + state.audioTasksQueue.partIdx}/audio_queue`, {
+          type: type,
+          options: options
+        })
+        .then(() => {
+          
+        })
+    },
+    getRemoteAudioQueue() {
+      return Promise.resolve();
     },
     popAudioTask({state}) {
       state.audioTasksQueue.queue.pop();
