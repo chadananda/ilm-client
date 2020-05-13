@@ -533,7 +533,7 @@
 <script>
 import Vue from 'vue'
 import moment from 'moment'
-import { mapGetters, mapActions }    from 'vuex'
+import { mapGetters, mapActions, mapMutations }    from 'vuex'
 import {  QuoteButton, QuotePreview,
           SuggestButton, SuggestPreview
         } from '../generic/ExtMediumEditor';
@@ -1019,9 +1019,10 @@ export default {
           currentBookCounters: 'currentBookCounters',
           audioTasksQueue: 'audioTasksQueue'
       }),
-      illustrationChaged() {
-        return this.$refs.illustrationInput.image
-      },
+    ...mapGetters('uploadImage', {
+      tempImage: 'file'
+    }),
+
       allowEditing: {
         get() {
           return this.block && this.tc_isShowEdit(this.block._id) && this.mode === 'edit';
@@ -1166,12 +1167,6 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    if (this.$refs.illustrationInput) {
-      // a trick to avoid console warning about incorrect resizeCanvas
-      // because somehow VuePictureInput does not destroyed in normal way
-      // and window.listener for 'resize' stil exists
-      this.$refs.illustrationInput.$refs.container = {};
-    }
     this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
 
     if (this.check_id) {
@@ -1239,6 +1234,9 @@ export default {
         'recountVoicedBlocks',
         'addAudioTask'
       ]),
+    ...mapMutations('uploadImage',{
+      removeTempImg: 'removeImage'
+    }),
       //-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
@@ -1624,10 +1622,8 @@ export default {
           });
 
           this.updateFlagStatus(block._id);
-          if (this.block.type === 'illustration' && this.$refs.blocks && this.$refs.blocks[0]) {
-            if (this.$refs.blocks[0].$refs.illustrationInput) {
-              this.$refs.blocks[0].$refs.illustrationInput.removeImage();
-            }
+          if (this.block.type === 'illustration') {
+            this.removeTempImg(block._id)
             this.block.description = block.description;
             if (this.$refs.blocks[0].$refs.blockDescription) {
               this.$refs.blocks[0].$refs.blockDescription.innerHTML = block.description;
@@ -3678,8 +3674,10 @@ Save text changes and realign the Block?`,
         if (!this.$refs.blocks || !this.$refs.blocks[0]) {
           return Promise.reject();
         }
+        let image = this.tempImage(this.block._id)
+
         let formData = new FormData();
-        formData.append('illustration', this.$refs.blocks[0].$refs.illustrationInput.file, this.$refs.blocks[0].$refs.illustrationInput.file.name);
+        formData.append('illustration', image, image.name);
         formData.append('block', JSON.stringify({'description': this.$refs.blocks[0].$refs.blockDescription.innerHTML, flags: this.block.flags || []}));
         let api = this.$store.state.auth.getHttp()
         let api_url = this.API_URL + 'book/block/' + this.block.blockid + '/image';
@@ -3688,12 +3686,13 @@ Save text changes and realign the Block?`,
         api.post(api_url, formData, {}).then((response) => {
           this.isSaving = false;
           if (response.status===200) {
+            this.removeTempImg(this.block._id)
+
             if (this.isCompleted) {
               this.tc_loadBookTask();
               this.getCurrentJobInfo();
             }
             // hide modal after one second
-            this.$refs.blocks[0].$refs.illustrationInput.removeImage();
             this.$emit('blockUpdated', this.block._id);
             //let offset = document.getElementById(self.block._id).getBoundingClientRect()
             //window.scrollTo(0, window.pageYOffset + offset.top);
@@ -3746,20 +3745,8 @@ Save text changes and realign the Block?`,
         });
       },
       onIllustrationChange() {
-        //console.log(arguments, this.$refs.illustrationInput.image);
-        if (this.$refs.illustrationInput && this.$refs.illustrationInput.image) {
-
           this.isIllustrationChanged = true;
-          Vue.nextTick(() => {
-            $('[id="' + this.block._id + '"] .drag-uploader').removeClass('no-picture');
-          });
-        } else {
 
-          this.isIllustrationChanged = false;
-          Vue.nextTick(() => {
-            $('[id="' + this.block._id + '"] .drag-uploader').addClass('no-picture');
-          });
-        }
       },
       setRangeSelection(type, ev) {
         if (this.block && !this.tc_isShowEdit(this.block._id)) {
@@ -5303,6 +5290,7 @@ Save text changes and realign the Block?`,
   }
 
   .drag-uploader {
+    margin: 0 auto;
     /*display: table-row;*/
     .picture-input {
       .preview-container, .picture-preview {
@@ -5313,7 +5301,7 @@ Save text changes and realign the Block?`,
     }
     .save-illustration {
       float: left !important;
-      width: 100% !important;
+      //width: 100% !important;
       text-align: center !important;
     }
   }
@@ -5322,7 +5310,7 @@ Save text changes and realign the Block?`,
     .picture-input {
       .preview-container, .picture-preview {
         max-height: 100px;
-        width: auto;
+        //width: auto;
         float: left;
         background-color: transparent !important;
         width: 100%;
