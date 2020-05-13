@@ -51,6 +51,11 @@
         default: DEFAULT_IMAGE_WIDTH,
       }
     },
+    data () {
+      return {
+        tempURL: ''
+      }
+    },
     computed:{
       ...mapGetters('uploadImage',{
         getImage: 'image',
@@ -102,16 +107,29 @@
           if(!file) {
             return reject();
           }
-          let url = URL.createObjectURL(file);
+          this.tempURL = URL.createObjectURL(file);
           let img = new Image;
-          img.src = url;
+          img.src = this.tempURL;
 
           img.onload = () => {
             return resolve(img);
           };
         })
       },
-    }
+      // getBase64(file) {
+      //   return new Promise((resolve, reject) => {
+      //     const reader = new FileReader();
+      //     reader.readAsDataURL(file);
+      //     reader.onload = () => resolve(reader.result);
+      //     reader.onerror = error => reject(error);
+      //   });
+      // }
+    },
+    beforeDestroy() {
+      if (this.tempURL) {
+        URL.revokeObjectURL(this.tempURL);
+      }
+    },
   }
 </script>
 <style lang="less" scoped>

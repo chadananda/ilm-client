@@ -32,7 +32,7 @@
       onFileDrop (files) {
         this.onChange(files)
       },
-    }
+    },
   }
 </script>
 
