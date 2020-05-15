@@ -21,17 +21,38 @@
     name: 'UploadFile',
     data () {
       return {
-        isBinary: false
+        tempURL: ''
       }
     },
-    props: ['id', 'name', 'accept', 'disabled'],
+    props: ['id', 'name', 'accept', 'disabled', 'toBase64'],
     methods: {
-      onChange(files){
-          this.$emit('input', files)
+      onChange(file){
+        let objectURL = this.tempURL = URL.createObjectURL(file);
+
+        if(this.toBase64){
+            this.getBase64(file).then(res => {
+              this.$emit('input', { file: res, objectURL })
+            });
+        } else {
+          this.$emit('input', { file, objectURL })
+        }
       },
       onFileDrop (files) {
         this.onChange(files)
       },
+      getBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+      }
+    },
+    beforeDestroy() {
+      if (this.tempURL) {
+        URL.revokeObjectURL(this.tempURL);
+      }
     },
   }
 </script>

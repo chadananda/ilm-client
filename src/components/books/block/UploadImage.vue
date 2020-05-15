@@ -79,17 +79,16 @@
     },
     methods: {
       ...mapActions('uploadImage',['setImage', 'removeImage']),
-      onChange(file){
-        if(!file){
+      onChange(data){
+        if(!data.file){
           return;
         }
-
-          this.createImageNode(file).then(res => {
+          this.createImageNode(data).then(res => {
 
               this.setImage({
                 id: this.id,
                 data: {
-                  file,
+                  file: data.file,
                   height: res.height,
                   width: res.width,
                   objectURL: res.src
@@ -102,33 +101,20 @@
 
       },
       //TODO pmove to helpers
-      createImageNode(file = null){
+      createImageNode(data = null){
         return new Promise((resolve, reject) => {
-          if(!file) {
+          if(!data.file) {
             return reject();
           }
-          this.tempURL = URL.createObjectURL(file);
           let img = new Image;
-          img.src = this.tempURL;
+          img.src = data.objectURL;
+
 
           img.onload = () => {
             return resolve(img);
           };
         })
       },
-      // getBase64(file) {
-      //   return new Promise((resolve, reject) => {
-      //     const reader = new FileReader();
-      //     reader.readAsDataURL(file);
-      //     reader.onload = () => resolve(reader.result);
-      //     reader.onerror = error => reject(error);
-      //   });
-      // }
-    },
-    beforeDestroy() {
-      if (this.tempURL) {
-        URL.revokeObjectURL(this.tempURL);
-      }
     },
   }
 </script>
