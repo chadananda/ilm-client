@@ -44,74 +44,8 @@
                 <div class="block-menu" v-if="mode !== 'narrate'">
 
                   <i class="glyphicon glyphicon-menu-hamburger"
-                  @click.prevent="$refs.blockMenu.open($event, block._id)">
-                  </i><!-- {{changes}} -->
-                  <block-menu
-                      ref="blockMenu"
-                      dir="top"
-                      :update="update"
-                      @click.stop>
-
-                    <li v-if="isHideArchFlags"
-                      @click.prevent="toggleArchFlags()">
-                      <i class="fa fa-eye" aria-hidden="true"></i>
-                      Show archived flags</li>
-                    <li v-else
-                      @click.prevent="toggleArchFlags()">
-                      <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                      Hide archived flags</li>
-
-                    <li class="separator"></li>
-                    <template v-if="allowEditing || proofreadModeReadOnly">
-                      <template v-if="!proofreadModeReadOnly">
-                      <li v-if="!isBlockLocked(prevId)" @click="insertBlockBefore()">
-                        <i class="fa fa-angle-up" aria-hidden="true"></i>
-                        Insert block before</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Insert block before</li>
-                      <li v-if="!isBlocked" @click="insertBlockAfter()">
-                        <i class="fa fa-angle-down" aria-hidden="true"></i>
-                        Insert block after</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Insert block after</li>
-                      <li v-if="!isBlockLocked(prevId)" @click="showModal('delete-block-message')">
-                        <i class="fa fa-trash" aria-hidden="true"></i>
-                        Delete block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Delete block</li>
-                      <!--<li>Split block</li>-->
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(prevId)" @click="joinWithPrevious()">
-                        <i class="fa fa-angle-double-up" aria-hidden="true"></i>
-                        Join with previous block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Join with previous block</li>
-                      <li v-if="!isBlockLocked(block._id) && !isBlockLocked(block.chainid)" @click="joinWithNext()">
-                        <i class="fa fa-angle-double-down" aria-hidden="true"></i>
-                        Join with next block</li>
-                      <li v-else class="disabled">
-                        <i class="fa menu-preloader" aria-hidden="true"></i>
-                        Join with next block</li>
-                      <li class="separator"></li>
-                      </template>
-                      <li @click.stop="function(){return false}" v-if="block.type=='title' || block.type=='header' || block.type=='par' || block.type=='illustration'">
-                          <i class="fa fa-language" aria-hidden="true"></i>
-                          Language: <select :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='block.language' style="min-width: 100px;" @input.prevent="selectLangSubmit($event);">
-                          <option v-for="(val, key) in blockLanguages" :value="key">{{ val }}</option>
-                        </select>
-                      </li>
-                      <li class="separator"></li>
-                      <template v-if="block.type != 'illustration' && block.type != 'hr' && !proofreadModeReadOnly">
-                      <li @click="showModal('block-html')">
-                        <i class="fa fa-code" aria-hidden="true"></i>
-                        Display block HTML</li>
-                      <li class="separator"></li>
-                      </template>
-                    </template>
-                  </block-menu>
+                    @click.prevent="$emit('blockMenuOpen', {e: $event, id: block._id})">
+                  </i>
                 </div>
                 <!--<div class="block-menu">-->
                 <div class="par-ctrl-divider"></div>
@@ -241,107 +175,107 @@
               @hideFlagPart="onHideFlagPart"
               @unHideFlagPart="onUnHideFlagPart"
               @isAudioChanged="onIsAudioChanged"
-          /></BookBlockPartView>
+          />
             <div v-if="blockParts.length === 1" class="hidden" ref="blockContent" v-html="blockParts[0].content"></div>
           <div class="ilm-block flag-popup-container">
-            <block-flag-popup
-                ref="blockFlagPopup"
-                dir="top"
-                :isHideArchFlags="isHideArchFlags"
-                :isHideArchParts="isHideArchParts"
-                :toggleHideArchParts="toggleHideArchParts"
-                :countArchParts="countArchParts"
-            >
-              <template v-if="flagsSel">
-              <template v-for="(part, partIdx) in flagsSel.parts">
-                <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
-                <li>
+<!--            <BlockFlagPopup-->
+<!--                ref="blockFlagPopup"-->
+<!--                dir="top"-->
+<!--                :isHideArchFlags="isHideArchFlags"-->
+<!--                :isHideArchParts="isHideArchParts"-->
+<!--                :toggleHideArchParts="toggleHideArchParts"-->
+<!--                :countArchParts="countArchParts"-->
+<!--            >-->
+<!--              <template v-if="flagsSel">-->
+<!--              <template v-for="(part, partIdx) in flagsSel.parts">-->
+<!--                <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">-->
+<!--                <li>-->
 
-                <div class="flag-header -left">
+<!--                <div class="flag-header -left">-->
 
-                  <i class="glyphicon glyphicon-triangle-bottom"
-                    v-if="!part.collapsed"
-                    @click.prevent="toggleFlagPart($event, partIdx)"></i>
-                  <i class="glyphicon glyphicon-triangle-right"
-                    v-if="part.collapsed"
-                    @click.prevent="toggleFlagPart($event, partIdx)"></i>
+<!--                  <i class="glyphicon glyphicon-triangle-bottom"-->
+<!--                    v-if="!part.collapsed"-->
+<!--                    @click.prevent="toggleFlagPart($event, partIdx)"></i>-->
+<!--                  <i class="glyphicon glyphicon-triangle-right"-->
+<!--                    v-if="part.collapsed"-->
+<!--                    @click.prevent="toggleFlagPart($event, partIdx)"></i>-->
 
-                  <span v-if="part.type == 'editor'">Editing</span>
-                  <span v-if="part.type == 'narrator'">Narrating</span>
-                  <span class="flag-date">{{moment(part.created_at).format("D MMM")}}</span>
-                  <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag flag-resolved"></i>
-                  <i v-if="part.status == 'open'" class="glyphicon glyphicon-flag flag-open"></i>
-                  <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>
-                </div>
+<!--                  <span v-if="part.type == 'editor'">Editing</span>-->
+<!--                  <span v-if="part.type == 'narrator'">Narrating</span>-->
+<!--                  <span class="flag-date">{{moment(part.created_at).format("D MMM")}}</span>-->
+<!--                  <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag flag-resolved"></i>-->
+<!--                  <i v-if="part.status == 'open'" class="glyphicon glyphicon-flag flag-open"></i>-->
+<!--                  <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>-->
+<!--                </div>-->
 
 
 
-                <a href="#" class="flag-control -right -top"
-                  v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted"
-                  @click.prevent="hideFlagPart($event, partIdx)">
-                  Archive flag</a>
+<!--                <a href="#" class="flag-control -right -top"-->
+<!--                  v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted"-->
+<!--                  @click.prevent="hideFlagPart($event, partIdx)">-->
+<!--                  Archive flag</a>-->
 
-                <a href="#" class="flag-control -right -top"
-                  v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"
-                  @click.prevent="unHideFlagPart($event, partIdx)">
-                  Unarchive flag</a>
+<!--                <a href="#" class="flag-control -right -top"-->
+<!--                  v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"-->
+<!--                  @click.prevent="unHideFlagPart($event, partIdx)">-->
+<!--                  Unarchive flag</a>-->
 
-                <a href="#" class="flag-control -right -top"
-                  v-if="canDeleteFlagPart(part) && part.status == 'open'"
-                  @click.prevent="delFlagPart($event, partIdx)">
-                  <i class="fa fa-trash"></i></a>
+<!--                <a href="#" class="flag-control -right -top"-->
+<!--                  v-if="canDeleteFlagPart(part) && part.status == 'open'"-->
+<!--                  @click.prevent="delFlagPart($event, partIdx)">-->
+<!--                  <i class="fa fa-trash"></i></a>-->
 
-                <div class="clearfix"></div>
+<!--                <div class="clearfix"></div>-->
 
-                <template v-if="!part.collapsed">
+<!--                <template v-if="!part.collapsed">-->
 
-                <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
+<!--                <p v-if="part.content" class="flag-content">"{{part.content}}"</p>-->
 
-                <p v-for="comment in part.comments" class="flag-comment">
-                  <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
-                </p>
+<!--                <p v-for="comment in part.comments" class="flag-comment">-->
+<!--                  <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}-->
+<!--                </p>-->
 
-                <textarea v-if="part.status !== 'hidden'"
-                  class="flag-comment"
-                  v-model="part.newComment"
-                  placeholder="Enter description here ..."
-                  @input="onInputFlag"
-                  @focusout="onFocusoutFlag(partIdx, $event)"
-                  :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">
-                </textarea>
+<!--                <textarea v-if="part.status !== 'hidden'"-->
+<!--                  class="flag-comment"-->
+<!--                  v-model="part.newComment"-->
+<!--                  placeholder="Enter description here ..."-->
+<!--                  @input="onInputFlag"-->
+<!--                  @focusout="onFocusoutFlag(partIdx, $event)"-->
+<!--                  :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">-->
+<!--                </textarea>-->
 
-                </template>
+<!--                </template>-->
 
-                <template v-if="block.isNeedAlso(flagsSel._id)">
-                  <a v-if="isCanFlag('narrator', false) && part.type == 'editor'"
-                  href="#" class="flag-control -right"
-                  @click.prevent="addFlagPart(part.content, 'narrator')">
-                  Flag for narration also</a>
-                  <a v-if="isCanFlag('editor', false) && part.type == 'narrator'"
-                  href="#" class="flag-control -right"
-                  @click.prevent="addFlagPart(part.content, 'editor')">
-                  Flag for editing also</a>
-                </template>
+<!--                <template v-if="block.isNeedAlso(flagsSel._id)">-->
+<!--                  <a v-if="isCanFlag('narrator', false) && part.type == 'editor'"-->
+<!--                  href="#" class="flag-control -right"-->
+<!--                  @click.prevent="addFlagPart(part.content, 'narrator')">-->
+<!--                  Flag for narration also</a>-->
+<!--                  <a v-if="isCanFlag('editor', false) && part.type == 'narrator'"-->
+<!--                  href="#" class="flag-control -right"-->
+<!--                  @click.prevent="addFlagPart(part.content, 'editor')">-->
+<!--                  Flag for editing also</a>-->
+<!--                </template>-->
 
-                <a v-if="isCanReopen(flagsSel, partIdx)"
-                  href="#" class="flag-control"
-                  @click.prevent="reopenFlagPart($event, partIdx)">
-                  Re-open flag</a>
+<!--                <a v-if="isCanReopen(flagsSel, partIdx)"-->
+<!--                  href="#" class="flag-control"-->
+<!--                  @click.prevent="reopenFlagPart($event, partIdx)">-->
+<!--                  Re-open flag</a>-->
 
-                <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned() || tc_allowNarrateUnassigned(block))"
-                  href="#" class="flag-control -left"
-                  @click.prevent="resolveFlagPart($event, partIdx)">
-                  Resolve flag</a>
+<!--                <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned() || tc_allowNarrateUnassigned(block))"-->
+<!--                  href="#" class="flag-control -left"-->
+<!--                  @click.prevent="resolveFlagPart($event, partIdx)">-->
+<!--                  Resolve flag</a>-->
 
-                <div class="clearfix"></div>
+<!--                <div class="clearfix"></div>-->
 
-                </li>
+<!--                </li>-->
 
-                </template>
-              </template>
-              </template>
+<!--                </template>-->
+<!--              </template>-->
+<!--              </template>-->
 
-            </block-flag-popup>
+<!--            </BlockFlagPopup>-->
           </div>
             <div class="table-row content-footnotes"
               v-if="block.footnotes.length > 0 && mode !== 'narrate'">
@@ -371,21 +305,21 @@
                     <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
                         <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
                           <i class="fa fa-play-circle-o"
-                            @click="FtnAudio.audPlay(block._id, ftnIdx)"></i>
+                             @click="FtnAudio.audPlay(block._id, ftnIdx)"></i>
                           <i class="fa fa-stop-circle-o disabled"></i>
                         </template>
                         <template v-else>
                           <i class="fa fa-pause-circle-o" v-if="!FtnAudio.isPaused"
-                            @click="FtnAudio.audPause(block._id, ftnIdx)"></i>
+                             @click="FtnAudio.audPause(block._id, ftnIdx)"></i>
                           <i class="fa fa-play-circle-o paused" v-else
-                            @click="FtnAudio.audResume(block._id, ftnIdx)"></i>
+                             @click="FtnAudio.audResume(block._id, ftnIdx)"></i>
                           <i class="fa fa-stop-circle-o"
-                            @click="FtnAudio.audStop(block._id, ftnIdx)"></i>
+                             @click="FtnAudio.audStop(block._id, ftnIdx)"></i>
                           <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                         </template>
-                    </template>
+                      </template>
+                    </div>
                   </div>
-                </div>
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
@@ -406,7 +340,7 @@
                 </div>
               </div>
             </div>
-            <div class="table-row controls-bottom" >
+            <div class="table-row controls-bottom">
               <div class="controls-bottom-wrapper">
                 <div class="-hidden -left">
                   <span v-if="showBlockFlag">
@@ -453,86 +387,86 @@
     <!--<div :class="['table-cell'-->
     <div class="table-cell controls-right">
     </div>
-    <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false" height="auto">
-      <div class="modal-header"></div>
-      <div class="modal-body">
-        <p>Delete block?</p>
-      </div>
-      <div class="modal-footer">
-        <template v-if="deletePending">
-          <div class="voicework-preloader"></div>
-        </template>
-        <template v-else>
-          <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>
-          <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>
-        </template>
-      </div>
-    </modal>
-    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="400px" class="vue-js-modal" @before-close="voicework_change_close($event)">
-      <!-- custom header -->
-      <div class="modal-header">
-        <h4 class="modal-title"><!--text-center-->
-          Voicework update
-        </h4>
-      </div>
-      <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
-        <section v-if="isAllowBatchVoiceworkNarration">
-          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
-          <div class="modal-content-flex">
-            <div class="modal-content-flex-block">
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
-            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
-            <!--v-if="!block.status.marked"-->
-            </div>
-            <div class="modal-content-flex-block">
-            <label class="modal-content-empty">&nbsp;</label>
-            <label class="modal-content-empty">&nbsp;</label>
-            <label class="modal-content-empty">&nbsp;</label>
-            </div>
-          </div>
-          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>
-          <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
-          <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
-          <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
-        </section>
-        <section v-else> <!--!isAllowBatchVoiceworkNarration-->
-          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>
-          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': !isNarratedBlockCompleteAudio}]">Сurrent audio on the {{blockTypeLabel}} cannot be saved because it is incomplete</div>
-        </section>
-      </div>
-      <!-- custom buttons -->
-      <div class="modal-footer vue-dialog-buttons">
-        <template v-if="!voiceworkUpdating">
-          <button type="button" class="btn btn-cancel" @click="voiceworkChange = false; voiceworkUpdateType = 'single'">Cancel</button>
-          <button type="button" class="btn btn-primary" @click="updateVoicework()">Update voicework</button>
-        </template>
-        <template v-else>
-          <div class="voicework-preloader"></div>
-        </template>
-      </div>
-    </modal>
-    <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">
-    <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">
-      <div class="modal-header">
-        <div>
-          <h4 class="modal-title">Block: {{shortBlockid}}</h4>
-        </div>
-        <div>
-          <h4 class="modal-title">
-            <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>
-          </h4>
-        </div>
-        <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>
-      </div>
-      <div class="modal-body">
-        <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>
-      </div>
-      <div class="modal-footer">
-          <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>
-      </div>
-    </div>
-    </modal>
+<!--    <modal :name="'delete-block-message' + block._id" :resizeable="false" :clickToClose="false" height="auto">-->
+<!--      <div class="modal-header"></div>-->
+<!--      <div class="modal-body">-->
+<!--        <p>Delete block?</p>-->
+<!--      </div>-->
+<!--      <div class="modal-footer">-->
+<!--        <template v-if="deletePending">-->
+<!--          <div class="voicework-preloader"></div>-->
+<!--        </template>-->
+<!--        <template v-else>-->
+<!--          <button class="btn btn-default" v-on:click="hideModal('delete-block-message')">Cancel</button>-->
+<!--          <button class="btn btn-primary" v-on:click="deleteBlock()">Delete</button>-->
+<!--        </template>-->
+<!--      </div>-->
+<!--    </modal>-->
+<!--    <modal :name="'voicework-change' + block._id" :resizeable="false" height="auto" width="400px" class="vue-js-modal" @before-close="voicework_change_close($event)">-->
+<!--      &lt;!&ndash; custom header &ndash;&gt;-->
+<!--      <div class="modal-header">-->
+<!--        <h4 class="modal-title">&lt;!&ndash;text-center&ndash;&gt;-->
+<!--          Voicework update-->
+<!--        </h4>-->
+<!--      </div>-->
+<!--      <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">-->
+<!--        <section v-if="isAllowBatchVoiceworkNarration">-->
+<!--          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>-->
+<!--          <div class="modal-content-flex">-->
+<!--            <div class="modal-content-flex-block">-->
+<!--            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>-->
+<!--            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>-->
+<!--            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>-->
+<!--            &lt;!&ndash;v-if="!block.status.marked"&ndash;&gt;-->
+<!--            </div>-->
+<!--            <div class="modal-content-flex-block">-->
+<!--            <label class="modal-content-empty">&nbsp;</label>-->
+<!--            <label class="modal-content-empty">&nbsp;</label>-->
+<!--            <label class="modal-content-empty">&nbsp;</label>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>-->
+<!--          <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>-->
+<!--          <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>-->
+<!--          <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>-->
+<!--        </section>-->
+<!--        <section v-else> &lt;!&ndash;!isAllowBatchVoiceworkNarration&ndash;&gt;-->
+<!--          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>-->
+<!--          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': !isNarratedBlockCompleteAudio}]">Сurrent audio on the {{blockTypeLabel}} cannot be saved because it is incomplete</div>-->
+<!--        </section>-->
+<!--      </div>-->
+<!--      &lt;!&ndash; custom buttons &ndash;&gt;-->
+<!--      <div class="modal-footer vue-dialog-buttons">-->
+<!--        <template v-if="!voiceworkUpdating">-->
+<!--          <button type="button" class="btn btn-cancel" @click="voiceworkChange = false; voiceworkUpdateType = 'single'">Cancel</button>-->
+<!--          <button type="button" class="btn btn-primary" @click="updateVoicework()">Update voicework</button>-->
+<!--        </template>-->
+<!--        <template v-else>-->
+<!--          <div class="voicework-preloader"></div>-->
+<!--        </template>-->
+<!--      </div>-->
+<!--    </modal>-->
+<!--    <modal :name="'block-html' + block._id" height="auto" width="90%" class="block-html-modal" :clickToClose="false" @opened="setHtml">-->
+<!--    <div v-on:wheel.stop="" :class="['-langblock-' + getBlockLang]">-->
+<!--      <div class="modal-header">-->
+<!--        <div>-->
+<!--          <h4 class="modal-title">Block: {{shortBlockid}}</h4>-->
+<!--        </div>-->
+<!--        <div>-->
+<!--          <h4 class="modal-title">-->
+<!--            <a v-if="compressedAudioUrl" :href="compressedAudioUrl" target="_blank">Block audio URL</a>-->
+<!--          </h4>-->
+<!--        </div>-->
+<!--        <button type="button" class="close modal-close-button" aria-label="Close" @click="hideModal('block-html')"><span aria-hidden="true">×</span></button>-->
+<!--      </div>-->
+<!--      <div class="modal-body">-->
+<!--        <textarea :ref="'block-html' + block.blockid" disabled class="block-html"></textarea>-->
+<!--      </div>-->
+<!--      <div class="modal-footer">-->
+<!--          <button class="btn btn-default" v-on:click="hideModal('block-html')">Close</button>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    </modal>-->
   </div>
 </template>
 
@@ -545,17 +479,15 @@ import {  QuoteButton, QuotePreview,
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
-import BlockMenu          from '../generic/BlockMenu';
-import BlockContextMenu   from '../generic/BlockContextMenu';
-import BlockFlagPopup     from '../generic/BlockFlagPopup';
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
 import access             from '../../mixins/access.js';
 //import { modal }          from 'vue-strap';
+const BlockFlagPopup = () => import('@/components/generic/BlockFlagPopup')
+
 import v_modal from 'vue-js-modal';
 import { BookBlock, BlockTypes, FootNote }     from '../../store/bookBlock'
-import VuePictureInput    from 'vue-picture-input'
 import BookBlockPartView from './BookBlockPartView';
 var BPromise = require('bluebird');
 Vue.use(v_modal, { dialog: true });
@@ -625,12 +557,9 @@ export default {
     }
   },
   components: {
-      'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu,
-      'block-flag-popup': BlockFlagPopup,
+      BlockFlagPopup,
       //'modal': modal,
-      'vue-picture-input': VuePictureInput,
-      BookBlockPartView: BookBlockPartView
+      BookBlockPartView
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'mode', 'putBlockProofread', 'putBlockNarrate', 'initRecorder'],
   mixins: [taskControls, apiConfig, access],
@@ -1114,24 +1043,24 @@ export default {
         cache: false
       }
   },
-  mounted: function() {
+  mounted() {
       //this.initEditor();
       //console.log('mounted', this.block._id);
-      this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
-      if (!this.player && this.blockAudio.src) {
-          this.initPlayer();
-      }
+      // this.blockAudio = {'map': this.block.content, 'src': this.block.getAudiosrc('m4a')};
+      // if (!this.player && this.blockAudio.src) {
+      //     this.initPlayer();
+      // }
 
-      if (this.block.footnotes && this.block.footnotes.length) {
-        this.block.footnotes.forEach((footnote, footnoteIdx)=>{
-          if (footnote.audiosrc && !this.FtnAudio.player) {
-            this.initFootnotePlayer(this.FtnAudio);
-            return true;
-          }
-        });
-      }
+      // if (this.block.footnotes && this.block.footnotes.length) {
+      //   this.block.footnotes.forEach((footnote, footnoteIdx)=>{
+      //     if (footnote.audiosrc && !this.FtnAudio.player) {
+      //       this.initFootnotePlayer(this.FtnAudio);
+      //       return true;
+      //     }
+      //   });
+      // }
 
-      this.updateFlagStatus(this.block._id);
+      // this.updateFlagStatus(this.block._id);
       if (Object.keys(this.blockTypes[this.block.type])[0] !== '') {
         this.classSel = Object.keys(this.blockTypes[this.block.type])[0];
       } else {
@@ -1162,27 +1091,27 @@ export default {
       //this.detectMissedFlags();
 
       //console.log('mounted', this.block._id);
-      this.destroyEditor();
-      this.initEditor();
-      this.addContentListeners();
+      // this.destroyEditor();
+      // this.initEditor();
+      // this.addContentListeners();
 
-      this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
-      this.$root.$on('saved-block:' + this.block._id, () => {
-        this.isChanged = false;
-        this.isAudioChanged = false;
-        this.isIllustrationChanged = false;
-        this.recountApprovedInRange();
-      });
-      this.$root.$on(`save-block:${this.block.blockid}`, (evt) => {
-        evt.waitUntil(new Promise((resolve, reject) => {
-          this.assembleBlockProxy(false, false)
-            .then(() => {
-              resolve();
-            })
-        }));
-      });
-      this.$root.$on('prepare-alignment', this._saveContent);
-      this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
+      // this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
+      // this.$root.$on('saved-block:' + this.block._id, () => {
+      //   this.isChanged = false;
+      //   this.isAudioChanged = false;
+      //   this.isIllustrationChanged = false;
+      //   this.recountApprovedInRange();
+      // });
+      // this.$root.$on(`save-block:${this.block.blockid}`, (evt) => {
+      //   evt.waitUntil(new Promise((resolve, reject) => {
+      //     this.assembleBlockProxy(false, false)
+      //       .then(() => {
+      //         resolve();
+      //       })
+      //   }));
+      // });
+      // this.$root.$on('prepare-alignment', this._saveContent);
+      // this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
 
       if (!this.block.language) this.block.language = this.meta.language;
 
@@ -1267,7 +1196,8 @@ export default {
     ...mapMutations('uploadImage',{
       removeTempImg: 'removeImage'
     }),
-      //-- Checkers -- { --//
+
+//-- Checkers -- { --//
       isCanFlag: function (flagType = false, range_required = true) {
         if (flagType === 'narrator' && this.block.voicework !== 'narration') {
           return false;
@@ -3350,10 +3280,8 @@ Save text changes and realign the Block?`,
             //this.block.secnum = false;
             //this.block.parnum = false;
           //}
-          this.$root.$emit('from-block-edit:set-style');
-          if (['type'].indexOf(type) !== -1) {
-            this.$forceUpdate();
-          }
+
+          //this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
             this.block.type = event.target.value;
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
@@ -3896,7 +3824,7 @@ Save text changes and realign the Block?`,
       selectLangSubmit(ev){
         this.block.language = ev.target.value;
         this.setChanged(true, 'language');
-        this.$refs.blockMenu.close();
+        this.$emit('blockMenuClose');
       },
       setNumVal: _.debounce(function(ev){
         let val = ev.target.value;
@@ -4386,7 +4314,7 @@ Save text changes and realign the Block?`,
       'styleSel' (newVal, oldVal) {
         //console.log('styleSel');
         this.block.setClassStyle(this.classSel, newVal);
-        this.$root.$emit('from-block-edit:set-style');
+        //this.$root.$emit('from-block-edit:set-style');
         //this.addContentListeners();
         //this.destroyEditor()
         //this.initEditor();

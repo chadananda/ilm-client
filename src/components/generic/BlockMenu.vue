@@ -70,7 +70,7 @@ import Vue from 'vue'
             ev.preventDefault();
             this.$root.$emit('closeBlockMenu', block_Id);
 
-            if (this.viewMenu == true) return this.close();
+            if (this.viewMenu) return this.close();
             this.block_Id = block_Id;
             this.viewMenu = true;
             this.setMenu(ev.clientX, ev.clientY, ev.target);

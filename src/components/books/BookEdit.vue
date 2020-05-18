@@ -1,6 +1,6 @@
 <template>
 <div :class="['content-scroll-wrapper']"
-  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
+  v-hotkey="keymap" ref="contentScrollWrapRef" @scroll.stop.passive="smoothHandleScroll($event)">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
       <div class="content-background">
@@ -63,7 +63,8 @@
               :joinBlocks="joinBlocks"
               @setRangeSelection="setRangeSelection"
               @blockUpdated="blockUpdated"
-          /></BookBlockView>
+
+          />
         </div>
         <!--<div class='col'>-->
       </div>
@@ -79,6 +80,71 @@
       <strong>3</strong>
     </div>
   </div>
+  {{blockMenuActive}}
+  <BlockMenu
+    ref="blockMenu"
+    dir="top"
+    @click.stop>
+    <li v-if="isHideArchFlags"
+        @click.prevent="toggleArchFlags()">
+      <i class="fa fa-eye" aria-hidden="true"></i>
+      Show archived flags</li>
+    <li v-else
+        @click.prevent="toggleArchFlags()">
+      <i class="fa fa-eye-slash" aria-hidden="true"></i>
+      Hide archived flags</li>
+
+    <li class="separator"></li>
+    <template v-if="allowBlockEdit(blockMenuActive) || proofreadModeReadOnly">
+      <template v-if="!proofreadModeReadOnly">
+        <li v-if="!isBlockLocked(prevId())" @click="insertBlockBefore">
+          <i class="fa fa-angle-up" aria-hidden="true"></i>
+          Insert block before</li>
+        <li v-else class="disabled">
+          <i class="fa menu-preloader" aria-hidden="true"></i>
+          Insert block before</li>
+        <li v-if="!isBlocked" @click="insertBlockAfter">
+          <i class="fa fa-angle-down" aria-hidden="true"></i>
+          Insert block after</li>
+        <li v-else class="disabled">
+          <i class="fa menu-preloader" aria-hidden="true"></i>
+          Insert block after</li>
+        <li v-if="!isBlockLocked(prevId())" @click="showModal('delete-block-message')">
+          <i class="fa fa-trash" aria-hidden="true"></i>
+          Delete block</li>
+        <li v-else class="disabled">
+          <i class="fa menu-preloader" aria-hidden="true"></i>
+          Delete block</li>
+        <!--<li>Split block</li>-->
+        <li v-if="!isBlockLocked(blockMenuActive._id) && !isBlockLocked(prevId())" @click="joinBlocks(blockMenuActive, blockMenuActive._id, 'previous')">
+          <i class="fa fa-angle-double-up" aria-hidden="true"></i>
+          Join with previous block</li>
+        <li v-else class="disabled">
+          <i class="fa menu-preloader" aria-hidden="true"></i>
+          Join with previous block</li>
+        <li v-if="!isBlockLocked(blockMenuActive._id) && !isBlockLocked(blockMenuActive.chainid)" @click="joinBlocks(blockMenuActive, blockMenuActive._id, 'next')">
+          <i class="fa fa-angle-double-down" aria-hidden="true"></i>
+          Join with next block</li>
+        <li v-else class="disabled">
+          <i class="fa menu-preloader" aria-hidden="true"></i>
+          Join with next block</li>
+        <li class="separator"></li>
+      </template>
+      <li @click.stop="function(){return false}" v-if="blockMenuActive.type !=='hr'">
+        <i class="fa fa-language" aria-hidden="true"></i>
+        Language: <select :disabled="!allowBlockEdit(blockMenuActive) && proofreadModeReadOnly ? 'disabled' : false" v-model='blockMenuActive.language' style="min-width: 100px;" @input.prevent="selectLangSubmit">
+        <option v-for="(val, key) in languages" :value="key">{{ val }}</option>
+      </select>
+      </li>
+      <li class="separator"></li>
+      <template v-if="blockMenuActive.type != 'illustration' && blockMenuActive.type != 'hr' && !proofreadModeReadOnly">
+        <li @click="showModal('block-html')">
+          <i class="fa fa-code" aria-hidden="true"></i>
+          Display block HTML</li>
+        <li class="separator"></li>
+      </template>
+    </template>
+  </BlockMenu>
 
 </div>
 <!--<div class="content-scroll-wrapper">-->
@@ -100,6 +166,9 @@ import { BookBlock }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
+import { Languages }      from "../../mixins/lang_config.js"
+
+const BlockMenu  = () => import( '@/components/generic/BlockMenu');
 
 import VueHotkey from 'v-hotkey';
 Vue.use(VueHotkey);
@@ -109,6 +178,8 @@ const initialTopOffset = 84;
 export default {
   data () {
     return {
+      languages: Languages,
+
       page: 0,
       //parlist: new Map(),
       //autoload: true,
@@ -136,7 +207,10 @@ export default {
       lazyLoaderDir: 'up',
       isNeedUp: true,
       isNeedDown: true,
-      scrollToId: null
+      scrollToId: null,
+      isHideArchFlags: true,
+      blockMenuActive: {}
+
 
     }
   },
@@ -154,8 +228,14 @@ export default {
           parlistO: 'storeListO',
           blockSelection: 'blockSelection',
           currentJobInfo: 'currentJobInfo',
-          audioTasksQueue: 'audioTasksQueue'
+          audioTasksQueue: 'audioTasksQueue',
+        isBlockLocked: 'isBlockLocked',
       }),
+
+    proofreadModeReadOnly() {
+       return this.mode === 'proofread';
+
+    },
       metaStyles: function () {
           let result = '';
           if (this.meta.styles) {
@@ -241,7 +321,7 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, BookBlockPreview, vueSlider
+      BookBlockView, BookBlockPreview, vueSlider, BlockMenu
   },
   methods: {
     ...mapActions([
@@ -254,7 +334,23 @@ export default {
     test(ev) {
         console.log('test', ev);
     },
-
+    blockMenuOpen({e, id}){
+      this.blockMenuActive = this.parlist.get(id)
+        this.$refs.blockMenu.open(e, id);
+    },
+    blockMenuClose(){
+      this.blockMenuActive = {};
+      this.$refs.blockMenu.close();
+    },
+    toggleArchFlags() {
+      this.isHideArchFlags = !this.isHideArchFlags;
+    },
+    allowBlockEdit(block) {
+      return block._id && this.tc_isShowEdit(block._id) && this.mode === 'edit';
+    },
+    prevId(){
+      return this.parlistO.getInId(this.blockMenuActive._rid)
+    },
     refreshTmpl() {
       // a hack to update template
       //Vue.set(this, 'screenTop', this.screenTop + 0.1);
@@ -759,7 +855,7 @@ export default {
         }
         let block = new BookBlock(res);
         this.$store.commit('set_storeList', block);
-        this.$root.$emit('from-block-edit:set-style');
+        //this.$root.$emit('from-block-edit:set-style');
         this.refreshTmpl();
         return Promise.resolve(block);
       })
@@ -925,6 +1021,7 @@ export default {
     },
 
     insertBlockBefore(block, block_Idx) {
+      block = block || this.blockMenuActive
       this.freeze('insertBlockBefore');
       let newBlock = this.createEmptyBlock(block.bookid, block._id).clean();
       this.insertBlock({
@@ -969,6 +1066,8 @@ export default {
     },
 
     insertBlockAfter(block, block_Idx) {
+      block = block || this.blockMenuActive
+
       //this.insertBlock(block_id, 'after');
       this.freeze('insertBlockAfter');
       let newBlock = this.createEmptyBlock(block.bookid, block.chainid).clean();
@@ -1037,6 +1136,8 @@ export default {
     },
 
     deleteBlock(block, block_Idx) {
+      block = block || this.blockMenuActive
+
       //console.log('deleteBlock', block._id);
       this.freeze('deleteBlock');
       this.removeBlock(block._id)
@@ -1077,6 +1178,7 @@ export default {
 
     },
     joinBlocks(block, block_Idx, direction) {
+      block = block || this.blockMenuActive
 
       switch(direction) {
         case 'previous' : {
@@ -1437,10 +1539,6 @@ export default {
       this.parlistO.setUnCheckedRange()
     },
 
-    smoothScrollContent: _.debounce(function (ev) {
-      this.scrollContent(ev);
-    }, 50),
-
     scrollContent(ev, step = 60)
     {
       if (ev.deltaY !== false && ev.hasOwnProperty('preventDefault')) ev.preventDefault();
@@ -1656,10 +1754,10 @@ export default {
     },
 
     smoothHandleScroll: _.debounce(function (ev) {
-      ev.stopPropagation();
       //console.log('smoothHandleScroll', ev);
+      this.updatePositions();
       this.handleScroll();
-    }, 100),
+    }, 30),
 
     handleScroll(force = false) {
       if (!this.$refs.viewBlocks || !this.$refs.viewBlocks.length) {

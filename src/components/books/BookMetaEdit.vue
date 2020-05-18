@@ -682,7 +682,7 @@ export default {
         }
       });
     this.setCurrentBookCounters();
-    this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
+    //this.$root.$on('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$on('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
 
     if (this.selectionStart && this.selectionEnd) {

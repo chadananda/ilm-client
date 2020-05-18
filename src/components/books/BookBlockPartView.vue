@@ -24,20 +24,21 @@
                     <template v-if="!isAudStarted">
                       <i class="fa fa-pencil" v-on:click="showAudioEditor()" v-if="tc_showBlockAudioEdit(block, blockPart) && !isUpdating && mode === 'edit'"></i>
                       <i class="fa fa-play-circle-o"
-                        @click="audPlay($event)"></i>
+                         @click="audPlay($event)"></i>
                       <i class="fa fa-stop-circle-o disabled"></i>
                     </template>
                     <template v-else>
                       <i class="fa fa-pause-circle-o" v-if="!isAudPaused"
-                        @click="audPause(block._id, $event)"></i>
+                         @click="audPause(block._id, $event)"></i>
                       <i class="fa fa-play-circle-o paused" v-else
-                        @click="audResume(block._id, $event)"></i>
+                         @click="audResume(block._id, $event)"></i>
                       <i class="fa fa-stop-circle-o"
-                        @click="audStop(block._id, $event)"></i>
+                         @click="audStop(block._id, $event)"></i>
                       <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
                     </template>
                 </template>
               </div>
+
               <!--<div class="par-ctrl -hidden">-->
             </div>
             <!--<div class="table-row-flex controls-top">-->
@@ -142,124 +143,124 @@
                 <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
                 <!--<div class="content-wrap">-->
 
-                <block-flag-popup
-                    ref="blockFlagPopup"
-                    dir="top"
-                    :isHideArchFlags="isHideArchFlags"
-                    :isHideArchParts="isHideArchParts"
-                    :toggleHideArchParts="toggleHideArchParts"
-                    :countArchParts="countArchParts"
-                >
-                  <template v-if="flagsSel">
-                  <template v-for="(part, partIdx) in flagsSel.parts">
-                    <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">
-                    <li>
+<!--                <BlockFlagPopup-->
+<!--                    ref="blockFlagPopup"-->
+<!--                    dir="top"-->
+<!--                    :isHideArchFlags="isHideArchFlags"-->
+<!--                    :isHideArchParts="isHideArchParts"-->
+<!--                    :toggleHideArchParts="toggleHideArchParts"-->
+<!--                    :countArchParts="countArchParts"-->
+<!--                >-->
+<!--                  <template v-if="flagsSel">-->
+<!--                  <template v-for="(part, partIdx) in flagsSel.parts">-->
+<!--                    <template v-if="part.status!=='hidden' || !isHideArchFlags || !isHideArchParts">-->
+<!--                    <li>-->
 
-                    <div class="flag-header -left">
+<!--                    <div class="flag-header -left">-->
 
-                      <i class="glyphicon glyphicon-triangle-bottom"
-                        v-if="!part.collapsed"
-                        @click.prevent="toggleFlagPart($event, partIdx)"></i>
-                      <i class="glyphicon glyphicon-triangle-right"
-                        v-if="part.collapsed"
-                        @click.prevent="toggleFlagPart($event, partIdx)"></i>
+<!--                      <i class="glyphicon glyphicon-triangle-bottom"-->
+<!--                        v-if="!part.collapsed"-->
+<!--                        @click.prevent="toggleFlagPart($event, partIdx)"></i>-->
+<!--                      <i class="glyphicon glyphicon-triangle-right"-->
+<!--                        v-if="part.collapsed"-->
+<!--                        @click.prevent="toggleFlagPart($event, partIdx)"></i>-->
 
-                      <span v-if="part.type == 'editor'">Editing</span>
-                      <span v-if="part.type == 'narrator'">Narrating</span>
-                      <span class="flag-date">{{moment(part.created_at).format("D MMM")}}</span>
-                      <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag flag-resolved"></i>
-                      <i v-if="part.status == 'open'" class="glyphicon glyphicon-flag flag-open"></i>
-                      <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>
-                    </div>
+<!--                      <span v-if="part.type == 'editor'">Editing</span>-->
+<!--                      <span v-if="part.type == 'narrator'">Narrating</span>-->
+<!--                      <span class="flag-date">{{moment(part.created_at).format("D MMM")}}</span>-->
+<!--                      <i v-if="part.status == 'resolved'" class="glyphicon glyphicon-flag flag-resolved"></i>-->
+<!--                      <i v-if="part.status == 'open'" class="glyphicon glyphicon-flag flag-open"></i>-->
+<!--                      <i v-if="part.status == 'hidden'" class="glyphicon glyphicon-flag flag-hidden"></i>-->
+<!--                    </div>-->
 
 
 
-                    <a href="#" class="flag-control -right -top"
-                      v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted"
-                      @click.prevent="hideFlagPart($event, partIdx)">
-                      Archive flag</a>
+<!--                    <a href="#" class="flag-control -right -top"-->
+<!--                      v-if="_is('proofer', true) && part.status == 'resolved' && !isCompleted"-->
+<!--                      @click.prevent="hideFlagPart($event, partIdx)">-->
+<!--                      Archive flag</a>-->
 
-                    <a href="#" class="flag-control -right -top"
-                      v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"
-                      @click.prevent="unHideFlagPart($event, partIdx)">
-                      Unarchive flag</a>
+<!--                    <a href="#" class="flag-control -right -top"-->
+<!--                      v-if="_is('proofer', true) && part.status == 'hidden' && (!isCompleted || isProofreadUnassigned())"-->
+<!--                      @click.prevent="unHideFlagPart($event, partIdx)">-->
+<!--                      Unarchive flag</a>-->
 
-                    <a href="#" class="flag-control -right -top"
-                      v-if="canDeleteFlagPart(part) && part.status == 'open'"
-                      @click.prevent="_delFlagPart($event, partIdx)">
-                      <i class="fa fa-trash"></i></a>
+<!--                    <a href="#" class="flag-control -right -top"-->
+<!--                      v-if="canDeleteFlagPart(part) && part.status == 'open'"-->
+<!--                      @click.prevent="_delFlagPart($event, partIdx)">-->
+<!--                      <i class="fa fa-trash"></i></a>-->
 
-                    <div class="clearfix"></div>
+<!--                    <div class="clearfix"></div>-->
 
-                    <template v-if="!part.collapsed">
+<!--                    <template v-if="!part.collapsed">-->
 
-                    <p v-if="part.content" class="flag-content">"{{part.content}}"</p>
+<!--                    <p v-if="part.content" class="flag-content">"{{part.content}}"</p>-->
 
-                    <p v-for="comment in part.comments" class="flag-comment">
-                      <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}
-                    </p>
+<!--                    <p v-for="comment in part.comments" class="flag-comment">-->
+<!--                      <i>{{comment.creator}}</i>&nbsp;({{moment(comment.created_at).format("D MMM")}}): {{comment.comment}}-->
+<!--                    </p>-->
 
-                    <textarea v-if="part.status !== 'hidden'"
-                      class="flag-comment"
-                      v-model="part.newComment"
-                      placeholder="Enter description here ..."
-                      @input="onInputFlag"
-                      @focusout="onFocusoutFlag(partIdx, $event)"
-                      :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">
-                    </textarea>
+<!--                    <textarea v-if="part.status !== 'hidden'"-->
+<!--                      class="flag-comment"-->
+<!--                      v-model="part.newComment"-->
+<!--                      placeholder="Enter description here ..."-->
+<!--                      @input="onInputFlag"-->
+<!--                      @focusout="onFocusoutFlag(partIdx, $event)"-->
+<!--                      :disabled="!canCommentFlagPart(part) || (isCompleted && !isProofreadUnassigned() && !tc_allowNarrateUnassigned(block))">-->
+<!--                    </textarea>-->
 
-                    </template>
+<!--                    </template>-->
 
-                    <template v-if="block.isNeedAlso(flagsSel._id)">
-                      <a v-if="isCanFlag('narrator', false) && part.type == 'editor'"
-                      href="#" class="flag-control -right"
-                      @click.prevent="addFlagPart(part.content, 'narrator')">
-                      Flag for narration also</a>
-                      <a v-if="isCanFlag('editor', false) && part.type == 'narrator'"
-                      href="#" class="flag-control -right"
-                      @click.prevent="addFlagPart(part.content, 'editor')">
-                      Flag for editing also</a>
-                    </template>
+<!--                    <template v-if="block.isNeedAlso(flagsSel._id)">-->
+<!--                      <a v-if="isCanFlag('narrator', false) && part.type == 'editor'"-->
+<!--                      href="#" class="flag-control -right"-->
+<!--                      @click.prevent="addFlagPart(part.content, 'narrator')">-->
+<!--                      Flag for narration also</a>-->
+<!--                      <a v-if="isCanFlag('editor', false) && part.type == 'narrator'"-->
+<!--                      href="#" class="flag-control -right"-->
+<!--                      @click.prevent="addFlagPart(part.content, 'editor')">-->
+<!--                      Flag for editing also</a>-->
+<!--                    </template>-->
 
-                    <a v-if="isCanReopen(flagsSel, partIdx)"
-                      href="#" class="flag-control"
-                      @click.prevent="reopenFlagPart($event, partIdx)">
-                      Re-open flag</a>
+<!--                    <a v-if="isCanReopen(flagsSel, partIdx)"-->
+<!--                      href="#" class="flag-control"-->
+<!--                      @click.prevent="reopenFlagPart($event, partIdx)">-->
+<!--                      Re-open flag</a>-->
 
-                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned() || tc_allowNarrateUnassigned(block))"
-                      href="#" class="flag-control -left"
-                      @click.prevent="resolveFlagPart($event, partIdx)">
-                      Resolve flag</a>
+<!--                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned() || tc_allowNarrateUnassigned(block))"-->
+<!--                      href="#" class="flag-control -left"-->
+<!--                      @click.prevent="resolveFlagPart($event, partIdx)">-->
+<!--                      Resolve flag</a>-->
 
-                    <div class="clearfix"></div>
+<!--                    <div class="clearfix"></div>-->
 
-                    </li>
-                    <!--<li class="separator"></li>-->
+<!--                    </li>-->
+<!--                    &lt;!&ndash;<li class="separator"></li>&ndash;&gt;-->
 
-                    </template>
-                  </template>
-                  </template>
+<!--                    </template>-->
+<!--                  </template>-->
+<!--                  </template>-->
 
-                </block-flag-popup>
+<!--                </BlockFlagPopup>-->
 
-                <block-cntx-menu
-                    ref="blockCntx"
-                    dir="bottom"
-                    :update="update"
-                >
-                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">
-                    <li @click="addFootnote">Add footnote</li>
-                    <li class="separator"></li>
-                  </template>
-                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>
-                  <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>
-                  <template v-if="!range.collapsed && blockAudio.src">
-                    <li class="separator"></li>
-                    <li @click="audPlayFromSelection()">Play from here</li>
-                    <li @click="audPlaySelection()">Play selection</li>
-                  </template>
-                  <!--<li @click="test">test</li>-->
-                </block-cntx-menu>
+<!--                <BlockContextMenu-->
+<!--                    ref="blockCntx"-->
+<!--                    dir="bottom"-->
+<!--                    :update="update"-->
+<!--                >-->
+<!--                  <template v-if="isFootnoteAllowed() && !this.proofreadModeReadOnly">-->
+<!--                    <li @click="addFootnote">Add footnote</li>-->
+<!--                    <li class="separator"></li>-->
+<!--                  </template>-->
+<!--                  <li v-if="isCanFlag('editor')" @click="addFlag($event, 'editor')">Flag for Editing</li>-->
+<!--                  <li v-if="isCanFlag('narrator')" @click="addFlag($event, 'narrator')">Flag for Narration</li>-->
+<!--                  <template v-if="!range.collapsed && blockAudio.src">-->
+<!--                    <li class="separator"></li>-->
+<!--                    <li @click="audPlayFromSelection()">Play from here</li>-->
+<!--                    <li @click="audPlaySelection()">Play selection</li>-->
+<!--                  </template>-->
+<!--                  &lt;!&ndash;<li @click="test">test</li>&ndash;&gt;-->
+<!--                </BlockContextMenu>-->
               </div>
             </div>
             <!--<div class="table-row ilm-block">-->
@@ -299,9 +300,10 @@ import {  QuoteButton, QuotePreview,
         } from '../generic/ExtMediumEditor';
 import _                  from 'lodash'
 import ReadAlong          from 'readalong'
-import BlockMenu          from '../generic/BlockMenu';
-import BlockContextMenu   from '../generic/BlockContextMenu';
-import BlockFlagPopup     from '../generic/BlockFlagPopup';
+
+const BlockContextMenu = () => import('../generic/BlockContextMenu')
+const BlockFlagPopup = () => import('../generic/BlockFlagPopup')
+
 import taskControls       from '../../mixins/task_controls.js';
 import apiConfig          from '../../mixins/api_config.js';
 import { Languages }      from "../../mixins/lang_config.js"
@@ -377,9 +379,8 @@ export default {
   },
   components: {
     UploadImage,
-      'block-menu': BlockMenu,
-      'block-cntx-menu': BlockContextMenu,
-      'block-flag-popup': BlockFlagPopup,
+    BlockContextMenu,
+    BlockFlagPopup,
       //'modal': modal,
   },
   props: ['block', 'blockO', 'putBlockO', 'putNumBlockO', 'putBlock', 'putBlockPart', 'getBlock',  'recorder', 'blockId', 'audioEditor', 'joinBlocks', 'blockReindexProcess', 'getBloksUntil', 'allowSetStart', 'allowSetEnd', 'prevId', 'putBlockProofread', 'putBlockNarrate', 'blockPart', 'blockPartIdx', 'isSplittedBlock', 'parnum', 'assembleBlockAudioEdit', 'discardAudioEdit', 'startRecording', 'stopRecording', 'delFlagPart', 'initRecorder', 'saveBlockPart', 'isCanReopen', 'isCompleted', 'checkAllowNarrateUnassigned', 'addToQueueBlockAudioEdit'],
@@ -828,9 +829,9 @@ export default {
       //this.initEditor();
       //console.log('mounted', this.block._id);
       this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
-      if (!this.player && this.blockAudio.src) {
-          this.initPlayer();
-      }
+      // if (!this.player && this.blockAudio.src) {
+      //     this.initPlayer();
+      // }
 
       //this.voiceworkSel = this.block.voicework;
       if (Array.isArray(this.block.parts) && this.block.parts[this.blockPartIdx]) {
@@ -855,14 +856,14 @@ export default {
       //this.detectMissedFlags();
 
       //console.log('mounted', this.block._id);
-      this.destroyEditor();
-      this.initEditor();
-      this.addContentListeners();
-
-      this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
-      this.$root.$on('prepare-alignment', this._saveContent);
-      this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
-      this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
+      // this.destroyEditor();
+      // this.initEditor();
+      // this.addContentListeners();
+      //
+      // this.$root.$on('block-state-refresh-' + this.block._id, this.$forceUpdate);
+      // this.$root.$on('prepare-alignment', this._saveContent);
+      // this.$root.$on('from-styles:styles-change-' + this.block.blockid, this.setClasses);
+      // this.$root.$on('start-narration-part-' + this.block.blockid + '-part-' + this.blockPartIdx, this._startRecording);
 
 //       Vue.nextTick(() => {
 //
@@ -874,12 +875,6 @@ export default {
 //     console.log('this.isChanged', this.isChanged);
     this.audioEditorEventsOff();
 
-    if (this.$refs.illustrationInput) {
-      // a trick to avoid console warning about incorrect resizeCanvas
-      // because somehow VuePictureInput does not destroyed in normal way
-      // and window.listener for 'resize' stil exists
-      this.$refs.illustrationInput.$refs.container = {};
-    }
     this.$root.$off('block-state-refresh-' + this.block._id, this.$forceUpdate);
 
     if (this.check_id) {
@@ -2422,7 +2417,7 @@ Save audio changes and realign the Block?`,
             //this.block.secnum = false;
             //this.block.parnum = false;
           }
-          this.$root.$emit('from-block-edit:set-style');
+          //this.$root.$emit('from-block-edit:set-style');
           if (type === 'type' && event && event.target) {
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
               this.block.voicework = 'no_audio';
@@ -3698,7 +3693,7 @@ Save text changes and realign the Block?`,
       'styleSel' (newVal, oldVal) {
         //console.log('styleSel');
         this.block.setClassStyle(this.classSel, newVal);
-        this.$root.$emit('from-block-edit:set-style');
+        //this.$root.$emit('from-block-edit:set-style');
         //this.addContentListeners();
         //this.destroyEditor()
         //this.initEditor();
