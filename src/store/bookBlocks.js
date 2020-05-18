@@ -16,7 +16,7 @@ class LookupBlock {
     this.isNumber = block.isNumber || false;
     this.isManual = block.isManual || false;
     this.isHidden = block.isHidden  || false;
-    this.index = block.index || -1;
+    this.index = block.hasOwnProperty('index') ? block.index : -1;
     this.visible = false;
     this.loaded = false;
     this.checked = false;
@@ -229,7 +229,10 @@ class BookBlocks {
         bookList.blocks.forEach((block)=>{
           this.listIds.push(block.blockid);
           this.listRIds.push(block.rid);
-          this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
+          this.listObjs.push({
+            blockRid: block.rid, blockId: block.blockid,
+            loaded: false, visible: false, blockView: {}
+          });
           this.lookupList[block.rid] = new LookupBlock(block);
           //this.blocksList[block.blockid] = new BookBlock(block);
         })
@@ -244,7 +247,10 @@ class BookBlocks {
       if (!this.lookupList[block.rid]) {
         this.listIds.push(block.blockid);
         this.listRIds.push(block.rid);
-        this.listObjs.push({blockRid: block.rid, blockId: block.blockid});
+        this.listObjs.push({
+          blockRid: block.rid, blockId: block.blockid,
+          loaded: false, visible: false, blockView: {}
+        });
         this.lookupList[block.rid] = new LookupBlock(block);
         //this.blocksList[block.blockid] = new BookBlock(block);
       }
@@ -261,9 +267,12 @@ class BookBlocks {
       listRIds.push(block.rid);
       listObjs.push({
         blockRid: block.rid,
-        blockId: block.blockid/*,
+        blockId: block.blockid,
+        loaded: (this.listObjs[blockIdx] ? this.listObjs[blockIdx].loaded : false),
+        visible: (this.listObjs[blockIdx] ? this.listObjs[blockIdx].visible : false)/*,
+        blockView: (this.listObjs[blockIdx] ? this.listObjs[blockIdx].blockView : {})
         height: (this.listObjs[blockIdx] ? this.listObjs[blockIdx].height : 0),
-        loaded: (this.listObjs[blockIdx] ? this.listObjs[blockIdx].loaded : false)*/
+        */
       });
       if (!this.lookupList[block.rid]) {
         this.lookupList[block.rid] = new LookupBlock(block);
@@ -373,7 +382,12 @@ class BookBlocks {
     } else {
       rid = this.getRIdById(blockId);
     }
-    if (rid) this.lookupList[rid].loaded = true;
+    if (rid) {
+      this.lookupList[rid].loaded = true;
+      this.listObjs.forEach((listObj)=>{
+        if (listObj.blockRid === rid) listObj.loaded = true;
+      })
+    }
     //console.log('setLoaded', rid, this.lookupList[rid].loaded);
   }
 
@@ -384,7 +398,12 @@ class BookBlocks {
     } else {
       rid = this.getRIdById(blockId);
     }
-    if (rid) this.lookupList[rid].visible = val;
+    if (rid) {
+      this.lookupList[rid].visible = val;
+      this.listObjs.forEach((listObj)=>{
+        if (listObj.blockRid === rid) listObj.visible = true;
+      })
+    }
     //console.log('setVisible', rid, this.lookupList[rid].visible);
   }
 
@@ -557,7 +576,7 @@ class BookBlocks {
     this.listObjs = [];
     this.listObjs = tmp;
   }
-  
+
   setFirstVisibleId(blockid) {
     if (!blockid) return false;
     if (this.firstVisibleId && this.firstVisibleId == blockid) return false;
@@ -569,7 +588,7 @@ class BookBlocks {
     }
     return true;
   }
-  
+
   compareIndex(fromRid, toRid) {
     let from = this.listRIds.indexOf(fromRid);
     let to = this.listRIds.indexOf(toRid);

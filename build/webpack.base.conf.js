@@ -19,7 +19,7 @@ module.exports = {
       : config.dev.assetsPublicPath
   },
   resolve: {
-    extensions: ['.js', '.vue', '.json'],
+    extensions: ['.js', '.vue', '.json', '.svelte'],
     alias: {
       '@': resolve('src'),
       'medium-editor': path.resolve(__dirname, "../node_modules/medium-editor/dist/js/medium-editor.min.js"),
@@ -73,6 +73,16 @@ module.exports = {
       {
         test: /medium-editor\.min\.js$/,
         use: [ 'script-loader' ]
+      },
+      {
+        test: /\.svelte$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'svelte-loader',
+          options: {
+            preprocess: require('svelte-preprocess')({ /* options */ })
+          },
+        }
       }
     ]
   }

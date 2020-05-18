@@ -1,5 +1,6 @@
 <template>
 <div>
+  
   <div ref="viewBlock" :id="block.blockid + '-' + blockPartIdx"
     :class="['table-body -block -subblock block-preview', blockOutPaddings]">
     <div v-if="isLocked" :class="['locked-block-cover', 'content-process-run', 'preloader-' + lockedType]"></div>
@@ -78,11 +79,10 @@
                   </div>
                 </div>
               </div>
-              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId">
+              <div class="table-cell -content-wrapper"  :forced_bind="blockPart.blockId" :class="[{'__unsave': !((!this.$parent.isChanged && !isChanged) && (!this.$parent.isAudioChanged || this.$parent.isAudioEditing) && !this.$parent.isIllustrationChanged)}]">
                 <hr v-if="block.type=='hr'"
                   :class="[block.getClass(mode), {'checked': blockO.checked}]"
                   @click="onClick($event)"/>
-
                 <div
                   v-else-if="block.type == 'illustration'"
                   :class="['table-body illustration-block', block.getClass(mode), {'checked': blockO.checked}]"
@@ -105,15 +105,6 @@
                     <!-- <div class="save-illustration" v-if="isIllustrationChanged">
                       <button class="btn btn-default" @click="uploadIllustration">Save picture</button>
                     </div> -->
-
-                  <div :class="['table-row content-description', block.getClass(mode)]">
-                    <div class="content-wrap-desc description"
-                      ref="blockDescription"
-                      @input="commitDescription($event)"
-                      v-html="block.description"
-                      @contextmenu.prevent="onContext">
-                    </div>
-                  </div>
 
                 </div>
                 <!--<img v-if="block.illustration"-->
@@ -138,6 +129,15 @@
                   @contextmenu.prevent="onContext"
                   @focusout="onFocusout"
                   @inputSuggestion="onInputSuggestion">
+                </div>
+
+                <div :class="['table-row content-description', block.getClass(mode), {'hidden': block.type !== 'illustration'}]" @click="onClick($event)">
+                  <div class="content-wrap-desc description"
+                    ref="blockDescription"
+                    @input="commitDescription($event)"
+                    v-html="block.description"
+                    @contextmenu.prevent="onContext">
+                  </div>
                 </div>
                 <!-- <div class="table-cell controls-left audio-controls" v-if="mode === 'narrate'"></div> -->
                 <!--<div class="content-wrap">-->
@@ -226,7 +226,7 @@
                       @click.prevent="reopenFlagPart($event, partIdx)">
                       Re-open flag</a>
 
-                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned())"
+                    <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned() || tc_allowNarrateUnassigned(block))"
                       href="#" class="flag-control -left"
                       @click.prevent="resolveFlagPart($event, partIdx)">
                       Resolve flag</a>
@@ -273,11 +273,11 @@
       <div class="controls-bottom-wrapper">
         <div class="par-ctrl -hidden -right">
           <div class="save-block -right" @click="discardBlock"
-               v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing}">
+               v-bind:class="{'-disabled': !((allowEditing || isProofreadUnassigned) && hasChanges) || isAudioEditing || isLocked}">
             Discard
           </div>
           <div class="save-block -right"
-          v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+          v-bind:class="{ '-disabled': ((!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)) || isLocked }"
           @click="assembleBlockProxy(true, needsRealignment)">
             {{saveBlockLabel}}
           </div>
@@ -395,7 +395,7 @@ export default {
         if (this.isUpdating) {
           return true;
         }
-        if (this.audioTasksQueue.block.checkId === this.check_id && this.audioTasksQueue.running) {
+        if (this.check_id && this.audioTasksQueue.blockId === this.check_id && this.audioTasksQueue.running) {
           return true;
         }
         return this.block ? this.isBlockLocked(this.block.blockid, this.isSplittedBlock ? this.blockPartIdx : null) : false;
@@ -804,6 +804,18 @@ export default {
           get() {
               return this.allowEditing && this.mode === 'proofread';
           }
+      },
+      hasIllustration: {
+        get() {
+          return this.block.illustration && this.block.illustration.length > 0 ? true : false;
+        },
+        cache: false
+      },
+      blockIllustration: {
+        get() {
+          return this.block.getIllustration();
+        },
+        cache: false
       },
       isAudioEditing: {
         get() {
@@ -2094,13 +2106,16 @@ Save audio changes and realign the Block?`,
       },
 
       canResolveFlagPart: function (flagPart) {
-          return this.tc_canResolveFlagPart(flagPart);
+          return this.tc_canResolveFlagPart(flagPart, this.block);
       },
       canCommentFlagPart: function(flagPart) {
         return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed/* && (!this.isCompleted || this.isProofreadUnassigned())*/;
       },
 
       canDeleteFlagPart: function (flagPart) {
+          if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id && this.block.voicework === 'narration') {
+            return true;
+          }
           let result = false;
           let isProofreadUnassigned = this.isProofreadUnassigned();
           if ((!this.isCompleted || isProofreadUnassigned) && flagPart.creator === this.auth.getSession().user_id) {
@@ -2419,14 +2434,6 @@ Save audio changes and realign the Block?`,
               this.pushChange('audiosrc');
               this.pushChange('audiosrc_ver');
             }
-            if (event.target.value === 'illustration') {
-              let i = setInterval(() => {
-                if (this.$refs.blockDescription) {
-                  this.initEditor();
-                  clearInterval(i);
-                }
-              }, 500);
-            }
           }
         }
       },
@@ -2477,16 +2484,35 @@ Save audio changes and realign the Block?`,
         if (blockId === this.check_id) {
           this.clearAudioTasks(false);
           if (this.isAudioChanged) {
-            this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
+            let checks = 0;
+            let waitStopRunning = new Promise((resolve, reject) => {// if there is running queue request then wait for it to finish
+              let waitInterval = setInterval(() => {
+                ++checks;
+                if (this.audioTasksQueue.running === null || checks >= 20) {
+                  clearInterval(waitInterval);
+                  return resolve();
+                }
+              }, 1000);
+            });
+            if (this.isSplittedBlock) {
+              this.isUpdating = true;
+            } else {
+              this.$parent.isUpdating = true;
+            }
+            return waitStopRunning
               .then(() => {
-                this.isAudioChanged = false;
-                this.isChanged = false;
-                this.unsetChange('audio');
-                this.unsetChange('content');
-                this.unsetChange('manual_boundaries');
+                this.discardAudioEdit(this.footnoteIdx, false, this.isSplittedBlock ? this.blockPartIdx : null)
+                  .then(() => {
+                    this.isAudioChanged = false;
+                    this.isChanged = false;
+                    this.unsetChange('audio');
+                    this.unsetChange('content');
+                    this.unsetChange('manual_boundaries');
 
-                this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
-              });
+                    this.blockAudio = {'map': this.blockPart.content, 'src': this.blockAudiosrc('m4a')};
+                    this.isUpdating = false;
+                  });
+                });
           }
           //$('nav.fixed-bottom').addClass('hidden');
 
@@ -2513,7 +2539,8 @@ Save audio changes and realign the Block?`,
           }
         }
       },
-      evFromAudioeditorWordRealign(map, blockId) {
+      evFromAudioeditorWordRealign(map, pinnedIndex, blockId) {
+        let response_params = null;
         if (blockId == this.check_id) {
           this.audStop();
           //console.log('from-audioeditor:word-realign', this.$refs.blockContent.querySelectorAll('[data-map]').length, map.length);
@@ -2521,21 +2548,34 @@ Save audio changes and realign the Block?`,
             let current_boundaries = this.blockPart.manual_boundaries ? this.blockPart.manual_boundaries.slice() : [];
             let w_maps = this.$refs.blockContent.querySelectorAll('[data-map]');
             
-            let currentMap = w_maps[map[1].index].getAttribute('data-map').split(',');
+            let currentMap = w_maps[map[pinnedIndex].index].getAttribute('data-map').split(',');
             currentMap[0] = parseInt(currentMap[0]);
             currentMap[1] = parseInt(currentMap[1]);
             
+            let manual_boundaries = [map[pinnedIndex].map[0]];
             map.forEach(m => {
+              let cMap = w_maps[m.index].getAttribute('data-map');
+              if (cMap) {
+                cMap = cMap.split(',');
+                cMap[0] = parseInt(cMap[0]);
+                cMap[1] = parseInt(cMap[1]);
+                if (current_boundaries.indexOf(cMap[0]) !== -1 && manual_boundaries.indexOf(cMap[0]) === -1) {
+                  manual_boundaries.push(m.map[0]);
+                  current_boundaries.splice(current_boundaries.indexOf(cMap[0]), 1);
+                }
+              }
               w_maps[m.index].setAttribute('data-map', m.map.join());
+              if (m.map[1] > 50) {
+                w_maps[m.index].classList.remove('alignment-changed');
+              }
             });
-            let manual_boundaries = [map[1].map[0]];
-            if (currentMap[0] !== map[1].map[0] && manual_boundaries.indexOf(map[1].map[0]) === -1) {
+            if (currentMap[0] !== map[pinnedIndex].map[0] && manual_boundaries.indexOf(map[pinnedIndex].map[0]) === -1) {
               if (manual_boundaries.indexOf(currentMap[0]) !== -1) {
                 manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0]), 1);
               }
               //manual_boundaries.push(_m[0]);
             }
-            if (currentMap[0] + currentMap[1] !== map[1].map[0] + map[1].map[1] && manual_boundaries.indexOf(map[1].map[0] + map[1].map[1]) === -1) {
+            if (currentMap[0] + currentMap[1] !== map[pinnedIndex].map[0] + map[pinnedIndex].map[1] && manual_boundaries.indexOf(map[pinnedIndex].map[0] + map[pinnedIndex].map[1]) === -1) {
               if (manual_boundaries.indexOf(currentMap[0] + currentMap[1]) !== -1) {
                 manual_boundaries.splice(manual_boundaries.indexOf(currentMap[0] + currentMap[1]), 1);
               }
@@ -2546,17 +2586,23 @@ Save audio changes and realign the Block?`,
                 manual_boundaries.push(_m);
                 //console.log(`PUSH ${_m[0]}`);
               }
-            })
+            });
+            manual_boundaries = [...new Set(manual_boundaries)].sort((a, b) => {return a - b;});
             this.block.setPartManualBoundaries(this.blockPartIdx, manual_boundaries.slice());
             this.blockPart.manual_boundaries = manual_boundaries.slice();
             manual_boundaries = null;
-            //this.pushChange('manual_boundaries');
             this.block.setPartContent(this.blockPartIdx, this.$refs.blockContent.innerHTML);
             this.block.setPartAudiosrc(this.blockPartIdx, this.blockAudiosrc(null, false), {m4a: this.blockAudiosrc('m4a', false)});
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
             if (this.audioTasksQueue.queue.length === 0) {
               this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart);
+            } else {
+              if (this.isSplittedBlock) {
+                response_params = [this.block.getPartAudiosrc(this.blockPartIdx, 'm4a'), this.block.getPartContent(this.blockPartIdx), true, Object.assign({_id: this.check_id}, this.blockPart)];
+              } else {
+                response_params = [this.blockAudio.src, this.blockAudio.map, true, this.block];
+              }
             }
             this.showPinnedInText();
             //this.pushChange('content');
@@ -2571,6 +2617,7 @@ Save audio changes and realign the Block?`,
           }
           this.isAudioChanged = true;
         }
+        return response_params;
       },
       evFromAudioeditorSaveAndRealign (blockId, check_realign = true, realign = false) {
         if (blockId == this.check_id) {
@@ -2711,13 +2758,15 @@ Save audio changes and realign the Block?`,
         }
       },
       evFromAudioeditorUnpinRight(position, blockId) {
+        let response = null;
         if (this.check_id === blockId) {
           if (Array.isArray(this.blockPart.manual_boundaries) && this.blockPart.manual_boundaries.length > 0) {
             let oldBoundaries = this.blockPart.manual_boundaries;
-            this.blockPart.manual_boundaries = this.blockPart.manual_boundaries.filter(mb => {
+            let new_mb = this.blockPart.manual_boundaries.filter(mb => {
               return mb <= position;
             });
-            this.block.setPartManualBoundaries(this.blockPartIdx, this.blockPart.manual_boundaries);
+            this.block.setPartManualBoundaries(this.blockPartIdx, new_mb);
+            this.blockPart.manual_boundaries = new_mb;
             this.blockPart.content = this.$refs.blockContent.innerHTML;
             this.blockAudio.map = this.blockPart.content;
             this.block.setPartContent(this.blockPartIdx, this.blockPart.content);
@@ -2727,15 +2776,22 @@ Save audio changes and realign the Block?`,
               this.isAudioChanged = true;
             }
             this.showPinnedInText();
-            this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
+            //this.$root.$emit('for-audioeditor:reload-text', this.$refs.blockContent.innerHTML, this.blockPart, changed);
+            response = [this.blockAudio.src, this.blockAudio.map, true, this.blockPart];
           }
         }
+        return response;
       },
       evFromAudioeditorEraseAudio(blockId, start, end) {
         if (blockId === this.check_id) {
           this.isAudioChanged = true;
           this.isUpdating = true;
           this.audStop();
+          if (this.isSplittedBlock) {
+            this.block.setPartContent(this.blockPartIdx, this.clearBlockContent());
+          } else {
+            this.block.setContent(this.clearBlockContent());
+          }
           return this.eraseAudio(start, end, null, this.blockPartIdx, this.check_id)
             .then(() => {
               this.isUpdating = false;
@@ -2796,7 +2852,11 @@ Save audio changes and realign the Block?`,
                 task = this.eraseAudioSilent(...record.options.concat([this.check_id]));
                 break;
               case 'save-audio':
-                task = this.$parent.assembleBlockAudioEdit(...record.options, false);
+                task = this.$parent.assembleBlockAudioEdit(...record.options, false)
+                  .then(response => {
+                    this.isAudioChanged = false;
+                    return Promise.resolve(response);
+                  });
                 break;
               case 'save-audio-then-block':
                 task = new Promise((resolve, reject) => {
@@ -2805,6 +2865,7 @@ Save audio changes and realign the Block?`,
                       return this.$parent.assembleBlockProxy(false, true, [], false);
                     })
                     .then(() => {
+                      this.isAudioChanged = false;
                       return resolve();
                     })
                     .catch(err => {
@@ -2834,8 +2895,14 @@ Save audio changes and realign the Block?`,
                 break;
               case 'manual_boundaries':
                 task = new Promise((resolve, reject) => {
-                  this.evFromAudioeditorWordRealign(...record.options);
-                  return resolve();
+                  let response = this.evFromAudioeditorWordRealign(...record.options);
+                  return resolve(response);
+                });
+                break;
+              case 'unpin_right':
+                task = new Promise((resolve, reject) => {
+                  let response = this.evFromAudioeditorUnpinRight(...record.options.concat([this.check_id]));
+                  return resolve(response);
                 });
                 break;
               default:
@@ -3231,6 +3298,8 @@ Save audio changes and realign the Block?`,
           .catch(err => {
             this.isSaving = false;
             this.checkError(err);
+            this.$root.$emit('for-audioeditor:set-process-run', false);
+            this.$root.$emit('set-error-alert', err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to apply your correction. Please try again.');
             BPromise.reject(err)
           });
       },
@@ -3803,5 +3872,5 @@ Save text changes and realign the Block?`,
          }
       }
    }
-
+   
 </style>

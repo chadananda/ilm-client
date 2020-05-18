@@ -192,7 +192,7 @@
             <!-- <div style="" class="preloader-container">
               <div v-if="isUpdating" class="preloader-small"> </div>
             </div> -->
-            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + blockPartIdx" ref="blocks"
+            <BookBlockPartView v-for="(blockPart, blockPartIdx) in blockParts" v-bind:key="block.blockid + '-' + block.type + '-' + blockPartIdx + (isSplittedBlock ? '-split' : '')" ref="blocks"
               :block="storeListById(block.blockid)"
               :blockO="blockO"
               :blockId = "blockId"
@@ -328,7 +328,7 @@
                   @click.prevent="reopenFlagPart($event, partIdx)">
                   Re-open flag</a>
 
-                <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned())"
+                <a v-if="canResolveFlagPart(part) && part.status == 'open' && !part.collapsed && (!isCompleted || isProofreadUnassigned() || tc_allowNarrateUnassigned(block))"
                   href="#" class="flag-control -left"
                   @click.prevent="resolveFlagPart($event, partIdx)">
                   Resolve flag</a>
@@ -389,11 +389,11 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div class="table-cell -text"
+                  <div 
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="[{'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language)]"
+                    :class="['table-cell', '-text', {'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language), {'__unsave': !(!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}]"
                     @input="commitFootnote(ftnIdx, $event)"
                     @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
                     v-html="footnote.content"
@@ -476,24 +476,30 @@
         </h4>
       </div>
       <div class="modal-body" style="padding-top: 10px; padding-bottom: 10px;">
-        <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
-        <div class="modal-content-flex">
-          <div class="modal-content-flex-block">
-          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
-          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
-          <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
-          <!--v-if="!block.status.marked"-->
+        <section v-if="isAllowBatchVoiceworkNarration">
+          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to:</div>
+          <div class="modal-content-flex">
+            <div class="modal-content-flex-block">
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="single" :disabled="voiceworkUpdating"/>this {{blockTypeLabel}}</label>
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="unapproved" :disabled="voiceworkUpdating"/>all unapproved {{blockTypeLabel}}s</label>
+            <label><input type="radio" name="voicework-update-type" v-model="voiceworkUpdateType" value="all" :disabled="voiceworkUpdating"/>all {{blockTypeLabel}}s</label>
+            <!--v-if="!block.status.marked"-->
+            </div>
+            <div class="modal-content-flex-block">
+            <label class="modal-content-empty">&nbsp;</label>
+            <label class="modal-content-empty">&nbsp;</label>
+            <label class="modal-content-empty">&nbsp;</label>
+            </div>
           </div>
-          <div class="modal-content-flex-block">
-          <label class="modal-content-empty">&nbsp;</label>
-          <label class="modal-content-empty">&nbsp;</label>
-          <label class="modal-content-empty">&nbsp;</label>
-          </div>
-        </div>
-        <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': block.audiosrc}]">This will also delete current audio from the {{blockTypeLabel}}</div>
-        <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
-        <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
-        <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
+          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': isSingleBlockRemoveAudio}]">This will also delete current audio from the {{blockTypeLabel}}</div>
+          <div v-else :class="['attention-msg', {'visible': currentBookCounters.voiceworks_for_remove > 0}]">This will also delete current audio from {{currentBookCounters.voiceworks_for_remove}} {{blockTypeLabel}}<span v-if="currentBookCounters.voiceworks_for_remove!==1">(s)</span></div>
+          <div v-if="voiceworkUpdateType == 'single'">&nbsp;</div>
+          <div v-else :class="['attention-msg', 'visible']">The book will reload automatically</div>
+        </section>
+        <section v-else> <!--!isAllowBatchVoiceworkNarration-->
+          <div class="modal-text">Apply <i>"{{blockVoiceworks[voiceworkChange]}}"</i> voicework type to this {{blockTypeLabel}}?</div>
+          <div v-if="voiceworkUpdateType == 'single'" :class="['attention-msg', {'visible': !isNarratedBlockCompleteAudio}]">Сurrent audio on the {{blockTypeLabel}} cannot be saved because it is incomplete</div>
+        </section>
       </div>
       <!-- custom buttons -->
       <div class="modal-footer vue-dialog-buttons">
@@ -1079,6 +1085,28 @@ export default {
         },
         cache: false
       },
+      isSingleBlockRemoveAudio() {
+        return this.block.audiosrc && this.block.audiosrc.length;
+          //&& !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration'
+      },
+      isNarratedBlockCompleteAudio() {
+
+        if (this.block.voicework == 'narration'
+          && this.block.parts && this.block.parts.length) {
+
+          let aPartsLength = this.block.parts.filter((part)=>{
+            return part.audiosrc && part.audiosrc.length
+          }).length;
+
+          return (aPartsLength == 0 || aPartsLength == this.block.parts.length)
+        }
+        return true;
+      },
+      isAllowBatchVoiceworkNarration() {
+        if (this.currentJobInfo.text_cleanup === true) return true;
+        if (this.currentJobInfo.mastering == true || this.currentJobInfo.mastering_complete == true) return true;
+        return !(this.voiceworkChange == 'audio_file' && this.block.voicework == 'narration')
+      },
       isAudioEditing: {
         get() {
           return this.audioTasksQueue.block.blockId === this.block.blockid;
@@ -1179,7 +1207,9 @@ export default {
         this.block.changes = this.changes;
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
-            this.block.description = this.$refs.blockDescription.innerHTML;
+            if (this.$refs.blocks[0] && this.$refs.blocks[0].$refs) {
+              this.block.description = this.$refs.blocks[0].$refs.blockDescription ? this.$refs.blocks[0].$refs.blockDescription.innerHTML : '';
+            }
             this.block.voicework = 'no_audio';
           case 'hr':
             this.block.content = '';
@@ -1420,7 +1450,7 @@ export default {
           this.editor.setup();
         }
 
-        if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
+        /*if ((!this.editorDescr || force === true) && this.block.type == 'illustration' && this.mode === 'edit') {
           let extensions = {};
           let toolbar = {buttons: []};
           if (this.allowEditing) {
@@ -1447,7 +1477,7 @@ export default {
           });
         } else if (this.editorDescr) {
           this.editorDescr.setup();
-        }
+        }*/
 
         this.initFtnEditor(force)
 
@@ -1645,6 +1675,7 @@ export default {
           api_url+= '/part/' + partIdx;
         }
         let api = this.$store.state.auth.getHttp();
+        this.isUpdating = !this.isSplittedBlock;
         return api.delete(api_url, {}, {})
           .then(response => {
             if (response.status == 200 && response.data) {
@@ -1681,6 +1712,7 @@ export default {
                 this.audioEditFootnote.isAudioChanged = false;
               }
             }
+            this.isUpdating = false;
             return Promise.resolve();
           })
           .catch(err => {
@@ -1709,7 +1741,7 @@ Save audio changes and realign the Block?`,
                 title: 'Save & Realign',
                 handler: () => {
                   this.$root.$emit('hide-modal');
-                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0)};
+                  let preparedData = {audiosrc: this.block.getPartAudiosrc(0, null, false), manual_boundaries: this.block.getPartManualBoundaries(0), content: this.clearBlockContent()};
                   return this.assembleBlockProxy(false, false, update_fields, false)
                     .then(() => {
                       return this.assembleBlockAudioEdit(this.footnoteIdx, true, preparedData)
@@ -1733,7 +1765,7 @@ Save audio changes and realign the Block?`,
         if (this.mode === 'proofread') {
           return this.assembleBlockProofread();
         } else if (this.mode === 'narrate') {
-          return this.assembleBlockNarrate(true, false, update_fields);
+          return this.assembleBlockNarrate(true, realign, update_fields);
         }
         if (check_realign === true && this.needsRealignment) {
           realign = true;
@@ -1852,6 +1884,9 @@ Save audio changes and realign the Block?`,
                     partUpdate['content'] = this.block.content;
                     partUpdate['parts'] = this.block.parts;
                     break;
+                  case 'manual_boundaries':
+                    partUpdate['content'] = this.block.content;
+                    break;
                   default:
                     partUpdate[c] = this.block[c];
                     break;
@@ -1884,6 +1919,9 @@ Save audio changes and realign the Block?`,
         let update = partUpdate ? partUpdate : this.block;
         if (update.status && update.status.marked === true) {
           update.status.marked = false;
+        }
+        if (this.hasChange('classes') && !update.classes) {
+          update.classes = this.block.classes;
         }
 
         this.checkBlockContentFlags();
@@ -2096,13 +2134,30 @@ Save audio changes and realign the Block?`,
           upd_block.bookid = this.block.bookid;
         }
         this.isSaving = true;
+        if (this.isAudioEditing) {
+          this.$root.$emit('for-audioeditor:set-process-run', true, 'save');
+        }
         let refreshTasks = this.isCompleted;
         return this.putBlockNarrate([upd_block, realign])
           .then(() => {
-            this.isSaving = false;
+            if (realign) {
+              this.getBookAlign()
+                .then(() => {
+                  this.isSaving = false;
+                  if (this.isLocked && this.isAudioEditing) {
+                    this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                  }
+                });
+            } else {
+              this.isSaving = false;
+              if (this.isAudioEditing) {
+                this.$root.$emit('for-audioeditor:set-process-run', false);
+              }
+            }
             this.isChanged = false;
             if (refreshTasks) {
               this.getCurrentJobInfo();
+              this.tc_loadBookTask(this.block.bookid);
             }
             return Promise.resolve();
           })
@@ -2203,7 +2258,7 @@ Save audio changes and realign the Block?`,
               //content: this.blockAudio.map,
               //manual_boundaries: this.block.manual_boundaries
               audiosrc: preparedData.audiosrc || this.block.getPartAudiosrc(0, null, false),
-              content: this.block.getPartContent(0),
+              content: preparedData.content || this.block.getPartContent(0),
               manual_boundaries: preparedData.manual_boundaries || this.block.getPartManualBoundaries(0),
               mode: this.mode
             };
@@ -2264,6 +2319,11 @@ Save audio changes and realign the Block?`,
                   //return this.putBlock(this.block);
                   if (!realign) {
                     this.$root.$emit('for-audioeditor:load', this.blockAudio.src, this.blockAudio.map, false, this.block);
+                  }
+                  if (!this.isSplittedBlock) {
+                    if (this.$refs.blocks && this.$refs.blocks[0]) {
+                      this.$refs.blocks[0].isAudioChanged = false;
+                    }
                   }
                   return BPromise.resolve();
                 } else {
@@ -2738,11 +2798,6 @@ Save text changes and realign the Block?`,
           this.block.setAudiosrcFootnote(pos, '');
         }
       },
-      commitDescription: function(ev) {
-        //this.block.description = ev.target.innerText.trim();
-        this.isChanged = true;
-        this.pushChange('description');
-      },
 
       addFlag: function() {
         this.isChanged = true;
@@ -2860,13 +2915,16 @@ Save text changes and realign the Block?`,
       },
 
       canResolveFlagPart: function (flagPart) {
-          return this.tc_canResolveFlagPart(flagPart);
+          return this.tc_canResolveFlagPart(flagPart, this.block);
       },
       canCommentFlagPart: function(flagPart) {
         return this.canResolveFlagPart(flagPart) && flagPart.status == 'open' && !flagPart.collapsed/* && (!this.isCompleted || this.isProofreadUnassigned())*/;
       },
 
       canDeleteFlagPart: function (flagPart) {
+          if (this.tc_allowNarrateUnassigned(this.block) && flagPart.creator === this.auth.getSession().user_id && this.block.voicework === 'narration') {
+            return true;
+          }
           let result = false;
           let isProofreadUnassigned = this.isProofreadUnassigned();
           if ((!this.isCompleted || isProofreadUnassigned) && flagPart.creator === this.auth.getSession().user_id) {
@@ -3293,7 +3351,11 @@ Save text changes and realign the Block?`,
             //this.block.parnum = false;
           //}
           this.$root.$emit('from-block-edit:set-style');
+          if (['type'].indexOf(type) !== -1) {
+            this.$forceUpdate();
+          }
           if (type === 'type' && event && event.target) {
+            this.block.type = event.target.value;
             if (['hr', 'illustration'].indexOf(event.target.value) !== -1) {
               this.block.voicework = 'no_audio';
               this.block.setAudiosrc('');
@@ -3304,14 +3366,13 @@ Save text changes and realign the Block?`,
               this.pushChange('audiosrc');
               this.pushChange('audiosrc_ver');
             }
-            if (event.target.value === 'illustration') {
-              let i = setInterval(() => {
-                if (this.$refs.blocks && this.$refs.blocks[0] && this.$refs.blocks[0].$refs && this.$refs.blocks[0].$refs.blockDescription) {
-                  this.$refs.blocks[0].initEditor();
-                  clearInterval(i);
-                }
-              }, 500);
-            }
+            Vue.nextTick(() => {
+              if (event.target.value !== 'hr') {
+                this.$refs.blocks[0].initEditor(true);
+              } else {
+                this.$refs.blocks[0].destroyEditor();
+              }
+            });
           }
         }
       },
@@ -3772,7 +3833,7 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-        if (true && this.voiceworkUpdateType !== 'single') {
+        if (false && this.voiceworkUpdateType !== 'single') {
           this.$store.state.liveDB.onBookReimport();
           this.$store.state.liveDB.stopWatch('metaV');
           this.$store.state.liveDB.stopWatch('job');
@@ -3787,15 +3848,19 @@ Save text changes and realign the Block?`,
           .then(response => {
             this.voiceworkUpdating = false;
             if (response.status == 200) {
+
+              this.voiceworkChange = false;
+
               if (response && response.data && response.data.blocks) {
                 //console.log('BookBlockView.vue->Counters:', response.data.counters);
+                //console.log('response.data.blocks.length:', response.data.blocks.length);
 
-                if (true && this.voiceworkUpdateType !== 'single') {
-                  document.location.href = document.location.href + '/' + this.block.blockid;
-                  return;
-                }
+//                 if (true && this.voiceworkUpdateType !== 'single') {
+//                   document.location.href = document.location.href + '/' + this.block.blockid;
+//                   return;
+//                 }
                 //response.data.updField = 'voicework';
-                if (response.data.blocks.length > 900) {
+                if (response.data.blocks.length > 300) {
                   this.$store.state.liveDB.onBookReimport();
                   this.$store.state.liveDB.stopWatch('metaV');
                   this.$store.state.liveDB.stopWatch('job');
@@ -3813,12 +3878,12 @@ Save text changes and realign the Block?`,
                   this.getCurrentJobInfo();
                   this.getAlignCount();
                   this.$root.$emit('bookBlocksUpdates', response.data);
+                  this.setCurrentBookBlocksLeft(this.block.bookid);
                 }
-                //this.setCurrentBookBlocksLeft(this.block.bookid);
               }
             }
             this.currentBookCounters.voiceworks_for_remove = 0;
-            this.voiceworkChange = false;
+            //this.voiceworkChange = false;
           })
           .catch(err => {
             this.voiceworkUpdating = false;
@@ -4227,7 +4292,7 @@ Save text changes and realign the Block?`,
         //console.log('voicework_change_close', $ev);
         if (this.voiceworkUpdating) $ev.stop();
         else {
-          this.voiceworkChange = false;
+          //this.voiceworkChange = false;
           this.voiceworkUpdateType = 'single';
         }
       }
@@ -4856,6 +4921,9 @@ Save text changes and realign the Block?`,
 
     &.content-description {
         line-height: 24pt;
+        width: 100%;
+        display: table;
+        margin-top: -30px;
         .content-wrap-desc {
           p {
             margin: 0;
@@ -4878,6 +4946,7 @@ Save text changes and realign the Block?`,
     }
 
     .illustration-block {
+      padding-bottom: 30px;
       img {
         border: solid grey 2px;
         /*max-height: 85vh;*/
@@ -5507,4 +5576,32 @@ Save text changes and realign the Block?`,
     background-color: #e0dede;
     border: none;
   }
+
+div.__unsave > div.content-wrap, div.__unsave > hr, div.__unsave > .illustration-block {
+  border-color: #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+}
+div.__unsave > hr {
+  border-width: 2px !important;
+  border-style: solid !important;
+  border-radius: 8px;
+}
+
+div.-content.editing  div.content-wrap {
+  border-color: #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+  background: #ffffe1 !important;
+}
+
+
+/*
+div.content-wrap-footn.__unsave {
+  border: 2px solid #ded056 !important;
+  box-shadow: 0 0 10px #ded056 !important;
+}
+
+div.content-wrap-footn.__unsave:focus {
+  outline: none;
+} */
+
 </style>

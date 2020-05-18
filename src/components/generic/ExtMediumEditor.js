@@ -82,7 +82,7 @@ let QuoteButton = MediumEditor.Extension.extend({
             if (opts.value == element.text && element.text_farsi !== undefined)
               opts.value = element.text_farsi;
           }
-        );                 
+        );
       }
 
     if (opts.value) this.quoteFormInput.value = opts.value;
@@ -267,7 +267,7 @@ let QuoteButton = MediumEditor.Extension.extend({
     } else {
       item.innerHTML = `<div style="float: left;">${content.text}</div><div style="float: right; width: 20px; height: 20px; background: ${content.color}">`;
     }
-    
+
     return item;
   },
 
@@ -312,7 +312,7 @@ let QuoteButton = MediumEditor.Extension.extend({
 
     if (this.value.length) {
       var self = this;
-      //let's change to farsi if farsi  input field 
+      //let's change to farsi if farsi  input field
       //this.getEditorOption('blockLang')
       //this.getEditorOption('quotesList')
       if (this.getEditorOption('blockLang') == 'fa' || this.getEditorOption('blockLang') == 'ar')
@@ -322,7 +322,7 @@ let QuoteButton = MediumEditor.Extension.extend({
             if (self.value == element.text && element.text_farsi !== undefined)
               self.value = element.text_farsi;
           }
-        );                 
+        );
       }
     }
   },

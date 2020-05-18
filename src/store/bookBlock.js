@@ -605,6 +605,7 @@ class BookBlock {
     if (this.illustration) {
       return process.env.ILM_API + this.illustration + '?' + this.timestamp;
     }
+    return false;
   }
 
   getAudiosrc(ver = false, full = true) {

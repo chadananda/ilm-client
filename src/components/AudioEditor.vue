@@ -189,7 +189,8 @@
           processRunType: null,
           selectionBordersVisible: false,
           audioDuration: 0,
-          isFootnote: false
+          isFootnote: false,
+          wordRepositioning: false
         }
       },
       mounted() {
@@ -661,8 +662,14 @@
             self._setWordSelection(index, true, true);
             self.wordSelectionMode = index;
           });
+          $('.wf-playlist').on('dragstart', '.annotations-boxes .annotation-box .resize-handle', (ev) => {
+            //console.log('DRAG START');
+            this.wordRepositioning = true;
+          });
           $('.wf-playlist').on('dragend', '.annotations-boxes .annotation-box .resize-handle', (ev)=>{
             this.smoothDrag(ev);
+            //console.log('DRAG END');
+            this.wordRepositioning = false;
           });
 
           let waitPlaylist = setInterval(() => {
@@ -809,7 +816,10 @@
         setAudioSilent(queue_record, audio, text, saveToHistory = true, block = null) {
           //console.log(`%c COMPARE ${this.audioTasksQueue.time}, ${queue_record.time}`, `color: #bada55; background-color: #222;`)
           this.emitDisplayWordSelection();
-          if (this.audioTasksQueue.time === queue_record.time) {
+          if (this.audioTasksQueue.time === queue_record.time && !this.wordRepositioning) {
+            if (block) {
+              this.block.manual_boundaries = block.manual_boundaries || [];
+            }
             let replay = this.isPlaying;
             let stopPlay = new Promise((resolve, reject) => {
               if (replay) {
@@ -831,8 +841,11 @@
                     //console.log(response);
                     this.audiosourceEditor.ac.decodeAudioData(response.data, (buffer) => {
                       this.setAudioBuffer(buffer);
-                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                      this.audiosourceEditor.activeTrack.duration = buffer.duration;
+                      this.audiosourceEditor.duration = buffer.duration;
                       this._setText(text, block);
+                      this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                      this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
                       this.audiosourceEditor.drawRequest();
                       if (replay) {
                         this.play();
@@ -1058,6 +1071,7 @@
           $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
           $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
           this.$root.$off('for-audioeditor:select', this.select);
+          this.$root.$off('for-audioeditor:reload-text', this._setText);
         },
         addSilence() {
           if (this.silenceLength > 0 && this.cursorPosition >= 0) {
@@ -1096,13 +1110,19 @@
           this.isModified = true;
         },
         _changeWordPositions(new_positions, index) {
-          
+          new_positions.start = this._round(new_positions.start, 2);
+          new_positions.end = this._round(new_positions.end, 2);
           let w = this.words.find(_w => {
             return _w.index === index;
           });//this.words.push({start: map[0], end: map[1], index: this.words.length, alignedIndex: alignedWords++})
           if (w) {
             w.start = new_positions.start;
             w.end = new_positions.end;
+          }
+          let a = this.annotations[index];
+          if (a) {
+            a.begin = new_positions.start;
+            a.end = new_positions.end;
           }
         },
         insertRangeAction(position, range, length) {
@@ -1180,7 +1200,7 @@
         cutLocal() {
           let cut_range = this.cutRangeAction(this.selection.start, this.selection.end);
           this._addHistoryLocal('cut', cut_range, this.selection.start, this.selection.end);
-          let diff = this.selection.end - this.selection.start;
+          let diff = this._round(this.selection.end - this.selection.start, 2);
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
             if (al.start <= this.selection.start && al.end >= this.selection.end) {// cut middle of the word
               al.end-= diff;
@@ -1290,11 +1310,14 @@
               this._changeWordPositions(al, i);
             }
             if (al.end - al.start < min) {
-              let delta = (min - (al.end - al.start));
-              shift+= delta;
-              al.end+=delta;
+              let delta = this._round(min - (al.end - al.start), 2);
+              shift = this._round(shift + delta, 2);
+              al.end = this._round(al.end + delta, 2);
             }
           });
+          if (shift > 0) {
+            this.insertRangeAction(this.audiosourceEditor.duration, new Float32Array(shift * this.audiosourceEditor.activeTrack.buffer.sampleRate), shift);
+          }
           this.audiosourceEditor.annotationList.annotations[this.audiosourceEditor.annotationList.annotations.length - 1].end = this.audiosourceEditor.duration;
           this.addTaskQueue('cut', [Math.round(this.selection.start * 1000), Math.round(this.selection.end * 1000)]);
           this.clearSelection();
@@ -1359,6 +1382,8 @@
           //console.log(new _Playout.default(this.audiosourceEditor.ac, new_buffer));
           //console.log(new _Playout(this.audiosourceEditor.ac, new_buffer));
           //this.audiosourceEditor.activeTrack.playout.setBuffer(new_buffer);
+          //this.audiosourceEditor.activeTrack.duration = new_buffer.duration;
+          //this.audiosourceEditor.duration = new_buffer.duration;
           this.audiosourceEditor.activeTrack.setPlayout(new _Playout(this.audiosourceEditor.ac, new_buffer));
         },
         addTaskQueue(type, options) {
@@ -1718,7 +1743,7 @@ Discard unsaved audio changes?`,
             this.isHistoryFull = false;
           }
         },
-        _addHistoryLocal(type, range, start, end, additional = []) {
+        _addHistoryLocal(type, range, start, end, additional = {}) {
           let record = {
             type: type,
             range: range,
@@ -1760,6 +1785,36 @@ Discard unsaved audio changes?`,
                 case 'erase':
                   this.cutRangeAction(record.selection.start, record.selection.end);
                   this.insertRangeAction(record.selection.start, record.range, record.selection.end - record.selection.start);
+                  break;
+                case 'manual_boundaries':
+                  if (record.additional && record.additional.shifted && record.additional.oldMap) {
+                    record.additional.shifted.forEach(sw => {
+                      let oldMap = record.additional.oldMap.shift();
+                      if (oldMap) {
+                        this.audiosourceEditor.annotationList.annotations[sw.index].start = oldMap.start;
+                        this.audiosourceEditor.annotationList.annotations[sw.index].end = oldMap.end;
+                      }
+                    });
+                    if (Array.isArray(record.additional.manual_boundaries) && record.additional.manual_boundaries.indexOf(record.additional.shifted[1].start) === -1) {
+                      $($(`.annotation-box`)[record.additional.shifted[1].index]).find(`.resize-handle.resize-w`).removeClass('manual');
+
+                      $($(`.annotation-box`)[record.additional.shifted[0].index]).find(`.resize-handle.resize-e`).removeClass('manual');
+                    }
+                    //this.audiosourceEditor.renderAnnotations();
+                    //this.audiosourceEditor.activeTrack.setCues(0, this.audiosourceEditor.duration);
+                    //this.audiosourceEditor.activeTrack.calculatePeaks(this.audiosourceEditor.samplesPerPixel, this.audiosourceEditor.sampleRate);
+                    this.audiosourceEditor.drawRequest();
+                  }
+                  break;
+                case 'unpin_right':
+                  if (record.additional.unpinned_indexes) {
+                    record.additional.unpinned_indexes.start.forEach(i => {
+                      $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w`).addClass('manual');
+                    });
+                    record.additional.unpinned_indexes.end.forEach(i => {
+                      $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e`).addClass('manual');
+                    });
+                  }
                   break;
               }
             } else {
@@ -2093,6 +2148,10 @@ Discard unsaved audio changes?`,
 
         smoothDrag:_.debounce(function (ev) {
           let moveIndex = $('.annotations-boxes .annotation-box .resize-handle').index(ev.target);
+          let oldMap = [];
+          this.words.forEach(w => {
+            oldMap.push(Object.assign({}, w));
+          });
           $('.annotation-resize-pos').remove();// hide resize marker
           if (!this._isAnnotationsEditable()) {
             this.showModal('onWordRepositionMessage');
@@ -2108,7 +2167,7 @@ Discard unsaved audio changes?`,
 
           this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {// find the shifted annotation, find shift direction
             if (this.annotations[i]) {
-              if (this.annotations[i].begin == al.start && this.annotations[i].end != al.end) {
+              if (!shiftedAnnotation && this._round(this.annotations[i].begin, 2) == this._round(al.start, 2) && this._round(this.annotations[i].end, 2) != this._round(al.end, 2)) {
                 direction = this.annotations[i].end > al.end ? 'left' : 'right';
                 if (direction === 'left') {
                   shiftedAnnotation = Object.assign({}, al);
@@ -2126,17 +2185,37 @@ Discard unsaved audio changes?`,
             }
           });
           let shifted = false;
+          //console.log(this.audiosourceEditor.annotationList.annotations[8].start, this.audiosourceEditor.annotationList.annotations[8].end);
+          //console.log(this.annotations[8].begin, this.annotations[8].end);
+          let length = 0;
+          //let shift = 0;
+          this.annotations.forEach((an, i) => {
+            if (length > an.begin) {
+              //console.log(an.begin, 'overlapped by ', this.annotations[i - 1]);
+              an.begin = length;
+              //if (this._round(an.end - an.begin) < this.minWordSize) {
+                //shift = this._round(this.minWordSize)
+              //}
+            } else if (length < an.begin) {
+              //console.log('HERE LESS', length, an.begin)
+              an.begin = length;
+            }
+            length = an.end;
+          });
 
-          if (shiftedAnnotation) {
+          this.annotations.forEach((an, i) => {
+            //console.log(an);
             //this._addHistory(this.content, this.audiofile, this.block.manual_boundaries ? this.block.manual_boundaries.slice() : []);
-            if (shiftedAnnotation.end - shiftedAnnotation.start < this.minWordSize) {// find words with length less than minimum
-              let shift = this.minWordSize - (shiftedAnnotation.end - shiftedAnnotation.start);
+            if (this._round(an.end - an.begin, 2) < this.minWordSize) {// find words with length less than minimum
+              //console.log('MIN WORD SIZE', an.begin, an.end, an.id);
+              let shift = this.minWordSize - (an.end - an.begin);
+              //console.log(shift);
               let found = false;
               let shiftIndexes = [];
               switch (direction) {
                 case 'left':
-                  this.annotations[shiftedIndex].begin-= shift;
-                  let j = shiftedIndex - 1;
+                  this.annotations[i].begin-= shift;
+                  let j = i - 1;
                   do {
                     if (this.annotations[j]) {
                       this.annotations[j].end-=shift;
@@ -2151,7 +2230,7 @@ Discard unsaved audio changes?`,
                   } while (j >= 0 && !shifted);
                   shifted = true;
                   shift = 0;
-                  for (j = 0; j <= shiftedIndex + 2; ++j) {// if some words start is before zero, shift all words
+                  for (j = 0; j <= i + 2; ++j) {// if some words start is before zero, shift all words
                     if (this.annotations[j]) {
                       if (this.annotations[j].begin < 0) {
                         if (shift == 0) {
@@ -2173,8 +2252,8 @@ Discard unsaved audio changes?`,
                   }
                   break;
                 case 'right':
-                  this.annotations[shiftedIndex].end+= shift;
-                  j = shiftedIndex + 1;
+                  this.annotations[i].end+= shift;
+                  j = i + 1;
                   do {
                     if (this.annotations[j]) {
                       this.annotations[j].begin+=shift;
@@ -2189,7 +2268,7 @@ Discard unsaved audio changes?`,
                   } while (j < this.annotations.length && !shifted);
                   shifted = true;
                   shift = 0;
-                  for (j = this.annotations.length; j >= shiftedIndex - 2; --j) {// if some words end if after audio finish, shift all words
+                  for (j = this.annotations.length; j >= i - 2; --j) {// if some words end if after audio finish, shift all words
                     if (this.annotations[j]) {
                       if (this.annotations[j].end > this.audiosourceEditor.duration) {
                         if (shift == 0) {
@@ -2211,9 +2290,14 @@ Discard unsaved audio changes?`,
                   break;
               }
             }
-          }
+          });
           this.annotations.forEach((al, i) => {
             map.push([Math.round(al.begin * 1000), Math.round((al.end - al.begin) * 1000)]);
+            //console.log(i, ':', map[i][0], map[i][1]);
+            if (map[i - 1] && map[i - 1][0] + map[i - 1][1] != map[i][0]) {
+              //console.log('FIX MAP', map[i - 1][0] + map[i - 1][1], map[i][0]);
+              map[i][0] = map[i - 1][0] + map[i - 1][1];
+            }
             let w = this.words.find(_w => {
               return _w.alignedIndex == i;
             });
@@ -2229,23 +2313,38 @@ Discard unsaved audio changes?`,
             });
           }
           this.audiosourceEditor.drawRequest();
-          this._addHistoryLocal('manual_boundaries');
           let shiftedWords = [];
           let index = parseInt(moveIndex / 2);
+          let pinnedIndex = null
           if (moveIndex % 2 === 1) {
-            shiftedWords.push({index: index, map: map[index]});
-            shiftedWords.push({index: index + 1, map: map[index + 1]});
+            //shiftedWords.push({index: index, map: map[index]});
+            //shiftedWords.push({index: index + 1, map: map[index + 1]});
+            pinnedIndex = index + 1;
           } else {
-            shiftedWords.push({index: index - 1, map: map[index - 1]});
-            shiftedWords.push({index: index, map: map[index]});
+            //shiftedWords.push({index: index - 1, map: map[index - 1]});
+            //shiftedWords.push({index: index, map: map[index]});
+            pinnedIndex = index;
           }
+          map.forEach((m, i) => {
+            shiftedWords.push({index: i, map: m});
+          });
+          let shiftedOldMap = [];
+          shiftedWords.forEach(sw => {
+            shiftedOldMap.push(oldMap[sw.index]);
+          })
+          this._addHistoryLocal('manual_boundaries', null, null, null, {
+            shifted: shiftedWords,
+            oldMap: shiftedOldMap,
+            manual_boundaries: this.block.manual_boundaries
+          });
           if (this.audioTasksQueue.queue.length > 0) {
-            this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), this.blockId]);
-            $($(`.annotation-box`)[shiftedWords[1].index]).find(`.resize-handle.resize-w`).addClass('manual');
+            //console.log(shiftedWords.slice());
+            this.addTaskQueue('manual_boundaries', [shiftedWords.slice(), pinnedIndex, this.blockId]);
+            $($(`.annotation-box`)[shiftedWords[pinnedIndex].index]).find(`.resize-handle.resize-w`).addClass('manual');
 
-            $($(`.annotation-box`)[shiftedWords[0].index]).find(`.resize-handle.resize-e`).addClass('manual');
+            $($(`.annotation-box`)[shiftedWords[pinnedIndex - 1].index]).find(`.resize-handle.resize-e`).addClass('manual');
           } else {
-            this.$root.$emit('from-audioeditor:word-realign', shiftedWords, this.blockId);
+            this.$root.$emit('from-audioeditor:word-realign', shiftedWords, pinnedIndex, this.blockId);
           }
           this.isModified = true;
           if (this.wordSelectionMode !== false) {
@@ -2279,7 +2378,24 @@ Discard unsaved audio changes?`,
 
         unpinRight(event) {
           let position = (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
-          this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
+          let unpinned_indexes = {start: [], end: []};
+          this.audiosourceEditor.annotationList.annotations.forEach((al, i) => {
+            let resize_w = $($(`.annotation-box`)[i]).find(`.resize-handle.resize-w.manual`);
+            if (al.start >= position && resize_w.length > 0) {
+              unpinned_indexes.start.push(i);
+              resize_w.removeClass('manual');
+            }
+            let resize_e = $($(`.annotation-box`)[i]).find(`.resize-handle.resize-e.manual`);
+            if (al.end >= position && resize_e.length > 0) {
+              unpinned_indexes.end.push(i);
+              resize_e.removeClass('manual');
+            }
+          });
+          
+          this._addHistoryLocal('unpin_right', null, null, null, {unpinned_indexes: unpinned_indexes});
+          this.addTaskQueue('unpin_right', [position * 1000]);
+          this.isModified = true;
+          //this.$root.$emit('from-audioeditor:unpin-right', position * 1000, this.blockId);
         },
         revert(warn = false) {
           if (this.isRevertDisabled) {

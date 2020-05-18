@@ -546,7 +546,7 @@ export default {
         'engineer': [],
         'reader': [],
         'narrator': []
-      },                   
+      },
       authorsLangFarsi:    // move to config
       {
        'bab':      'باب',
@@ -675,7 +675,7 @@ export default {
   mounted() {
     this.$root.$on('from-bookblockview:voicework-type-changed', this.getAudioBook);
     //this.loadAudiobook(true)
-    this.getAudioBook(this.currentBookid)
+    this.getAudioBook({bookid: this.currentBookid})
       .then(() => {
         if (this.currentAudiobook) {
 
@@ -706,7 +706,7 @@ export default {
     this.$root.$off('uploadAudio');
     this.$root.$off('audiobookUpdated');
     this.$root.$off('from-bookblockview:voicework-type-changed', this.getAudioBook);
-    this.$root.$off('book-reimported');
+    //this.$root.$off('book-reimported');
     this.$root.$off('from-block-edit:set-style', this.listenSetStyle);
     this.$root.$off('from-block-edit:set-style-switch', this.listenSetStyleSwitch);
   },
@@ -1262,7 +1262,7 @@ export default {
       if (lang != 'en'){
         result.lang = lang;
       }
-      
+
       this.styleTabs = result;
       this.numProps = nums;
 
@@ -1299,7 +1299,7 @@ export default {
             let oBlock = this.storeListO.get(blockRid);
             if (oBlock) {
               let pBlock = this.storeList.get(oBlock.blockid);
-              
+
               if (styleKey !== 'paragraph type') updateNum = oBlock.isNumber;
 
               if (pBlock && blockType == 'title') { // ILM-2533
@@ -1551,7 +1551,7 @@ export default {
         } else {
           return val;
         }
-        
+
       }
     },
     convertTime(dt, time = false) {

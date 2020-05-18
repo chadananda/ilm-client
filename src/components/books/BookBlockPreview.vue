@@ -15,6 +15,7 @@
           <!--<div class="table-row-flex controls-top">-->
           <template v-for="(blockPart, blockPartIdx) in blockParts">
             <BookBlockPartPreview
+              v-bind:key="block.blockid + '-' + block.type + '-' + blockPartIdx"
               :blockRid = "blockRid"
               :blockId = "blockId"
               :blockO = "blockO"

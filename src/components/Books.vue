@@ -344,9 +344,11 @@ export default {
   }
 
   .metaedit {
-    flex-grow: 1;
+    /*flex-grow: 1;
     min-width: 445px;
-    max-width: 27%;
+    max-width: 27%;*/
+    width: 445px;
+    flex-shrink: 0;
     overflow-y: auto;
   }
 
@@ -355,6 +357,7 @@ export default {
     display:flex;
     flex-direction: column;
     overflow: hidden;
+    width: 100%;
     .narrate& {
       min-width: 860px;
     }
