@@ -2513,7 +2513,7 @@ export const store = new Vuex.Store({
       }
       if (bookid && (!watchId || watchId === state.currentBookid)) {
         let set = bookid === state.currentBookid;
-        let counters = dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks']);
+        let counters = dispatch('setCurrentBookCounters', ['narration_blocks', 'not_marked_blocks_missed_audio', 'not_marked_blocks', 'unresolved_flags_blocks']);
 
         //console.log(state.API_URL + 'books/' + bookid + '/audiobooks');
         let request = axios.get(state.API_URL + 'books/' + bookid + '/audiobooks')

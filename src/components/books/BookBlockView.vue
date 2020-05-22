@@ -323,7 +323,7 @@
 
                 <div class="table-row">
                   <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div 
+                  <div
                     :id="block._id +'_'+ ftnIdx"
                     :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
                     :data-footnoteIdx="block._id +'_'+ ftnIdx"
@@ -1137,7 +1137,9 @@ export default {
         switch (this.block.type) { // part from assembleBlock: function()
           case 'illustration':
             if (this.$refs.blocks[0] && this.$refs.blocks[0].$refs) {
-              this.block.description = this.$refs.blocks[0].$refs.blockDescription ? this.$refs.blocks[0].$refs.blockDescription.innerHTML : '';
+              if (this.$refs.blocks[0].$refs.blockDescription) {
+                this.block.description = this.$refs.blocks[0].$refs.blockDescription.innerHTML;
+              } else this.block.description = '';
             }
             this.block.voicework = 'no_audio';
           case 'hr':
