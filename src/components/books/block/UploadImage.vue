@@ -11,8 +11,7 @@
         accept="image/*"
         @input="onChange"
       />
-      <div v-if="!image" class="ilm-upload-image__drop">Click to upload image</div>
-      <button v-else class="btn btn-primary ilm-upload-image__change">Change image</button>
+      <div class="ilm-upload-image__drop">Click here or drag image here</div>
     </label>
 <!--    <button v-if="getImage(id)" class="btn btn-default ilm-upload-image__remove" @click.stop="removeImage(id)">Remove image</button>-->
 
@@ -133,11 +132,16 @@
       margin: 0 auto;
     }
     &__drop{
-        margin: 2rem auto;
-        padding:3rem;
-        border: 2px dashed grey;
-        text-align: center;
-      }
+       text-align: center;
+      margin: 1em auto;
+      padding: .5em;
+      border: 4px dashed rgba(66, 66, 66, 0.15);
+      height: 70px;
+      border-radius: 0;
+      font-size: 20pt;
+      font-weight: normal;
+      cursor:move;
+    }
   }
 </style>
 
