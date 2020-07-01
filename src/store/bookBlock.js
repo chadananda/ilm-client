@@ -325,6 +325,9 @@ class BookBlock {
     }
 
     this.audioHash = init.audioHash || null;
+
+    this.verKey = ':' + (init.verV || '0').toString() +'.'+ (init.verD || '0').toString();
+    console.log('this.verKey', this.verKey);
   }
 
   clean() {
@@ -961,7 +964,7 @@ class BookBlock {
     });
     return part ? true : false;
   }
-  
+
   getIsSplittedBlock() {
     //Vue.prototype.globalJobInfo.id
     if (this.voicework === 'narration' && !Vue.prototype.globalJobInfo.text_cleanup && Array.isArray(this.parts) && this.parts.length > 1 && !(Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {

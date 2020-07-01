@@ -53,7 +53,10 @@ class BookBlocks {
       let seqId = this.startRId;
       for (var i=0; i<=9; i++) {
         if (this.lookupList.hasOwnProperty(seqId)) {
-          this.listIdsCache.list.push({blockRid: seqId, blockId: this.lookupList[seqId].blockid});
+          this.listIdsCache.list.push({
+            blockRid: seqId,
+            blockId: this.lookupList[seqId].blockid,
+          });
           seqId = this.lookupList[seqId].out;
           if (seqId == this.meta.rid) return this.listIdsCache.list;
         }

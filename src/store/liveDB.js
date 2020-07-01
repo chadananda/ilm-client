@@ -32,8 +32,8 @@ class liveDB {
       socket.emit('start-watch', {class: className, params: params, key: key, subscriber: this.subscriber_id});
 
       socket.on('data-change-' + key, (data) => {
-        //console.log('data-change-' + key, data);
-        callback.call(this, data);
+        console.log('data-change-' + key, data);
+        //callback.call(this, data);
       });
       socket.on('stop-watch-all-' + key, (data) => {
         this.stopWatch(data.class);

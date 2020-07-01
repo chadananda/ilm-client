@@ -343,110 +343,111 @@
 
             </block-flag-popup>
           </div>
-            <div class="table-row content-footnotes"
-              v-if="block.footnotes.length > 0 && mode !== 'narrate'">
-              <div class="table-body footnote"
-                v-for="(footnote, ftnIdx) in block.footnotes">
+          <div class="table-row content-footnotes"
+            v-show="block.footnotes.length > 0 && mode !== 'narrate'">
+            <div class="table-body footnote"
+              v-for="(footnote, ftnIdx) in block.footnotes">
 
-                <div class="table-row controls-top -hidden">
-                  <div class="table-cell"></div>
-                  <div class="table-cell">
-                    <template v-if="allowEditing || proofreadModeReadOnly">
-                      <template v-if="allowVoiceworkChange">
-                        <label>
-                          <i class="fa fa-volume-off"></i>
-                          <select  :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
-                            <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
-                          </select>
-                        </label>
-                        <label><i class="fa fa-language" aria-hidden="true"></i>
-                        <select :disabled="!allowEditing ||  proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
-                          <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
+              <div class="table-row controls-top -hidden">
+                <div class="table-cell"></div>
+                <div class="table-cell">
+                  <template v-if="allowEditing || proofreadModeReadOnly">
+                    <template v-if="allowVoiceworkChange">
+                      <label>
+                        <i class="fa fa-volume-off"></i>
+                        <select  :disabled="!allowEditing && proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.voicework' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'voicework')">
+                          <option v-for="(val, key) in footnVoiceworks" :value="key">{{ val }}</option>
                         </select>
-                        </label>
+                      </label>
+                      <label><i class="fa fa-language" aria-hidden="true"></i>
+                      <select :disabled="!allowEditing ||  proofreadModeReadOnly ? 'disabled' : false" v-model='footnote.language' style="min-width: 100px;" @input="commitFootnote(ftnIdx, $event, 'language')">
+                        <option v-for="(val, key) in footnLanguages" :value="key">{{ val }}</option>
+                      </select>
+                      </label>
+                    </template>
+                  </template>
+                </div>
+                <div class="table-cell -audio -right">
+                  <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
+                      <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
+                        <i class="fa fa-play-circle-o"
+                          @click="FtnAudio.audPlay(block._id, ftnIdx)"></i>
+                        <i class="fa fa-stop-circle-o disabled"></i>
                       </template>
-                    </template>
-                  </div>
-                  <div class="table-cell -audio -right">
-                    <template v-if="FtnAudio.palyer!==false && footnote.audiosrc && footnote.audiosrc.length">
-                        <template v-if="!FtnAudio.isStarted || FtnAudio.isStarted!==`${block._id}_${ftnIdx}`">
-                          <i class="fa fa-play-circle-o"
-                            @click="FtnAudio.audPlay(block._id, ftnIdx)"></i>
-                          <i class="fa fa-stop-circle-o disabled"></i>
-                        </template>
-                        <template v-else>
-                          <i class="fa fa-pause-circle-o" v-if="!FtnAudio.isPaused"
-                            @click="FtnAudio.audPause(block._id, ftnIdx)"></i>
-                          <i class="fa fa-play-circle-o paused" v-else
-                            @click="FtnAudio.audResume(block._id, ftnIdx)"></i>
-                          <i class="fa fa-stop-circle-o"
-                            @click="FtnAudio.audStop(block._id, ftnIdx)"></i>
-                          <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
-                        </template>
-                    </template>
-                  </div>
+                      <template v-else>
+                        <i class="fa fa-pause-circle-o" v-if="!FtnAudio.isPaused"
+                          @click="FtnAudio.audPause(block._id, ftnIdx)"></i>
+                        <i class="fa fa-play-circle-o paused" v-else
+                          @click="FtnAudio.audResume(block._id, ftnIdx)"></i>
+                        <i class="fa fa-stop-circle-o"
+                          @click="FtnAudio.audStop(block._id, ftnIdx)"></i>
+                        <!--<div class="empty-control"></div>--><!-- empty block to keep order -->
+                      </template>
+                  </template>
+                </div>
+              </div>
+
+              <div class="table-row">
+                <div class="table-cell -num">{{ftnIdx+1}}.</div>
+                <div
+                  :id="block._id +'_'+ ftnIdx"
+                  :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
+                  :data-footnoteIdx="block._id +'_'+ ftnIdx"
+                  :class="['table-cell', '-text', {'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language), {'__unsave': !(!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}]"
+                  @input="commitFootnote(ftnIdx, $event)"
+                  @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
+                  v-html="footnote.content"
+                  :ref="'footnoteContent_' + ftnIdx">
                 </div>
 
-                <div class="table-row">
-                  <div class="table-cell -num">{{ftnIdx+1}}.</div>
-                  <div
-                    :id="block._id +'_'+ ftnIdx"
-                    :data-audiosrc="block.getAudiosrcFootnote(ftnIdx, 'm4a', true)"
-                    :data-footnoteIdx="block._id +'_'+ ftnIdx"
-                    :class="['table-cell', '-text', {'content-wrap-footn':true},'js-footnote-val', 'js-footnote-'+ block._id, {'playing': (footnote.audiosrc)}, '-langftn-' + getFtnLang(footnote.language), {'__unsave': !(!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged)}]"
-                    @input="commitFootnote(ftnIdx, $event)"
-                    @inputSuggestion="commitFootnote(ftnIdx, $event, 'suggestion')"
-                    v-html="footnote.content"
-                    :ref="'footnoteContent_' + ftnIdx">
-                  </div>
-
-                  <div class="table-cell -control" v-if="allowEditing && !proofreadModeReadOnly">
-                    <span @click="delFootnote([ftnIdx])"><i class="fa fa-trash"></i></span>
-                  </div>
+                <div class="table-cell -control" v-if="allowEditing && !proofreadModeReadOnly">
+                  <span @click="delFootnote([ftnIdx])"><i class="fa fa-trash"></i></span>
                 </div>
               </div>
             </div>
-            <div class="table-row controls-bottom" >
-              <div class="controls-bottom-wrapper">
-                <div class="-left" :class="{'-hidden': isHideArchFlags}">
-                  <span v-if="showBlockFlag">
-                    <i :class="['glyphicon', 'glyphicon-flag']"
-                      ref="blockFlagControl"
-                      @click="handleBlockFlagClick"
-                    ></i>
-                  </span>
-                </div>
-                <div class="par-ctrl -hidden -right">
-                    <div class="save-block -right" @click="discardBlock"
-                        v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
-                      Discard
-                    </div>
-                    <div class="save-block -right"
-                    v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
-                    @click="assembleBlockProxy(true, needsRealignment)">
-                      {{saveBlockLabel}}
-                    </div>
-                    <template v-if="!isCompleted">
-                    <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
-                      @click.prevent="reworkBlock">
-                      Need work</div>
-                    <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
-                      @click.prevent="approveBlock">
-                      Approve</div>
-
-                    <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
-                      @click.prevent="markBlock">
-                      Approve</div>
-                    <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
-                      Spot check
-                    </div>
-
-                    </template>
-                </div>
+          </div>
+          <!--<div class="table-row content-footnotes">-->
+          <div class="table-row controls-bottom" >
+            <div class="controls-bottom-wrapper">
+              <div class="-left" :class="{'-hidden': isHideArchFlags}">
+                <span v-if="showBlockFlag">
+                  <i :class="['glyphicon', 'glyphicon-flag']"
+                    ref="blockFlagControl"
+                    @click="handleBlockFlagClick"
+                  ></i>
+                </span>
               </div>
-              <!--<div class="-hidden">-->
+              <div class="par-ctrl -hidden -right">
+                  <div class="save-block -right" @click="discardBlock"
+                      v-bind:class="{'-disabled': !hasChanges || isAudioEditing}">
+                    Discard
+                  </div>
+                  <div class="save-block -right"
+                  v-bind:class="{ '-disabled': (!isChanged && (!isAudioChanged || isAudioEditing) && !isIllustrationChanged) }"
+                  @click="assembleBlockProxy(true, needsRealignment)">
+                    {{saveBlockLabel}}
+                  </div>
+                  <template v-if="!isCompleted">
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isNeedWorkDisabled || isApproving}]"
+                    @click.prevent="reworkBlock">
+                    Need work</div>
+                  <div v-if="!enableMarkAsDone" :class="['save-block', '-right', {'-disabled': isApproveDisabled || isApproving, 'approve-waiting': approveWaiting}]"
+                    @click.prevent="approveBlock">
+                    Approve</div>
+
+                  <div v-if="enableMarkAsDone" :class="['save-block', '-right', {'-disabled': markAsDoneButtonDisabled}]"
+                    @click.prevent="markBlock">
+                    Approve</div>
+                  <div :class="['save-block', '-right', {'-disabled': isSpotCheckDisabled }]" @click.prevent="spotCheck">
+                    Spot check
+                  </div>
+
+                  </template>
+              </div>
             </div>
-            <!--<div class="table-row controls-bottom">-->
+            <!--<div class="-hidden">-->
+          </div>
+          <!--<div class="table-row controls-bottom">-->
         </div>
         <!--<div :class="['table-body', '-content',-->
     </div>
@@ -1816,6 +1817,7 @@ Save audio changes and realign the Block?`,
             this.block.content = this.clearBlockContent();
             if (this.mode !== 'narrate') {
               if (this.block.footnotes && this.block.footnotes.length && this.$refs.blocks) {
+                console.log('11111');
                 let footnotesInText = [];
                 this.$refs.blocks.forEach((blk, blkIdx) => {
                   let blkFootnotes = document.getElementById(`${this.block.blockid}-${blkIdx}`).querySelectorAll(`sup[data-idx]`);

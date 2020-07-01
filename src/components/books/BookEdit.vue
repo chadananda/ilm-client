@@ -35,8 +35,8 @@
       <div class="row content-scroll-item front"
         v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
         v-bind:id="'s-'+ viewObj.blockId"
-        v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
-        <div class='col' v-if="parlist.has(viewObj.blockId)">
+        v-bind:key="viewObj.blockId + parlist.get(viewObj.blockId).verKey"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
+        <div class='col' v-if="parlist.has(viewObj.blockId)" v-bind:data-key="viewObj.blockId + parlist.get(viewObj.blockId).verKey">
           <BookBlockView ref="blocks"
               :block="parlist.get(viewObj.blockId)"
               :blockO="parlistO.get(viewObj.blockRid)"
@@ -720,11 +720,20 @@ export default {
     },
 
     _refreshAfterUpdate(block) {
-      this.updateVisibleBlocks();
-      this.refreshPreviewTmpl([block.blockid]);
-      this.$store.commit('set_storeList', new BookBlock(block));
-      this.parlistO.getBlockByRid(block.id).type = block.type;
+      //this.updateVisibleBlocks();
+//       this.refreshPreviewTmpl([block.blockid]);
+      //console.log('_refreshAfterUpdate.block.content', block.content);
+      //console.log('_refreshAfterUpdate.block.footnotes', block.footnotes);
+      //this.$store.commit('set_storeList', new BookBlock(block));
+      let oldType = this.parlistO.getBlockByRid(block.id).type;
+      console.log('_refreshAfterUpdate.block.oldType', oldType);
+      if (oldType != block.type) {
+        this.parlistO.getBlockByRid(block.id).type = block.type;
+      }
       Vue.nextTick(()=>{
+        //this.updateVisibleBlocks();
+        //this.refreshPreviewTmpl([block.blockid]);
+        console.log('_refreshAfterUpdate.block.footnotes', block.footnotes);
         this.$root.$emit('from-block-edit:set-style-switch');
       });
       return Promise.resolve(this.parlist.get(block.blockid));
@@ -1429,6 +1438,7 @@ export default {
         this.$refs.blocks.forEach(($ref)=>{
           //$ref.isUpdated = true;
           //$ref.isUpdated = false;
+          console.log('$ref', $ref);
           $ref.$forceUpdate();
         })
       }
@@ -1991,7 +2001,7 @@ export default {
   watch: {
     'meta._id': {
       handler(newVal, oldVal) {
-        console.log('watch meta._id', newVal, oldVal);
+        //console.log('watch meta._id', newVal, oldVal);
 //         if (newVal) {
 //           this.tc_loadBookTask()
 //           .then(()=>{

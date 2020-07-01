@@ -910,7 +910,8 @@ export const store = new Vuex.Store({
       state.aligningBlocks.push({_id: block.blockid ? block.blockid : block._id, partIdx: block.partIdx});
     },
     set_storeList (state, blockObj) {
-      //console.log('set_storeList', Date.now());
+      console.log('set_storeList.blockObj.content', blockObj.content);
+      console.log('set_storeList.blockObj.footnotes', blockObj.footnotes);
       if (state.storeList) {
         let firstObj = state.storeList.values().next().value;
         if (!(firstObj && firstObj.bookid == blockObj.bookid)) {
@@ -1512,7 +1513,7 @@ export const store = new Vuex.Store({
 
       let newMeta = Object.assign(state.currentBookMeta, update);
       commit('SET_CURRENTBOOK_META', newMeta);
-      console.log('update', update);
+      //console.log('update', update);
 
       return axios.put(state.API_URL + 'meta/' + state.currentBookMeta._id, update)
         .then(response => {
@@ -1829,9 +1830,13 @@ export const store = new Vuex.Store({
                   dispatch('updateBookVersion', {major: true});
                 }
               });
+              console.log('response.data', response.data);
+            //commit('set_storeList', new BookBlock(response.data));
             state.storeListO.updBlockByRid(response.data.id, {
-              status: response.data.status
+              status: response.data.status,
+              type: response.data.type
             });
+            commit('set_storeList', new BookBlock(response.data));
             return Promise.resolve(response.data);
           })
           .catch(err => {
@@ -1860,6 +1865,7 @@ export const store = new Vuex.Store({
           commit('clear_blocker', 'putBlock');
           dispatch('tc_loadBookTask', block.bookid);
           dispatch('getCurrentJobInfo');
+          commit('set_storeList', new BookBlock(response.data));
           return Promise.resolve(response.data);
         })
         .catch(err => {
@@ -1898,6 +1904,7 @@ export const store = new Vuex.Store({
           return dispatch('getBookAlign')
             .then(() => {
               commit('clear_blocker', 'putBlock');
+              commit('set_storeList', new BookBlock(response.data));
               return Promise.resolve(response.data);
             })
         })
