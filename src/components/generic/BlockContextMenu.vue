@@ -1,6 +1,6 @@
 <template>
 <ul ref="menu"
-    v-if="viewMenu"
+    v-show="viewMenu"
     class="click-menu"
     tabindex="-1"
     :style="{ top, left }"
