@@ -1312,6 +1312,18 @@ export default {
             let rangeLength = /[\s]+$/.test(this.range.startContainer.nodeValue) ? this.range.startContainer.length - 1 : this.range.startContainer.length;
             this.range.setStart(this.range.startContainer, rangeLength);
             this.range.setEnd(this.range.startContainer, rangeLength);
+          } else if (this.range.startContainer && this.range.startContainer.nodeType === 3 && this.range.endContainer && (this.range.endContainer.nodeName === 'W' || this.range.endContainer.nodeType === 3)) {
+            let parentElement = this.range.startContainer.parentElement;
+            let isUl = false;
+            while (parentElement.nodeName !== 'DIV' && !isUl) {
+              isUl = parentElement.nodeName === 'UL';
+              parentElement = parentElement.parentElement;
+            }
+            if (isUl) {
+              let rangeLength = /[\s]+$/.test(this.range.startContainer.nodeValue) ? this.range.startContainer.length - 1 : this.range.startContainer.length;
+              this.range.setStart(this.range.startContainer, rangeLength);
+              this.range.setEnd(this.range.startContainer, rangeLength);
+            }
           }
         }
         let container = $(e.target).closest('.-block.-subblock')[0]
