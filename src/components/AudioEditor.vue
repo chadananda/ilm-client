@@ -745,6 +745,8 @@
                     if (this.isPlaying) {
                       return this.stop()
                         .then(() => {
+                          this.audiosourceEditor.activeTrack.stateObj.active = true;// allow selection by drag after pause, default editor behaviour changed
+                          this.audiosourceEditor.activeTrack.stateObj.startX = e.offsetX;
                           return resolve();
                         });
                     } else {
