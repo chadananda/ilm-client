@@ -1,13 +1,13 @@
 <template>
 <ul ref="menu"
+    v-if="viewMenu"
     class="click-menu"
     tabindex="-1"
-    :style="{ visibility: viewMenu?'visible':'hidden', top, left }"
+    :style="{ top, left }"
     @click="close">
     <!--@blur="close"-->
     <slot></slot>
-    <!--<li>top: {{top}}</li>
-    <li>left: {{left}}</li>-->
+
 </ul>
 </template>
 
@@ -15,9 +15,6 @@
 
   export default {
     name: 'block-context-menu',
-    props: [
-        'update'
-    ],
     data() {
       return {
             viewMenu: false,
@@ -87,26 +84,22 @@
     &:empty {
       border: none;
     }
-}
+    li {
+     margin: 0;
+     padding: 5px 10px;
+     cursor: default;
 
-.click-menu li {
-
-    margin: 0;
-    padding: 5px 10px;
-    cursor: default;
-
-    &.separator {
-        border-bottom: 1px solid #E0E0E0;
-        padding: 0;
-    }
-}
-
-.click-menu li:last-child {
-    border-bottom: none;
-}
-
-.click-menu li:hover {
-    background: #1E88E5;
-    color: #FAFAFA;
+     &.separator {
+       border-bottom: 1px solid #E0E0E0;
+       padding: 0;
+     }
+     &:last-child {
+       border-bottom: none;
+     }
+     &:hover {
+       background: #1E88E5;
+       color: #FAFAFA;
+     }
+   }
 }
 </style>

@@ -1314,7 +1314,9 @@ export const store = new Vuex.Store({
 //         // save old state
 //       }
 
-      if (book_id && book_id === state.currentBookid) return Promise.resolve(state.currentBookMeta);
+      if (book_id && book_id === state.currentBookid) {
+        return Promise.resolve(state.currentBookMeta);
+      }
 
       if (book_id) {
         commit('SET_CURRENTBOOK_FILES', {fileName: 'coverimg', fileURL: ''});
@@ -2746,7 +2748,7 @@ export const store = new Vuex.Store({
         .then((doc) => {
           return axios.put(state.API_URL + 'task/' + state.currentBookMeta.bookid + '/finish_cleanup')
             .then((doc) => {
-              if (!doc.data.error) {
+              if (doc.data && !doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                 dispatch('getProcessQueue');
                 return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),
@@ -2797,14 +2799,14 @@ export const store = new Vuex.Store({
         return Promise.reject({error: 'Book is not selected'});
       }
       if (!(state.isAdmin || state.isLibrarian)){
-            return Promise.resolve({data: {}});
+        return Promise.resolve({data: {}});
       }
 
       return dispatch('updateBookMeta', {private: false})
-        .then((doc) => {
+        .then(() => {
           return axios.put(state.API_URL + 'books/' + state.currentBookMeta.bookid + '/batch_approve_edit_align')
             .then((doc) => {
-              if (!doc.data.error) {
+              if (doc.data && !doc.data.error) {
                 state.tc_currentBookTasks.assignments.splice(state.tc_currentBookTasks.assignments.indexOf('content_cleanup'));
                 dispatch('getProcessQueue');
                 return Promise.all([dispatch('tc_loadBookTask', state.currentBookMeta.bookid),

@@ -72,8 +72,8 @@
                 <template v-for="action in task.actions">
                   <div v-if="action=='complete_cleanup'">
                     <template v-if="!textCleanupProcess">
-                      <button v-if="!task.complete && adminOrLibrarian"  class="btn btn-primary btn-edit-complete"  v-on:click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
-                      <button v-else-if="!task.complete && !adminOrLibrarian" class="btn btn-primary btn-edit-complete" v-on:click="toggleCleanupComplete()" :disabled="!isAllowEditingComplete">Complete</button>
+                      <button v-if="!task.complete && adminOrLibrarian"  class="btn btn-primary btn-edit-complete"  @click="toggleBatchApprove()" :disabled="isBatchProgress">Complete</button>
+                      <button v-else-if="!task.complete && !adminOrLibrarian" class="btn btn-primary btn-edit-complete" @click="toggleCleanupComplete()" :disabled="!isAllowEditingComplete">Complete</button>
                     </template>
                     <template v-else>
                       <div class="preloader-task"></div>
@@ -345,10 +345,11 @@
               //this.isBatchProgress = true;
               this.isBatchProgressItems.push(this.currentBookMeta._id);
               this.$root.$emit('hide-modal');
-              return new Promise((resolve, reject) => {
-                this.completeBatchApproveEditAndAlign()
+              this.completeBatchApproveEditAndAlign()
                 .then((doc) => {
-                  if (!doc.data.error) {
+                  if (doc.data && doc.data.error) {
+                    this.$root.$emit('set-error-alert', doc.data.error);
+                  } else {
                     return this.reloadBook()
                       .then(() => {
                         this.$root.$emit('book-reimported');
@@ -363,15 +364,14 @@
                           this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id);
                         }
                       })
-                  } else {
-                    this.$root.$emit('set-error-alert', doc.data.error);
+                      .catch(console.error)
                   }
-                });
-              })
-              .catch((err) => {
-                //this.isBatchProgress = false;
-                this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id)
-              })
+                })
+                .catch((err) => {
+                  console.error(err)
+                  //this.isBatchProgress = false;
+                  this.isBatchProgressItems = this.isBatchProgressItems.filter(item => item !== this.currentBookMeta._id)
+                })
 
             },
             'class': 'btn btn-primary'

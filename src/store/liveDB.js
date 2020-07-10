@@ -61,8 +61,9 @@ class liveDB {
   }
 
   onBookReimport() {
-    if (this.keys['blockV']) {
-      socket.emit('stop-watch-all', {class: 'blockV', key: this.keys['blockV']});
+    let key = this.keys['blockV'];
+    if (key) {
+      socket.emit('stop-watch-all', {class: 'blockV', key});
       this.stopWatch('blockV');
     }
   }

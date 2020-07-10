@@ -175,40 +175,38 @@
       onFormSubmit() {
         this.closeAlert();
         this.validate();
-        if (Object.keys(this.errors).length > 0) {
+        if (Object.keys(this.errors).length) {
           return false;
         }
         this.liveDB.onBookReimport();
-        let vu_this = this
-        let api = this.$store.state.auth.getHttp()
 
         this.formData.append('type', this.bookType);
 
         var config = {
-          onUploadProgress: function (progressEvent) {
+          onUploadProgress: (progressEvent) => {
             var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            vu_this.uploadProgress = "Uploading Files... " + percentCompleted + "%";
+            this.uploadProgress = "Uploading Files... " + percentCompleted + "%";
           }
         }
 
         this.isUploading = true
-        this.reimportBook({data: this.formData, config: config}).then(function (response) {
+        this.reimportBook({data: this.formData, config})
+          .then((response) => {
           if (response.status === 200) {
             // hide modal after one second
-            vu_this.uploadProgress = "Upload Successful"
-            vu_this.$root.$emit('book-reimported');
-            vu_this.closeForm(true)
+            this.uploadProgress = "Upload Successful"
+            this.$root.$emit('book-reimported');
+            this.closeForm()
           } else {
             // not sure what we should be doing here
-            vu_this.formReset()
-            vu_this.closeForm(true)
+            this.closeForm()
           }
         }).catch((err) => {
           //console.log('reimportBook Err:', err.response)
           if (err.response.data.message && err.response.data.message.length) {
-            vu_this.bookUploadCommonError = err.response.data.message;
-            setTimeout(function () {
-              vu_this.$emit('close_modal')
+            this.bookUploadCommonError = err.response.data.message;
+            setTimeout(() => {
+              this.$emit('close_modal')
             }, 5000)
           } else if (Array.isArray(err.response.data)) {
             this.bookUploadCheckError = [];
@@ -216,7 +214,7 @@
               if (typeof msg.error == 'object') {
                 for (var prop in msg.error) {
                   if (Array.isArray(msg.error[prop]) && msg.error[prop].length) {
-                    this.bookUploadCheckError.push(`${vu_this.errorsMsgKeys[prop] ? vu_this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ').replace(/(^\[|\]$)/g, '')}`)
+                    this.bookUploadCheckError.push(`${this.errorsMsgKeys[prop] ? this.errorsMsgKeys[prop] : prop}: ${(JSON.stringify(msg.error[prop])).split(',').join(', ').replace(/(^\[|\]$)/g, '')}`)
                   }
                 }
               } else {
@@ -225,17 +223,16 @@
               this.bookUploadCheckError.reverse();
             })
           }
-          vu_this.formReset()
+          this.formReset()
           /*setTimeout(function () {
             vu_this.$emit('close_modal')
           }, 5000)*/
         });
       },
-      closeForm(response) {
-        let self = this
-        setTimeout(function () {
-          self.formReset()
-          self.$emit('close_modal', response)
+      closeForm() {
+        setTimeout(() => {
+          this.formReset()
+          this.$emit('close_modal')
         }, 1000)
       },
       humanFileSize(bytes, si) {
