@@ -1206,7 +1206,7 @@ export const store = new Vuex.Store({
             //state.storeListO.delBlock(data.block);
             if (state.audioTasksQueue.block.blockId && state.audioTasksQueue.block.blockId === data.block.blockid && state.audioTasksQueue.block.partIdx !== null) {
               let blockStore = state.storeList.get(data.block.blockid);
-              if (Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
+              if (blockStore && Array.isArray(blockStore.parts) && blockStore.parts.length > 0 && Array.isArray(data.block.parts) && data.block.parts.length === blockStore.parts.length) {
                 blockStore.parts.forEach((p, i) => {
                   if (p.isAudioChanged) {
                     data.block.parts[i] = p;
@@ -1228,12 +1228,14 @@ export const store = new Vuex.Store({
               }
             } else if (data.action === 'change' && data.block) {
               let blockStore = state.storeList.get(data.block.blockid);
-              let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
-                return p.isChanged;
-              }) : false;
-              if (blockStore.isSaving || hasChangedPart) {
-                //console.log('isSaving hasChangedPart');
-                return;
+              if (blockStore) {
+                let hasChangedPart = Array.isArray(blockStore.parts) ? blockStore.parts.find(p => {
+                  return p.isChanged;
+                }) : false;
+                if (blockStore.isSaving || hasChangedPart) {
+                  //console.log('isSaving hasChangedPart');
+                  return;
+                }
               }
               state.storeListO.updBlockByRid(data.block.id, data.block);
             } else if (data.action === 'delete') {
