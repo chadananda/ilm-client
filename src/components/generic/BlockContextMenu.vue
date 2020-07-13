@@ -47,9 +47,11 @@
 
             coords.x = ev.clientX - offsetX;
             coords.y = ev.layerY - offsetY;
-
-            this.setMenu(coords.x, coords.y, container);
             this.viewMenu = true;
+            this.$nextTick(() => {
+              //to be sure the menu is already visible
+              this.setMenu(coords.x, coords.y, container);
+            });
         },
     },
     mounted: function() {
