@@ -3905,7 +3905,9 @@ Save text changes and realign the Block?`,
       handlePinClick(e) {
         if (this.$refs.splitPinCntx && e.target) {
           //console.log(`OFFSET: ${-1 * e.target.offsetTop}, ${-1 * e.originalEvent.target.offsetTop}`)
-          this.$refs.splitPinCntx.open(e.originalEvent, this.range, /*this.mode === 'narrate' ? narrationShift : */0, -1 * e.target.offsetTop);
+          let container = $(e.target).closest('.-block.-subblock')[0];
+          let offsetX = container.offsetLeft;
+          this.$refs.splitPinCntx.open(e.originalEvent, container, /*this.mode === 'narrate' ? narrationShift : */offsetX, -1 * e.target.offsetTop);
           this.splitPinSelection = e.target;
         }
       },
