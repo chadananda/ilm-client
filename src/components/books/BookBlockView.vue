@@ -4519,7 +4519,7 @@ Save text changes and realign the Block?`,
       },
       'block.content': {
         handler(val) {
-          if (this.isChanged && val !== this.$refs.blockContent.innerHTML) {
+          if (this.isChanged && this.$refs.blockContent && val !== this.$refs.blockContent.innerHTML) {
             this.block.content = this.$refs.blockContent.innerHTML;
           }
           this.refreshBlockAudio(!(this.isChanged || this.isAudioChanged || this.isIllustrationChanged));
