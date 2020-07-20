@@ -1316,6 +1316,9 @@ export default {
             let parentElement = this.range.startContainer.parentElement;
             let isUl = false;
             while (parentElement.nodeName !== 'DIV' && !isUl) {
+              if (parentElement.nodeName === 'LI') {
+                break;
+              }
               isUl = parentElement.nodeName === 'UL';
               parentElement = parentElement.parentElement;
             }
@@ -3824,7 +3827,9 @@ Save text changes and realign the Block?`,
               return false;
             }
             if (this.range.startOffset === 0) {
-              return false;
+              if (!(container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.previousSibling)) {
+                return false;
+              }
             }
             let skipLengthCheck = this.range.endOffset >= container.length && container.parentElement && container.parentElement.nodeName !== 'DIV' && container.parentElement.nextSibling;// means click at the end of <w></w> tag
             if (!skipLengthCheck && container.nodeType === 3) {// not aligned block
