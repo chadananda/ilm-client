@@ -3853,8 +3853,8 @@ Save text changes and realign the Block?`,
             //console.log(container, container.length, this.range.endOffset);
             checkRange.setStart( container, this.range.startOffset );
             if (!isMac) {
-              regexp = skipLengthCheck ? /^[\S]*$/i : /^[\s]+$/i;
-              if (skipLengthCheck && this.range.startOffset > 0) {
+              regexp = skipLengthCheck ? /^(\S+)|(\s+)$/i : /^(\w+\W+\w*)|(\W+\w+)|(\s+)$/i;
+              if (this.range.startOffset > 0) {
                 checkRange.setStart(container, this.range.startOffset - 1);
               }
               checkRange.setEnd( container, this.range.endOffset >= container.length ? this.range.endOffset : this.range.endOffset+1 );
@@ -3885,6 +3885,7 @@ Save text changes and realign the Block?`,
             if (isMac) {
               console.log('IS ALLOWED', `"${checkRange.toString()}"`, regexp.test(checkRange.toString()), regexp, checkRange, this.range);
             }
+            //console.log(`${skipLengthCheck}, '${checkRange.toString()}'`);
             return regexp.test(checkRange.toString());
           }
         }
