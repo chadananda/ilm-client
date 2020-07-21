@@ -44,7 +44,7 @@
     "svelte-adapter": "^0.3.0",
     "uniqid": "^4.1.1",
     "v-clipboard": "^2.2.1",
-    "v-hotkey": "^0.2.3",
+    "v-hotkey": "^0.8.0",
     "vue": "^2.1.10",
     "vue-carousel-3d": "^0.1.8",
     "vue-infinite-loading": "^2.2.1",
