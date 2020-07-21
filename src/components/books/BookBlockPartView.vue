@@ -1269,8 +1269,11 @@ export default {
         //console.log(this.block.calcFlagsSummary());
         //console.log(this.tc_currentBookTasks.job.executors);
       },
-      onBlur: function() {
+      onBlur: function(e) {
         if (this.$refs.blockCntx && this.$refs.blockCntx.viewMenu) this.$refs.blockCntx.close();
+        if (this.$refs.splitPinCntx && this.$refs.splitPinCntx.viewMenu && (!e.target || e.target.nodeName !== 'I')) {
+          this.$refs.splitPinCntx.close();
+        }
       },
       onSelect: function($event) {
         console.log('onSelect');
