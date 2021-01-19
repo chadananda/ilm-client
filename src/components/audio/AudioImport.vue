@@ -94,11 +94,11 @@
             <template v-else>
               <div v-html="audiobookReport"></div>
               <template v-if="uploadFinished">
-                <div class="copy-report">
+                <div class="copy-report" v-if="allowCopyReport">
                   <textarea class="copy-report-content" ref="copy-report-content" ></textarea>
                   <button class="btn btn-primary" v-if="allowCopyReport" v-on:click="copyReport">Copy Report</button>
                 </div>
-                <div v-html="reportFooter" class="copy-report"></div>
+                <div v-html="reportFooter" class="copy-report" v-if="reportFooter.length"></div>
               </template>
             </template>
             <div v-for="err in uploadErrors" class="upload-error">{{err.error}}</div>
@@ -537,9 +537,9 @@ export default {
 
       var year = locdate.getFullYear(),
       month = locdate.getMonth() + 1, // months are zero indexed
-      day = locdate.getDate(),
-      hour = locdate.getHours(),
-      minute = locdate.getMinutes(),
+      day = locdate.getDate().toString(),
+      hour = locdate.getHours().toString(),
+      minute = locdate.getMinutes().toString(),
       second = locdate.getSeconds(),
       hourFormatted = hour < 10 ? `0${hour}` : hour, // hour returned in 24 hour format
       minuteFormatted = minute < 10 ? "0" + minute : minute
@@ -646,9 +646,7 @@ div.coverimg {
 }
 
 .modal-header {
-  padding-left: 0px;
-  padding-right: 0px;
-  padding-bottom:5px;
+  padding: 10px 0px;
 }
 
 .audio-logo {
@@ -661,7 +659,7 @@ div.coverimg {
 }
 
 .modal-footer {
-
+  padding: 10px;
 }
 
 .import-title {
@@ -741,7 +739,7 @@ button.close i.fa {font-size: 18pt; padding-right: .5em;}
   padding-top:0; margin-top:0;
 }
 
-#uploadingMsg {text-align: center; padding-bottom: 1em;}
+#uploadingMsg {text-align: center; padding: 0px;}
 #uploadingMsg h2 i {font-size: 24pt; color: silver}
 
 .download-audio-link {
