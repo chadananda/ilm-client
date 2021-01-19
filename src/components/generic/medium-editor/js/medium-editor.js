@@ -6982,48 +6982,7 @@ MediumEditor.extensions = {};
             }
             return false;
         }
-        var node = MediumEditor.selection.getSelectionStart(this.options.ownerDocument),
-            tagName;
-
-        if (!node) {
-            return;
-        }
-
-        // https://github.com/yabwe/medium-editor/issues/994
-        // Firefox thrown an error when calling `formatBlock` on an empty editable blockContainer that's not a <div>
-        /*if (MediumEditor.util.isMediumEditorElement(node) && node.children.length === 0 && !MediumEditor.util.isBlockContainer(node)) {// duplicate on backspace HERE
-            this.options.ownerDocument.execCommand('formatBlock', false, 'p');
-        }*/
-
-        // https://github.com/yabwe/medium-editor/issues/1455
-        // if somehow we have the BR as the selected element, typing does nothing, so move the cursor
-        if (node.nodeName === 'BR') {
-            MediumEditor.selection.moveCursor(this.options.ownerDocument, node.parentElement);
-        }
-
-        // https://github.com/yabwe/medium-editor/issues/834
-        // https://github.com/yabwe/medium-editor/pull/382
-        // Don't call format block if this is a block element (ie h1, figCaption, etc.)
-        if (MediumEditor.util.isKey(event, MediumEditor.util.keyCode.ENTER) &&
-            !MediumEditor.util.isListItem(node) &&
-            !MediumEditor.util.isBlockContainer(node)) {
-
-            tagName = node.nodeName.toLowerCase();
-            // For anchor tags, unlink
-            if (tagName === 'a') {
-                this.options.ownerDocument.execCommand('unlink', false, null);
-            } else if (!event.shiftKey && !event.ctrlKey) {
-                this.options.ownerDocument.execCommand('formatBlock', false, 'p');
-                // https://github.com/yabwe/medium-editor/issues/1455
-                // firefox puts the focus on the br - so we need to move the cursor to the newly created p
-                if (MediumEditor.util.isFF) {
-                    var newParagraph = node.querySelector('p');
-                    if (newParagraph) {
-                        MediumEditor.selection.moveCursor(this.options.ownerDocument, newParagraph);
-                    }
-                }
-            }
-        }
+        return false;
     }
 
     function handleEditableInput(event, editable) {
@@ -7052,6 +7011,10 @@ MediumEditor.extensions = {};
             selection = length ? element.nodeValue.substring(0, offset) : '',
             afterSelection = length && offset < length ? element.nodeValue.substring(offset, length) : '',
             mediumEditorElement = this.elements[0];
+            if (afterSelection.trim().length === 0) {
+                selection+= afterSelection;
+                afterSelection = '';
+            }
             if (isLiElement) {
                 return true;// keep default user agent's behaviour for lists
             } else if (element.nodeName === 'W') {
@@ -7073,7 +7036,7 @@ MediumEditor.extensions = {};
                 }
             } else if (element.parentNode.nodeName === 'DIV') {// click inside usual text node
                 if (isList) {
-                    element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling ? afterSelection : br);
+                    element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
                     MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
                 } else {
                     if (element.nodeName === 'BR') {
@@ -7147,9 +7110,23 @@ MediumEditor.extensions = {};
                         containerTwo.appendChild(partThree);
                     }
                     //console.log('HERE4');
-                }/* else {
+                    baseNode.replaceChild(containerTwo, parentNode);
+                    lastNode = partOne;
+                    containerOne.appendChild(partOne);
+                    for (let i = currentIndex - 1; i >=0; --i) {
+                        let currentNode = allChildNodes[i];
+                        containerOne.insertBefore(currentNode, lastNode);
+                        lastNode = currentNode;
+                    }
+                    baseNode.insertBefore(containerOne, containerTwo);
+                    if (['LI'].indexOf(parentNode.nodeName) === -1 && partTwo) {
+                        baseNode.insertBefore(partTwo, containerTwo);
+                    }
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo.firstChild ? containerTwo.firstChild : containerTwo, 0);
+                } else {
                     baseNode.replaceChild(partTwo, parentNode);
-                    baseNode.insertBefore(partOne, partTwo);
+                    containerOne.appendChild(partOne);
+                    baseNode.insertBefore(containerOne, partTwo);
                     MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
                     //console.log('HERE5');// end of block + <br><br> - cursor not moved
                     //console.log(partOne, partTwo);
@@ -7158,20 +7135,7 @@ MediumEditor.extensions = {};
                         baseNode.insertBefore(partThree, partTwo);
                         //console.log('HERE6');
                     }
-                }*/
-                baseNode.replaceChild(containerTwo, parentNode);
-                lastNode = partOne;
-                containerOne.appendChild(partOne);
-                for (let i = currentIndex - 1; i >=0; --i) {
-                    let currentNode = allChildNodes[i];
-                    containerOne.insertBefore(currentNode, lastNode);
-                    lastNode = currentNode;
                 }
-                baseNode.insertBefore(containerOne, containerTwo);
-                if (['LI'].indexOf(parentNode.nodeName) === -1 && partTwo) {
-                    baseNode.insertBefore(partTwo, containerTwo);
-                }
-                MediumEditor.selection.moveCursor(this.options.ownerDocument, containerTwo.firstChild ? containerTwo.firstChild : containerTwo, 0);
             }
             //return false;
 
