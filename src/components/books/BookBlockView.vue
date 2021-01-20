@@ -148,7 +148,6 @@
                   <div class="par-ctrl-divider"></div>
 
                   <template v-if="allowVoiceworkShow()">
-                    <i class="fa fa-volume-off"></i>
                     <div class="par-ctrl-divider"></div>
                     <label>
                       <select :disabled="!allowEditing || proofreadModeReadOnly || !allowVoiceworkChange() || editingLocked ? 'disabled' : false" v-model='voiceworkSel'>
