@@ -750,10 +750,10 @@ export default {
       parnumComp: { cache: false,
       get: function () {
           if (this.blockO.type == 'header' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.secnum;
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber && !this.blockO.isHidden) {
-            return this.blockO.parnum;
+            return this.blockO.parnum.toString();
           }
           return '';
       }},
@@ -770,10 +770,10 @@ export default {
       subBlockParnumComp: {
         get: function() {
           if (this.blockO.type == 'header' && this.blockO.isNumber) {
-            return this.blockO.secnum;
+            return this.blockO.secnum.toString();
           }
           if (this.blockO.type == 'par' && this.blockO.isNumber) {
-            return this.blockO.parnum;
+            return this.blockO.parnum.toString();
           }
           return '';
         },
