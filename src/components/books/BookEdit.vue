@@ -1155,53 +1155,58 @@ export default {
                 this.unableToJoinVoiceworkMessage();
                 return Promise.reject(new Error('types_missmatch'));
               }
-              if (elBlock && elNext) {
-                this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
-                this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
-                this.freeze('joinBlocks');
-                if ((elBlock && elBlock.getIsAudioEditing()) ||
-                        (elNext && elNext.getIsAudioEditing())) {
-                  this.$root.$emit('for-audioeditor:force-close');
-                }
-                elBlock.isAudioChanged = false;
-                //elBlock.evFromAudioeditorClosed(block.blockid);
-                elNext.isAudioChanged = false;
-                //elNext.evFromAudioeditorClosed(blockBefore.blockid);
-                return this.blocksJoin({
-                  resultBlock_id: blockBefore.blockid,
-                  donorBlock_id: block.blockid
-                })
-                .then((response)=>{
-                  //this.setBlockSelection({start: {}, end: {}});
-                  this.clearBlockLock({block: blockBefore, force: true});
-                  this.clearBlockLock({block: block, force: true});
-                  if (response.data.ok && response.data.blocks) {
-                    response.data.blocks.forEach((res)=>{
-                      this.refreshBlock({doc: res, deleted: res.deleted});
-                    });
-                  }
-                  if (response.data.blocks && response.data.blocks[2]) {
-                    this.parlistO.delBlock(response.data.blocks[2]);
-                  }
-
-                  this.putNumBlockOBatchProxy({bookId: block.bookid})
-                    .then(() => {
-                      if (['header', 'title'].indexOf(block.type) !== -1) {
-                        this.loadBookToc({bookId: block.bookid, isWait: true})
-                      }
-                    });
-                  this.refreshTmpl();
-                  this.unfreeze('joinBlocks');
-                  this.getCurrentJobInfo();
-                  return Promise.resolve();
-                })
-                .catch((err)=>{
-                  this.refreshTmpl();
-                  this.clearBlockLock({block: blockBefore, force: true});
-                  this.unfreeze('joinBlocks');
-                  return Promise.reject(err);
-                })
+              this.addBlockLock({block: blockBefore, watch: ['realigned'], type: 'join'})
+              this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+              this.freeze('joinBlocks');
+              if ((elBlock && elBlock.getIsAudioEditing()) ||
+                      (elNext && elNext.getIsAudioEditing())) {
+                this.$root.$emit('for-audioeditor:force-close');
               }
+              if (elBlock) {
+                elBlock.isAudioChanged = false;
+              }
+              //elBlock.evFromAudioeditorClosed(block.blockid);
+              if (elNext) {
+                elNext.isAudioChanged = false;
+              }
+              //elNext.evFromAudioeditorClosed(blockBefore.blockid);
+              if (!elNext) {
+                this.scrollToBlock(blockBefore.blockid);
+              }
+              return this.blocksJoin({
+                resultBlock_id: blockBefore.blockid,
+                donorBlock_id: block.blockid
+              })
+              .then((response)=>{
+                //this.setBlockSelection({start: {}, end: {}});
+                this.clearBlockLock({block: blockBefore, force: true});
+                this.clearBlockLock({block: block, force: true});
+                if (response.data.ok && response.data.blocks) {
+                  response.data.blocks.forEach((res)=>{
+                    this.refreshBlock({doc: res, deleted: res.deleted});
+                  });
+                }
+                if (response.data.blocks && response.data.blocks[2]) {
+                  this.parlistO.delBlock(response.data.blocks[2]);
+                }
+
+                this.putNumBlockOBatchProxy({bookId: block.bookid})
+                  .then(() => {
+                    if (['header', 'title'].indexOf(block.type) !== -1) {
+                      this.loadBookToc({bookId: block.bookid, isWait: true})
+                    }
+                  });
+                this.refreshTmpl();
+                this.unfreeze('joinBlocks');
+                this.getCurrentJobInfo();
+                return Promise.resolve();
+              })
+              .catch((err)=>{
+                this.refreshTmpl();
+                this.clearBlockLock({block: blockBefore, force: true});
+                this.unfreeze('joinBlocks');
+                return Promise.reject(err);
+              })
             }
           })
         } break;
@@ -1256,53 +1261,55 @@ export default {
                 this.unableToJoinVoiceworkMessage();
                 return Promise.reject(new Error('types_missmatch'));
               }
-              if (elBlock && elNext) {
-                this.freeze('joinBlocks');
-                this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
-                this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
-                if ((elBlock && elBlock.getIsAudioEditing()) ||
-                        (elNext && elNext.getIsAudioEditing())) {
-                  this.$root.$emit('for-audioeditor:force-close');
-                }
-                elBlock.isAudioChanged = false;
-                //elBlock.evFromAudioeditorClosed(block.blockid);
-                elNext.isAudioChanged = false;
-                //elNext.evFromAudioeditorClosed(blockAfter.blockid);
-                return this.blocksJoin({
-                  resultBlock_id: block.blockid,
-                  donorBlock_id: blockAfter.blockid
-                })
-                .then((response)=>{
-                  //this.setBlockSelection({start: {}, end: {}});
-                  this.clearBlockLock({block: block, force: true});
-                  this.clearBlockLock({block: blockAfter, force: true});
-                  if (response.data.ok && response.data.blocks) {
-                    response.data.blocks.forEach((res)=>{
-                      this.refreshBlock({doc: res, deleted: res.deleted});
-                    });
-                  }
-                  if (response.data.blocks && response.data.blocks[2]) {
-                    this.parlistO.delBlock(response.data.blocks[2]);
-                  }
-
-                  this.putNumBlockOBatchProxy({bookId: block.bookid})
-                    .then(() => {
-                      if (['header', 'title'].indexOf(block.type) !== -1) {
-                        this.loadBookToc({bookId: block.bookid, isWait: true});
-                      }
-                    });
-                  //this.refreshTmpl();
-                  this.unfreeze('joinBlocks');
-                  this.getCurrentJobInfo();
-                  return Promise.resolve();
-                })
-                .catch((err)=>{
-                  this.refreshTmpl();
-                  this.clearBlockLock({block: block, force: true});
-                  this.unfreeze('joinBlocks');
-                  return Promise.reject(err);
-                })
+              this.freeze('joinBlocks');
+              this.addBlockLock({block: block, watch: ['realigned'], type: 'join'})
+              this.addBlockLock({block: blockAfter, watch: ['realigned'], type: 'join'})
+              if ((elBlock && elBlock.getIsAudioEditing()) ||
+                      (elNext && elNext.getIsAudioEditing())) {
+                this.$root.$emit('for-audioeditor:force-close');
               }
+              if (elBlock) {
+                elBlock.isAudioChanged = false;
+              }
+              //elBlock.evFromAudioeditorClosed(block.blockid);
+              if (elNext) {
+                elNext.isAudioChanged = false;
+              }
+              //elNext.evFromAudioeditorClosed(blockAfter.blockid);
+              return this.blocksJoin({
+                resultBlock_id: block.blockid,
+                donorBlock_id: blockAfter.blockid
+              })
+              .then((response)=>{
+                //this.setBlockSelection({start: {}, end: {}});
+                this.clearBlockLock({block: block, force: true});
+                this.clearBlockLock({block: blockAfter, force: true});
+                if (response.data.ok && response.data.blocks) {
+                  response.data.blocks.forEach((res)=>{
+                    this.refreshBlock({doc: res, deleted: res.deleted});
+                  });
+                }
+                if (response.data.blocks && response.data.blocks[2]) {
+                  this.parlistO.delBlock(response.data.blocks[2]);
+                }
+
+                this.putNumBlockOBatchProxy({bookId: block.bookid})
+                  .then(() => {
+                    if (['header', 'title'].indexOf(block.type) !== -1) {
+                      this.loadBookToc({bookId: block.bookid, isWait: true});
+                    }
+                  });
+                //this.refreshTmpl();
+                this.unfreeze('joinBlocks');
+                this.getCurrentJobInfo();
+                return Promise.resolve();
+              })
+              .catch((err)=>{
+                this.refreshTmpl();
+                this.clearBlockLock({block: block, force: true});
+                this.unfreeze('joinBlocks');
+                return Promise.reject(err);
+              })
             }
            })
         } break;
