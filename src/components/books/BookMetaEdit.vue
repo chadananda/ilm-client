@@ -2368,4 +2368,54 @@ Vue.filter('prettyBytes', function (num) {
     font-size: 18px;
   }
   .meta-edit-tabs.vue-tabs .disabled i.fa-check-square-o{
-    font-size
+    font-size: 18px;
+  }
+  .meta-edit-tabs.vue-tabs .disabled i.fa-square-o{
+    font-size: 18px;
+  }
+
+  /*.author select * {
+    padding: 5px;
+    margin: 5px;
+    font-size: 110%;
+  } */
+
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-button {
+    border: 1px solid #444;
+    border-radius: 2px;
+    padding: 4px;
+    height: 30px
+  }
+
+  .dropdown-content {
+    cursor: default;
+    top: 30px;
+    left:-59px;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 80px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    padding: 5px;
+    z-index: 1;
+    border: 1px solid #aaa;
+  }
+
+  .dropdown-content:hover {
+    background: #1e90ff;
+    color: #fff;
+  }
+
+  .outside {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+}
+
+</style>
