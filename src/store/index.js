@@ -373,9 +373,12 @@ export const store = new Vuex.Store({
       if (!part) {
         let block = state.storeList.get(id);
         if (block) {
-          part = Array.isArray(block.parts) ? block.parts.find(p => {
-            return p.isUpdating;
-          }) : false;
+          part = block.isSaving || block.isUpdating;
+          if (!part) {
+            part = Array.isArray(block.parts) ? block.parts.find(p => {
+              return p.isUpdating || p.isSaving;
+            }) : false;
+          }
         }
       }
       return part ? true : false;
@@ -2044,25 +2047,6 @@ export const store = new Vuex.Store({
       }
       let isSplitting = update.block.content ? update.block.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
-
-      let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
-        if (isSplitting) {
-          if (this.getters.isBlockOrPartLocked(block.blockid)) {
-            let checkAlign = setInterval(() => {
-              if (!this.getters.isBlockOrPartLocked(block.blockid)) {
-                clearInterval(checkAlign);
-                return resolve();
-              }
-            }, 1000);
-          } else {
-            return resolve();
-          }
-        } else {
-          return resolve();
-        }
-      });
-      return checkSplit
-        .then(() => {
       return axios.put(url, update)
         .then((response) => {
 
@@ -2109,7 +2093,6 @@ export const store = new Vuex.Store({
           dispatch('checkError', err);
           return Promise.reject(err);
         });
-      });
     },
 
     putNumBlock ({commit, state, dispatch}, block) {
@@ -3275,25 +3258,6 @@ export const store = new Vuex.Store({
       let isSplitting = update.content ? update.content.match(/<i class="pin"><\/i>/img) : [];
       isSplitting = isSplitting ? isSplitting.length : 0;
 
-      let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
-        if (isSplitting) {
-          let blk = state.storeListO.getBlockByRid(id);
-          if (this.getters.isBlockOrPartLocked(blk.blockid)) {
-            let checkAlign = setInterval(() => {
-              if (!this.getters.isBlockOrPartLocked(blk.blockid)) {
-                clearInterval(checkAlign);
-                return resolve();
-              }
-            }, 1000);
-          } else {
-            return resolve();
-          }
-        } else {
-          return resolve();
-        }
-      });
-      return checkSplit
-        .then(() => {
       return axios.put(state.API_URL + url, update)
         .then((response) => {
           let storeBlock = state.storeList.get(response.data.blockid);
@@ -3330,7 +3294,6 @@ export const store = new Vuex.Store({
             .then(() => {
               return Promise.resolve(response.data);
             });
-        });
         });
     },
     getProcessQueue({state, dispatch, commit}) {
@@ -3752,23 +3715,19 @@ export const store = new Vuex.Store({
       }
       return axios.post(api_url, data, {})
         .then(response => {
-          //return Promise.resolve(response);
-          if (realign) {
-            dispatch('getBookAlign')
-              .then(() => {
-                if (block.getIsSplittedBlock()) {
-                  block.parts[alignBlock.partIdx].isSaving = false;
-                } else {
-                  block.isSaving = false;
-                }
-              });
-          } else {
-            if (block.getIsSplittedBlock()) {
-              block.parts[alignBlock.partIdx].isSaving = false;
+          return new Promise((resolve, reject) => {
+            if (realign) {
+              return dispatch('getBookAlign')
+                .then(() => {
+                  return resolve(response);
+                });
             } else {
-              block.isSaving = false;
+              return resolve(response);
             }
-          }
+          });
+        })
+        .then(response => {
+          //return Promise.resolve(response);
           dispatch('getCurrentJobInfo');
           if (response.status == 200) {
             if (block.getIsSplittedBlock()) {

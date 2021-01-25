@@ -797,7 +797,8 @@ export default {
           blockLockType: 'blockLockType',
           audioTasksQueue: 'audioTasksQueue',
           checkRunningAudioTask: 'checkRunningAudioTask',
-          audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous'
+          audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
+          isBlockOrPartLocked: 'isBlockOrPartLocked'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
@@ -1500,87 +1501,113 @@ export default {
             })
         }
         let isSplitting = this.hasChange('split_point');
-        if (check_realign === true && this.needsRealignment) {
-          realign = true;
-        }
-        if (this.$refs.blockContent) {// if splitting and audio changes saving - content was rebuilt
-          this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
-        }
-        
-        let splitPoints = this.blockPart.content ? this.blockPart.content.match(/<i class="pin"><\/i>/img) : [];
-        splitPoints = splitPoints ? splitPoints.length : 0;
-        let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
-            return b.isAudioEditing;
-          }) : false;
-        if (isSplitting && isAudioEditorOpened) {
-          this.$root.$emit('for-audioeditor:force-close');
-        }
-        this.block.parts.forEach((p, pIdx) => {
-          if (pIdx !== this.blockPartIdx) {
-            let ref = this.$parent.$refs.blocks.find(br => {
-              return br.blockPartIdx === pIdx;
-            });
-            if (ref) {
-              p.content = ref.clearBlockContent();
+        let checkSplit = new Promise((resolve, reject) => {// temporary solution, not allow split if any aligning task is running. Correct solution in develop in branch ilm-server 0.133-ILM-3110-align-part ; saving part id in block parts array
+          if (isSplitting) {
+            if (this.isBlockOrPartLocked(this.block.blockid)) {
+              this.block.isSaving = true;
+              this.$parent.isSaving = true;
+              this.$parent.$forceUpdate();
+              let checkAlign = setInterval(() => {
+                if (!this.isBlockOrPartLocked(this.block.blockid)) {
+                  clearInterval(checkAlign);
+                  return resolve();
+                }
+              }, 500);
+            } else {
+              return resolve();
             }
+          } else {
+            return resolve();
           }
         });
-        if (splitPoints) {
-          this.$parent.isSaving = true;
-          this.block.isSaving = true;
-          this.$parent.$forceUpdate();
-        } else {
-          this.isSaving = true;
-        }
-        this.$forceUpdate();
-        let reloadParent = this.hasChange('split_point');
-        if (this.isAudioEditing && !isSplitting) {
-          this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
-        }
-        if ((this.hasChange('content') || this.hasChange('suggestion')) && this.isSplittedBlock) {
-          this.block.parts[this.blockPartIdx].content_changed = true;
-          this.blockPart.content_changed = true;
-        }
-        let saveBlockPromise;
-        if (this.mode === 'proofread') {
-          saveBlockPromise = this.assembleBlockProofread();
-        } else if (this.mode === 'narrate') {
-          saveBlockPromise = this.assembleBlockNarrate();
-        } else {
-          saveBlockPromise = this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
-        }
-        return saveBlockPromise
-          .then((response) => {
-            this.isChanged = false;
-            if (this.blockAudio.map) {
-              this.blockAudio.map = this.blockPart.content;
+        return checkSplit
+          .then(() => {
+            if (check_realign === true && this.needsRealignment) {
+              realign = true;
             }
-            if (this.isLocked && this.isAudioEditing && !isSplitting) {
-              this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+            if (this.$refs.blockContent) {// if splitting and audio changes saving - content was rebuilt
+              this.blockPart.content = this.clearBlockContent(this.$refs.blockContent.innerHTML);
             }
-            if (reloadParent) {
-              //let oldLength = this.$parent.$refs.blocks.length;
-              this.$parent.$parent.refreshTmpl();
-              this.$parent.$forceUpdate();
-              /*if (isSplitting && splitPoints && oldLength < response.parts.length) {
-                //commit('set_storeList', new BookBlock(response.data));
-                Vue.nextTick(() => {
-                  this.$parent.$refs.blocks.forEach((p, pIdx) => {
-                    if (pIdx > this.blockPartIdx && (p.isChanged || p.isAudioChanged) && pIdx < oldLength) {
-                      this.$parent.$refs.blocks[pIdx + splitPoints].isChanged = p.isChanged;
-                      this.$parent.$refs.blocks[pIdx + splitPoints].isAudioChanged = p.isAudioChanged;
-                      this.$parent.$refs.blocks[pIdx + splitPoints].changes = p.changes;
-                      p.isChanged = false;
-                      p.isAudioChanged = false;
-                    }
-                  });
+
+            let splitPoints = this.blockPart.content ? this.blockPart.content.match(/<i class="pin"><\/i>/img) : [];
+            splitPoints = splitPoints ? splitPoints.length : 0;
+            let isAudioEditorOpened = Array.isArray(this.$parent.$refs.blocks) ? this.$parent.$refs.blocks.find((b, i) => {
+                return b.isAudioEditing;
+              }) : false;
+            if (isSplitting && isAudioEditorOpened) {
+              this.$root.$emit('for-audioeditor:force-close');
+            }
+            this.block.parts.forEach((p, pIdx) => {
+              if (pIdx !== this.blockPartIdx) {
+                let ref = this.$parent.$refs.blocks.find(br => {
+                  return br.blockPartIdx === pIdx;
                 });
-              }*/
+                if (ref) {
+                  p.content = ref.clearBlockContent();
+                }
+              }
+            });
+            if (splitPoints) {
+              this.$parent.isSaving = true;
+              this.block.isSaving = true;
+              this.$parent.$forceUpdate();
+            } else {
+              this.isSaving = true;
             }
-            this.$parent.isSaving = false;
-            this.isSaving = false;
-            return Promise.resolve();
-          });
+            this.$forceUpdate();
+            let reloadParent = this.hasChange('split_point');
+            if (this.isAudioEditing && !isSplitting) {
+              this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
+            }
+            if ((this.hasChange('content') || this.hasChange('suggestion')) && this.isSplittedBlock) {
+              this.block.parts[this.blockPartIdx].content_changed = true;
+              this.blockPart.content_changed = true;
+            }
+            let saveBlockPromise;
+            if (this.mode === 'proofread') {
+              saveBlockPromise = this.assembleBlockProofread();
+            } else if (this.mode === 'narrate') {
+              saveBlockPromise = this.assembleBlockNarrate();
+            } else {
+              saveBlockPromise = this.saveBlockPart(this.blockPart, this.blockPartIdx, realign)
+            }
+            return saveBlockPromise
+              .then((response) => {
+                this.isChanged = false;
+                if (this.blockAudio.map) {
+                  this.blockAudio.map = this.blockPart.content;
+                }
+                if (this.isLocked && this.isAudioEditing && !isSplitting) {
+                  this.$root.$emit('for-audioeditor:set-process-run', true, this.lockedType);
+                }
+                if (reloadParent) {
+                  //let oldLength = this.$parent.$refs.blocks.length;
+                  this.$parent.isSaving = false;
+                  this.$parent.$parent.refreshTmpl();
+                  this.$parent.$forceUpdate();
+                  /*if (isSplitting && splitPoints && oldLength < response.parts.length) {
+                    //commit('set_storeList', new BookBlock(response.data));
+                    Vue.nextTick(() => {
+                      this.$parent.$refs.blocks.forEach((p, pIdx) => {
+                        if (pIdx > this.blockPartIdx && (p.isChanged || p.isAudioChanged) && pIdx < oldLength) {
+                          this.$parent.$refs.blocks[pIdx + splitPoints].isChanged = p.isChanged;
+                          this.$parent.$refs.blocks[pIdx + splitPoints].isAudioChanged = p.isAudioChanged;
+                          this.$parent.$refs.blocks[pIdx + splitPoints].changes = p.changes;
+                          p.isChanged = false;
+                          p.isAudioChanged = false;
+                        }
+                      });
+                    });
+                  }*/
+                  if (isAudioEditorOpened) {
+                    this.$root.$emit('for-audioeditor:force-close');
+                  }
+                }
+                this.isSaving = false;
+                //this.block.isSaving = false;
+                return Promise.resolve();
+              });
+        })
       },
 
       assembleBlock: function(partUpdate = null, realign = false) {
