@@ -4370,13 +4370,13 @@ Save text changes and realign the Block?`,
         handler(val) {
           if (val === false) {
             this.flushChanges();
-            /*Vue.nextTick(() => {
-              if (this.$refs.blocks) {
+            Vue.nextTick(() => {
+              if (!this.isSplittedBlock && this.$refs.blocks) {
                 this.blockParts.forEach((part, partIdx) => {
                   this.$refs.blocks[partIdx].isChanged = false;
                 });
               }
-            });*/
+            });
             this.recountVoicedBlocks();
           }
           this.block.setChanged(val);
