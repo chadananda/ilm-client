@@ -177,10 +177,11 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <input :placeholder="bookDifficultyDefault" v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit"
-                           v-on:change="update('difficulty',$event,400)"  id="difficultySelection" :class="{ 'has-error': (validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid] ['difficulty']) ,
+                    <input v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit"
+                           v-on:change="update('difficulty',$event,100)"  id="difficultySelection" :class="{ 'has-error': (this.validationErrorDifficulty) ,
                             'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
-                    <span class="validation-error" >{{(validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid] ['difficulty'] )}}</span>
+                    <span class="validation-error" >{{(this.validationErrorDifficulty )}}</span>
+<!--                    <span class="validation-error" >{{(validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'])}}</span>-->
                   </td>
                 </tr>
 
@@ -207,9 +208,12 @@
                 <tr class='weight'>
                   <td>Weight:</td>
                   <td>
-                    <input v-model='currentBook.weight' v-on:change="updateWeigth($event, 400)" :disabled="!allowMetadataEdit"
-                           :class="[{'has-error': (validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length) }]"/>
-                    <div v-if="validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length > 0"><span class="validation-error" v-for="error in validationErrors[currentBook.bookid]['weight']">{{error}}</span></div>
+                    <input v-model='currentBook.weight' v-on:change="updateWeigth($event, 100)" :disabled="!allowMetadataEdit"
+                           :class="[{'has-error': this.validationErrorWeight }]"/>
+<!--                    <div v-if="validationErrors[currentBook.bookid] && validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'].length > 0">-->
+<!--                      <span class="validation-error" v-for="error in validationErrors[currentBook.bookid]['weight']">{{error}}</span>-->
+                      <span class="validation-error" >{{validationErrorWeight}}</span>
+<!--                    </div>-->
                   </td>
                 </tr>
               </table>
@@ -604,6 +608,8 @@ export default {
       isExporting:false,
       //validationErrors: {extid: [], weight: []},
       validationErrors: {},
+      validationErrorDifficulty: '',
+      validationErrorWeight: '',
       updateAllowed: false,
       TAB_ASSIGNMENT_INDEX: 0,
       TAB_META_INDEX: 1,
@@ -907,6 +913,18 @@ export default {
   methods: {
 
     init () {
+      // if( !this.validationErrors[this.currentBook.bookid])
+      //   this.validationErrors[this.currentBook.bookid] = {};
+      // if( !this.validationErrors[this.currentBook.bookid]['difficulty'])
+      //   this.validationErrors[this.currentBook.bookid]['difficulty'] = '';
+      // if( !this.validationErrors[this.currentBook.bookid]['weight'])
+      //   this.validationErrors[this.currentBook.bookid]['weight'] = '';
+      //
+      // this.validationErrorDifficulty = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['difficulty']) ? this.validationErrors[this.currentBook.bookid]['difficulty'] : '';
+      // this.validationErrorWeight = (this.validationErrors[this.currentBook.bookid] && this.validationErrors[this.currentBook.bookid]['weight']) ? this.validationErrors[this.currentBook.bookid]['weight'] : '';
+      this.validationErrorDifficulty ='';
+      this.validationErrorWeight = '';
+
       let checkId = this.currentBook.bookid;
       this.updateAllowed = false;
       setTimeout(() => {
@@ -1047,9 +1065,10 @@ export default {
         }
 
         if(validationErrors !=this.validationErrors['difficulty'] ){
-          this.validationErrors[this.currentBook.bookid]['difficulty'] = validationErrors;
+          // this.validationErrors[this.currentBook.bookid]['difficulty'] = validationErrors;
+          this.validationErrorDifficulty = validationErrors;
         }
-        if(validationErrors){
+        if(validationErrors && event){
           event.target.toggleAttribute('disable');
           return;
         }
@@ -1821,25 +1840,26 @@ export default {
       const key = 'weight';
       const maxValue = 10.99;
       const minValue = 1.00;
-      let errors = [];
+      let error = '';
       if (Number(value) == value && value % 1 !== 0) {
         if (value > maxValue || value < minValue || (value.split('.')[1]).toString().length > 2) {
           //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
           //ILM-3622:
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue );
+          error = 'Allowed range ' + minValue + ' - ' + maxValue ;
         }
       } else {
         if (value !== '' && (Number(value) != value || (value > maxValue || value < minValue))) {
           //errors.push('Allowed range ' + minValue + ' - ' + maxValue + ' and format 10.12');
           //ILM-3622:
-          errors.push('Allowed range ' + minValue + ' - ' + maxValue );
+          error = 'Allowed range ' + minValue + ' - ' + maxValue ;
         }
       }
 
 
-      if (!this.validationErrors[this.currentBook.bookid]) {Vue.set(this.validationErrors, this.currentBook.bookid, {key: []})} //this.validationErrors[this.currentBook.bookid] = []};
-      this.validationErrors[this.currentBook.bookid][key] = errors;
-      if (!errors.length) {
+      // if (!this.validationErrors[this.currentBook.bookid]) {Vue.set(this.validationErrors, this.currentBook.bookid, {key: []})} //this.validationErrors[this.currentBook.bookid] = []};
+      // this.validationErrors[this.currentBook.bookid][key] = error;
+      this.validationErrorWeight = error;
+      if (!error) {
 
         event.target.disabled  = true ;
 
