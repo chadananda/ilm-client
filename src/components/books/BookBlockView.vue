@@ -933,7 +933,7 @@ export default {
             return true;
           }
           if (this.block && this.block.voicework === 'no_audio') {
-            return this.block.status.marked ? true : false;
+            return this.blockO.status.marked ? true : false;
           }
           let disable_audio = !this.block.audiosrc && (this.block.voicework === 'audio_file' || this.block.voicework === 'tts');
           return this.block.status.marked ||
