@@ -177,7 +177,7 @@
                 <tr class='difficulty'>
                   <td>Difficulty</td>
                   <td>
-                    <input v-model="currentBookMeta.difficulty" :disabled="!allowMetadataEdit"
+                    <input v-model="currentBook.difficulty" :disabled="!allowMetadataEdit"
                            v-on:change="update('difficulty',$event,100)"  id="difficultySelection" :class="{ 'has-error': (this.validationErrorDifficulty) ,
                             'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
                     <span class="validation-error" >{{(this.validationErrorDifficulty )}}</span>
@@ -1053,14 +1053,14 @@ export default {
 
           let re = /^\d+(.\d+)*$/i;
 
-          if ( !this.currentBookMeta.difficulty.match(re) ){
+          if ( !this.currentBook.difficulty.match(re) ){
             validationErrors = 'Allowed range 1 - 14.99';
           }
 
-        if ( parseFloat(this.currentBookMeta.difficulty) > 14.99 ){
+        if ( parseFloat(this.currentBook.difficulty) > 14.99 ){
           validationErrors = 'Allowed range 1 - 14.99';
         }
-        if ( parseFloat(this.currentBookMeta.difficulty) < 1){
+        if ( parseFloat(this.currentBook.difficulty) < 1){
           validationErrors = 'Allowed range 1 - 14.99';
         }
 
