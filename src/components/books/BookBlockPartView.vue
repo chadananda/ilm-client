@@ -1483,10 +1483,14 @@ export default {
           if (this.isAudioEditing) {
             this.$root.$emit('for-audioeditor:set-process-run', true, realign ? 'align' : 'save');
           }
+          let partContent = this.clearBlockContent();
           return this.$parent.assembleBlockProxy(false, false, ['flags', 'parts'])
             .then(() => {
               if (this.hasChange('split_point')) {// can be pending split
                 this.changes = ['split_point']
+                if (this.isSplittedBlock) {
+                  this.block.setPartContent(this.blockPartIdx, partContent);
+                }
                 return this.assembleBlockProxy(false, false, false);
               }
               this.isChanged = false;
