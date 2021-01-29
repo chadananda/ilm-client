@@ -83,28 +83,28 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' v-on:change="update('title',$event,400)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,400)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
 
                 <tr class='title' v-if="currentBook.language !== 'en'">
                   <td>Title EN</td>
-                  <td><input v-model='currentBook.title_en' @input="update('title_en', $event); " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
+                  <td><input v-model='currentBook.title_en' v-on:change="updateWithDisabling('title_en', $event) " :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title_en']" class="validation-error">Define Title EN</span>
                   </td>
                 </tr>
 
                 <tr class='subtitle'>
                   <td>Subtitle</td>
-                  <td><input v-model='currentBook.subtitle' @input="update('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.subtitle' v-on:change="updateWithDisabling('subtitle', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='author'>
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
-                    <input v-model='currentBook.author[0]' @input="update('author', $event); " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
+                    <input v-model='currentBook.author[0]' @input="update('author', $event) " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
                                                 <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
                                                   <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
@@ -125,7 +125,7 @@
 
                 <tr class='author' v-if="currentBook.language !== 'en'">
                   <td>Author EN</td>
-                  <td style="text-align: left !important;"><input v-model='currentBook.author_en' @input="update('author_en', $event); " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
+                  <td style="text-align: left !important;"><input v-model='currentBook.author_en' v-on:change="update('author_en', $event) " :disabled="!allowMetadataEdit" style="width: 90%;" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author_en'] }">
                                                 <div class="dropdown" v-if="allowMetadataEdit">
                                                   <div v-on:click="showUnknownAuthorEn = -1 * showUnknownAuthorEn;" class="dropdown-button"><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthorEn == 1" v-on:click="showUnknownAuthorEn=-1; currentBook.author_en = 'Unknown'; liveUpdate('author_en', 'Unknown');" >Unknown</div>
@@ -150,7 +150,7 @@
             </fieldset>
             <fieldset class='description brief' style="text-align: right;">
               <legend style="text-align: left;">URL Slug</legend>
-                  <input v-model='currentBook.slug' @input="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
+                  <input v-model='currentBook.slug' v-on:change="lockLanguage = true; update('slug', $event); "  :disabled="!allowMetadataEdit || currentBook.slug_status == -1 " :style="[currentBook.slug_status === 1 ? {'color': '#999'} : {'color': '#000'}]" maxlength="100" style="width: 100%;" :title="currentBook.slug_status == -1 ? 'URL slug is not editable because Book has been published' : currentBook.slug" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug'] }">
                   <br><span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['slug']" class="validation-error">Define URL Slug</span>
             </fieldset>
 
@@ -178,7 +178,7 @@
                   <td>Difficulty</td>
                   <td>
                     <input v-model="currentBook.difficulty" :disabled="!allowMetadataEdit"
-                           v-on:change="update('difficulty',$event,100)"  id="difficultySelection" :class="{ 'has-error': (this.validationErrorDifficulty) ,
+                           v-on:change="updateWithDisabling('difficulty',$event,100)"  id="difficultySelection" :class="{ 'has-error': (this.validationErrorDifficulty) ,
                             'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['difficulty'] }">
                     <span class="validation-error" >{{(this.validationErrorDifficulty )}}</span>
 <!--                    <span class="validation-error" >{{(validationErrors[currentBook.bookid]['weight'] && validationErrors[currentBook.bookid]['weight'])}}</span>-->
@@ -187,13 +187,13 @@
 
                 <tr class='trans'>
                   <td>Translator</td>
-                  <td><input v-model='currentBook.translator' @input="update('translator', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model='currentBook.translator'  v-on:change="updateWithDisabling('translator', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='transfrom'>
                   <td>Tr From</td>
                   <!-- <td><input v-model="currentBook.transfrom" :placeholder="suggestTranslatedId"></td> -->
-                  <td><input v-model="currentBook.transfrom" @input="update('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
+                  <td><input v-model="currentBook.transfrom" v-on:change="updateWithDisabling('transfrom', $event)" :disabled="!allowMetadataEdit"></td>
                 </tr>
 
                 <tr class='collection'>
@@ -237,12 +237,12 @@
 
           <fieldset class='description brief'>
             <legend>Brief Description </legend>
-            <resizable-textarea ref="descriptionShort"><textarea v-model='currentBook.description_short' @input="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
+            <resizable-textarea ref="descriptionShort"><textarea v-model='currentBook.description_short' v-on:change="update('description_short', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full"></textarea></resizable-textarea>
           </fieldset>
 
           <fieldset class='description long'>
             <legend>Long Description </legend>
-            <resizable-textarea ref="descriptionLong"><textarea v-model='currentBook.description' @input="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
+            <resizable-textarea ref="descriptionLong"><textarea v-model='currentBook.description' v-on:change="update('description', $event)" :disabled="!allowMetadataEdit" rows="1" class="resize-none outline-0 w-full" ></textarea></resizable-textarea>
           </fieldset>
         </vue-tab>
           <vue-tab title="TOC" id="book-toc">
@@ -1042,9 +1042,17 @@ export default {
         }, 1500)
       }
     },
-    update(key, event, debounceTime){
+    updateWithDisabling(key, event, debounceTime){
       if(!debounceTime)
         debounceTime = 1500;
+
+      return this.update(key, event, debounceTime,true);
+    },
+    update(key, event, debounceTime,disable){
+      if(!debounceTime)
+        debounceTime = 1500;
+      if(!disable)
+        disable = false;
 
 
       if(key =='difficulty'){
@@ -1068,15 +1076,16 @@ export default {
           // this.validationErrors[this.currentBook.bookid]['difficulty'] = validationErrors;
           this.validationErrorDifficulty = validationErrors;
         }
-        if(validationErrors && event){
+        if(validationErrors && event && disable){
           event.target.toggleAttribute('disable');
           return;
         }
 
       }
 
-      event.target.disabled  = true ;
-
+      if(disable && event) {
+        event.target.disabled = true;
+      }
         let debouncedFunction = _.debounce((key,event)=>{
             let val = typeof event === 'string' ? event : event.target.value;
             this.liveUpdate(key, key == 'author' ? this.currentBook.author : val, event)
