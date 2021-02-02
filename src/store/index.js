@@ -1654,22 +1654,26 @@ export const store = new Vuex.Store({
         .then(response => {
           if (response.data["@class"] && response.status == 200) {
             //console.log('updateBookMeta @version', response.data['@version'], update);
-            state.currentBookMeta['@version'] = response.data['@version'];
             let bookMetaIdx = state.books_meta.findIndex((m)=>m.bookid==update.bookid);
             if (bookMetaIdx > -1) {
               update['@version'] = response.data['@version'];
               state.books_meta[bookMetaIdx] = Object.assign(state.books_meta[bookMetaIdx], update);
             }
+            
+            let checkBookid = state.route.params.hasOwnProperty('bookid') ? state.route.params.bookid : state.currentBookid;
+            if (response.data.bookid === checkBookid) {// ILM-3773 very quickly switch-over to another book, check bookid in URL or in state property currentBookid
+              state.currentBookMeta['@version'] = response.data['@version'];
 
-            if (update['version'] && response.data.collection_id) {
-              dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
+              if (update['version'] && response.data.collection_id) {
+                dispatch('updateCollectionVersion', Object.assign({id: response.data.collection_id}, update));
+              }
+
+              let allowPublish = state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
+              commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
+              commit('SET_CURRENTBOOK_META', response.data);
+              let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
+              commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
             }
-
-            let allowPublish = state.adminOrLibrarian && state.currentJobInfo.workflow.status !== 'archived';
-            commit('SET_ALLOW_BOOK_PUBLISH', allowPublish);
-            commit('SET_CURRENTBOOK_META', response.data);
-            let publishButton = state.currentJobInfo.text_cleanup === false && !(typeof state.currentBookMeta.version !== 'undefined' && state.currentBookMeta.version === state.currentBookMeta.publishedVersion);
-            commit('SET_BOOK_PUBLISH_BUTTON_STATUS', publishButton);
 
             return Promise.resolve(response.data);
           } else {
