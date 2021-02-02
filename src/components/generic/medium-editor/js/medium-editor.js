@@ -1578,6 +1578,18 @@ MediumEditor.extensions = {};
 
         replaceStringAt: function (input, position, replace) {
             return input.substring(0, position) + replace + (position >= input.length ? '' : input.substring(position + 1));
+        },
+
+        insertTextAtCursor: function (text) {
+            let selection = window.getSelection(),
+            range = selection.getRangeAt(0),
+            node = document.createTextNode(text);
+            range.deleteContents();
+            range.insertNode(node);
+
+            for (let position = 0; position !== text.length; position++) {
+                selection.modify('move', 'right', 'character');
+            }
         }
     };
 
@@ -6981,6 +6993,16 @@ MediumEditor.extensions = {};
                 }
             }
             return false;
+        } else {
+            let element = document.getSelection().anchorNode,
+            rootNode = element.parentNode;
+            while (rootNode.nodeName !== 'DIV') {
+                rootNode = rootNode.parentNode;
+            }
+            let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line']);
+            if (isList) {// when adding content to contenteditable element with style whitespace: pre-line, browser removes line breaks
+                return false;
+            }
         }
         return false;
     }
@@ -7146,6 +7168,18 @@ MediumEditor.extensions = {};
             });
 
             rootNode.dispatchEvent(eventInput);// run event for the element events handling
+        } else {
+            let element = document.getSelection().anchorNode,
+            rootNode = element.parentNode;
+            while (rootNode.nodeName !== 'DIV') {
+                rootNode = rootNode.parentNode;
+            }
+            let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line']);
+            if (isList) {// when adding content to conteneditable element with style whitespace: pre-line browser replaces line breaks
+                //console.log(MediumEditor.util.getKeyCode(event));
+                MediumEditor.util.insertTextAtCursor(String.fromCharCode(MediumEditor.util.getKeyCode(event)));
+                return false;
+            }
         }
     }
 
