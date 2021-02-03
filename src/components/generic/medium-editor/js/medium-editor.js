@@ -1590,6 +1590,8 @@ MediumEditor.extensions = {};
             for (let position = 0; position !== text.length; position++) {
                 selection.modify('move', 'right', 'character');
             }
+            node.parentNode.normalize();// merge neighbour text elements
+            //console.log(rootNode);
         }
     };
 
@@ -7178,6 +7180,13 @@ MediumEditor.extensions = {};
             if (isList) {// when adding content to conteneditable element with style whitespace: pre-line browser replaces line breaks
                 //console.log(MediumEditor.util.getKeyCode(event));
                 MediumEditor.util.insertTextAtCursor(String.fromCharCode(MediumEditor.util.getKeyCode(event)));
+                event.preventDefault();
+                var eventInput = new Event('input', {
+                    bubbles: true,
+                    cancelable: true
+                });
+
+                rootNode.dispatchEvent(eventInput);// run event for the element events handling
                 return false;
             }
         }
