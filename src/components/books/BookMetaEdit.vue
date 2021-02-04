@@ -1060,7 +1060,7 @@ export default {
 
           let validationErrors = '';
 
-          let re = /^\d+(.\d+)*$/i;
+          let re = /^\d+(\.\d+)*$/i;
 
           if ( !this.currentBook.difficulty.match(re) ){
             validationErrors = 'Allowed range 1 - 14.99';
