@@ -104,7 +104,7 @@
                   <td>Author</td>
                   <td style="text-align: left !important;">
 
-                    <input v-model='currentBook.author[0]' @input="update('author', $event) " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
+                    <input v-model='currentBook.author[0]'  v-on:change="update('author', $event) " :disabled="!allowMetadataEdit" v-if="currentBook.author.length === 0" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['author'] }">
                                                 <div class="dropdown" v-if="currentBook.author.length === 0 && allowMetadataEdit">
                                                   <div v-on:click="showUnknownAuthor = -1 * showUnknownAuthor;" class="dropdown-button" ><i class="fa fa-angle-down" ></i></div>
                                                   <div class="dropdown-content" v-if="showUnknownAuthor == 1" v-on:click="showUnknownAuthor=-1; currentBook.author[0] = 'Unknown'; liveUpdate('author', currentBook.author);" >Unknown</div>
