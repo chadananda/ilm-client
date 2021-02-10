@@ -742,6 +742,10 @@ export default {
     },
     allowMetadataEdit: {
       get() {
+        //do not allow to edit metadata while book is in Publish Queue:      
+        if (this.currentBookMeta.isInTheQueueOfPublication === true)
+            return false;
+
         return this.tc_allowMetadataEdit();
       }
     }
