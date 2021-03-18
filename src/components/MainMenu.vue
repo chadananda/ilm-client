@@ -7,6 +7,9 @@
     <td class='menu'>
       <ul class="navlist">
 
+        <router-link to="/assignments" class='presentation' tag='li'
+        v-show='!(isAdmin || isBookkeeper || isLibrarian)'><a>Assignments</a><sup>{{tc_userTasks.total}}</sup></router-link>
+
         <router-link to="/books" tag='li'
         v-show="isAdmin || isEditor || isLibrarian || isProofer || isNarrator"
         ><a>Books</a></router-link>
@@ -24,7 +27,7 @@
         ><a>Libraries</a></router-link>
 
         <router-link to="/assignments" class='presentation' tag='li'
-        v-show='true'><a>Assignments</a><sup>{{tc_userTasks.total}}</sup></router-link>
+        v-show="isAdmin || isBookkeeper || isLibrarian"><a>Assignments</a><sup>{{tc_userTasks.total}}</sup></router-link>
 
         <router-link to="/align" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>Check alignment</a></router-link>
