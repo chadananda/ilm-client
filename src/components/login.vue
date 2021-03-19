@@ -147,7 +147,13 @@ export default {
         superlogin.login({
           username: this.loginUser,
           password: this.loginPassword
-        }).catch(error => {
+        }).then(result=> {
+          if (!superlogin.confirmRole('admin') && !superlogin.confirmRole('librarian') && !superlogin.confirmRole('bookkeeper')){
+            console.log(superlogin.confirmRole('admin'), superlogin.confirmRole('librarian'), superlogin.confirmRole('bookkeeper'));
+            this.$router.push('assignments');
+          }
+        })
+        .catch(error => {
           this.loginError = error.message
         })
       })
