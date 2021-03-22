@@ -161,10 +161,7 @@ export default {
   methods: {
     parseTasks() {
       let tasks_formatted = {total: 0, list: []};
-      let list_priority_1 = [];
-      let list_priority_2 = [];
-      let list_priority_3 = [];
-      let list_priority_4 = [];
+      let list_priority = [[],[],[],[]];
       let priority_secondary = 0;
 
       let priorityTasks = ['fix-block-text', 'fix-block-narration', 'approve-modified-block', 'approve-new-block', 'approve-re-narration', 'approve-revoked-block']   // https://isddesign.atlassian.net/wiki/spaces/ILM/pages/2830827547/Assignments+page
@@ -177,14 +174,20 @@ export default {
 
         jobs[jobId].total = jobs[jobId].tasks.length;
         tasks_formatted.total += jobs[jobId].total;
-        jobs[jobId].tasksVisible = false;
+        //jobs[jobId].tasksVisible = false;
+        jobs[jobId].tasksVisible = true;
+
+        if (this.isAdmin || this.isLibrarian){
+            jobs[jobId].tasksVisible = false;
+        } else {
+            jobs[jobId].tasksVisible = true;
+        }
 
         let tasks_list = [];
-        let priority = 4;
+        let priority = list_priority.length;
         for (let _t in this.tc_userTasks.list[jobId].tasks) {
           tasks_list.push(Object.assign({}, this.tc_userTasks.list[jobId].tasks[_t]));
           //detect priority:
-          //console.log(this.tc_userTasks.list[jobId].tasks[_t]);
           if (priorityTasks.includes(this.tc_userTasks.list[jobId].tasks[_t].type)){
             priority = 1;
             priority_secondary++;
@@ -198,8 +201,7 @@ export default {
             priority = 4;
             priority_secondary = jobs[jobId].total;
           }
-
-          
+        
         }
         jobs[jobId].tasks = Object.assign({}, this.tc_userTasks.list[jobId].tasks);
         jobs[jobId].tasks = tasks_list.reduce((acc, val)=>{
@@ -218,30 +220,22 @@ export default {
           return  acc;
         }, {} );
 
-        if (priority == 1){
-          list_priority_1.push([jobs[jobId], priority_secondary]);
-        } else if (priority == 2) {
-          list_priority_2.push([jobs[jobId], priority_secondary]);
-        } else if (priority == 3) {
-          list_priority_3.push([jobs[jobId], priority_secondary]);
-        } else  {
-          list_priority_4.push([jobs[jobId], priority_secondary]);
+        for (let i = 0; i < list_priority.length; i ++ ){
+          if (priority == i )
+            list_priority[i].push([jobs[jobId], priority_secondary]);
         }
 
       }
 
-      //tasks_formatted.list = list_priority_1.concat(list_priority_4);
-      list_priority_1.sort((a, b) => a[1] > b[1] ? -1 : (a[1] < b[1] ? 1 : 0))
-      list_priority_2.sort((a, b) => a[1] > b[1] ? -1 : (a[1] < b[1] ? 1 : 0))
-      list_priority_3.sort((a, b) => a[1] > b[1] ? -1 : (a[1] < b[1] ? 1 : 0))
-      list_priority_4.sort((a, b) => a[1] > b[1] ? -1 : (a[1] < b[1] ? 1 : 0))
+      for (let i = 0; i < list_priority.length; i ++ ){
+        list_priority[i].sort((a, b) => a[1] > b[1] ? -1 : (a[1] < b[1] ? 1 : 0))
+      }
 
-      list_priority_1.forEach(element => tasks_formatted.list.push(element[0]));
-      list_priority_2.forEach(element => tasks_formatted.list.push(element[0]));
-      list_priority_3.forEach(element => tasks_formatted.list.push(element[0]));
-      list_priority_4.forEach(element => tasks_formatted.list.push(element[0]));
+      for (let i = 0; i < list_priority.length; i ++ ){
+        list_priority[i].forEach(element => tasks_formatted.list.push(element[0]));
 
-      //tasks_formatted.list = list_priority_1.concat(list_priority_2).concat(list_priority_3).concat(list_priority_4);
+      }
+
       this.tasks = tasks_formatted;
     },
     taskAddModalClose(create) {
