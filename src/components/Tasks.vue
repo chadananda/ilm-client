@@ -45,7 +45,9 @@
         <div v-if="job.tasksVisible" :key="job.title">
           <div v-for="task in job.tasks" class="tr subtasks-box" :key="task._id">
             <div class="task-title-box td">
-              <h4>({{task.count}})&nbsp;{{task.title}}</h4>
+              <h4 v-if="priorityTasks.includes(task.type)" style="color: red;"> ({{task.count}})&nbsp;{{task.title}}</h4>
+              <h4 v-else>({{task.count}})&nbsp;{{task.title}}</h4>
+
             </div>
 
             <div class="subtask-items-box td">
@@ -122,7 +124,8 @@ export default {
       import_book_id: '',
       import_book: {},
       task_audiobook: {},
-      audio_import_multiple: true
+      audio_import_multiple: true,
+      priorityTasks: ['fix-block-text', 'fix-block-narration', 'approve-modified-block', 'approve-new-block', 'approve-re-narration', 'approve-revoked-block'],
     }
   },
 
@@ -164,8 +167,6 @@ export default {
       let list_priority = [[],[],[],[]];
       let priority_secondary = 0;
 
-      let priorityTasks = ['fix-block-text', 'fix-block-narration', 'approve-modified-block', 'approve-new-block', 'approve-re-narration', 'approve-revoked-block']   // https://isddesign.atlassian.net/wiki/spaces/ILM/pages/2830827547/Assignments+page
-
       let jobs = Object.assign({}, this.tc_userTasks.list);
       for (let jobId in jobs) {
         priority_secondary = 0;
@@ -177,18 +178,18 @@ export default {
         //jobs[jobId].tasksVisible = false;
         jobs[jobId].tasksVisible = true;
 
-        if (this.isAdmin || this.isLibrarian){
+        /*if (this.isAdmin || this.isLibrarian){
             jobs[jobId].tasksVisible = false;
         } else {
             jobs[jobId].tasksVisible = true;
-        }
+        }*/
 
         let tasks_list = [];
         let priority = list_priority.length;
         for (let _t in this.tc_userTasks.list[jobId].tasks) {
           tasks_list.push(Object.assign({}, this.tc_userTasks.list[jobId].tasks[_t]));
           //detect priority:
-          if (priorityTasks.includes(this.tc_userTasks.list[jobId].tasks[_t].type)){
+          if (this.priorityTasks.includes(this.tc_userTasks.list[jobId].tasks[_t].type)){
             priority = 1;
             priority_secondary++;
           } else if (this.tc_userTasks.list[jobId].tasks[_t].type == 'text-cleanup'){
@@ -228,7 +229,10 @@ export default {
       }
 
       for (let i = 0; i < list_priority.length; i ++ ){
-        list_priority[i].sort((a, b) => a[1] > b[1] ? -1 : (a[1] < b[1] ? 1 : 0))
+        if (i == 0)
+            list_priority[i].sort((a, b) => a[1] > b[1] ? -1 : (a[1] < b[1] ? 1 : 0))
+        else
+            list_priority[i].sort((a, b) => a[1] < b[1] ? -1 : (a[1] > b[1] ? 1 : 0))
       }
 
       for (let i = 0; i < list_priority.length; i ++ ){
