@@ -18,6 +18,9 @@
           <a>Collections</a>
         </router-link>
 
+        <router-link to="/assignments" class='presentation' tag='li'
+        v-show="isAdmin || isBookkeeper || isLibrarian"><a>Assignments</a><sup>{{tc_userTasks.total}}</sup></router-link>
+
         <router-link to="/users" class='presentation' tag='li'
         v-show="isAdmin || isBookkeeper || isLibrarian"
         ><a>Users</a></router-link>
@@ -26,8 +29,6 @@
         v-show="isAdmin || isLibrarian"
         ><a>Libraries</a></router-link>
 
-        <router-link to="/assignments" class='presentation' tag='li'
-        v-show="isAdmin || isBookkeeper || isLibrarian"><a>Assignments</a><sup>{{tc_userTasks.total}}</sup></router-link>
 
         <router-link to="/align" class='presentation' tag='li'
         v-show='isAdmin || isLibrarian'><a>Check alignment</a></router-link>
