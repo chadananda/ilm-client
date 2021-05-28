@@ -626,6 +626,7 @@ export const store = new Vuex.Store({
       } else {
         state.currentBookMeta = {}
         state.currentBookid = ''
+        this.commit('set_block_selection', {start: {}, end: {}});
       }
     },
 
@@ -997,8 +998,13 @@ export const store = new Vuex.Store({
     },
 
     set_block_selection(state, selection) {
-      state.blockSelection.start = typeof selection.start !== 'undefined' ? selection.start : {};
-      state.blockSelection.end = typeof selection.end !== 'undefined' ? selection.end : {};
+      let start = typeof selection.start !== 'undefined' ? selection.start : {};
+      let end = typeof selection.end !== 'undefined' ? selection.end : {};
+      if ((state.blockSelection.start || state.blockSelection.end) && !start._id && !end._id) {
+        state.storeListO.setUnCheckedRange();
+      }
+      state.blockSelection.start = start;
+      state.blockSelection.end = end;
       const blockIdRgx = /.*(?:\-|\_){1}([a-zA-Z0-9]+)$/;
 
       if (state.blockSelection.start._id) {
@@ -1033,6 +1039,9 @@ export const store = new Vuex.Store({
 
     set_book_mode(state, mode) {
       state.bookMode = mode || null;
+      if (!state.bookMode) {
+        this.commit('set_block_selection', {start: {}, end: {}});
+      }
     },
 
     set_taskBlockMap(state) {
