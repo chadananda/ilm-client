@@ -1564,8 +1564,11 @@
                   if (this.origFilePositions.start == this.selection.end) {
                     this.setSelectionEnd(this.origFilePositions.end);
                   }
-                  this.setSelectionStart(this.origFilePositions.start);
-                  this.setSelectionEnd(this.origFilePositions.end);
+                  this.setSelectionStart(this.origFilePositions.start)
+                    .then(() => {
+                      this.cursorPosition = this.selection.start;
+                      this.setSelectionEnd(this.origFilePositions.end);
+                    });
                 }
               });
           }
@@ -2199,22 +2202,31 @@ Discard unsaved audio changes?`,
           }
         },
         setSelectionStart(val, event) {
+          this.contextPosition = null;
           //if (this.mode == 'file') {
             if (this.audiosourceEditor) {
               let start = val !== null ? val : (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
               start = this._round(start, 2);
               if (start == this.selection.start) {
-                return;
+                return Promise.resolve();
               }
               if (start > this.selection.end) {
                 if (this.audiosourceEditor.activeTrack && this.audiosourceEditor.activeTrack.duration) {
                   this.selection.end = this.audiosourceEditor.activeTrack.duration;
                 } else {
-                  return;
+                  return Promise.resolve();
                 }
               }
               let replay = this.isPlaying;
-              this.stop(false)
+              return new Promise((resolve, reject) => {
+                if (replay) {
+                  return this.stop(false)
+                    .then(() => {
+                      return resolve();
+                    })
+                }
+                return resolve();
+              })
                   .then(() => {
                     this.selection.start = start;
                     this.cursorPosition = this.selection.start;
@@ -2224,12 +2236,12 @@ Discard unsaved audio changes?`,
                     if (replay) {
                       this.play();
                     }
+                    return Promise.resolve();
                   });
             } else {
-              return;
+              return Promise.resolve();
             }
           //}
-          this.contextPosition = null;
         },
         setSelectionEnd(val, event) {
           //if (this.mode == 'file') {
