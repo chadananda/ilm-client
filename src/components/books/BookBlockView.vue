@@ -3794,9 +3794,6 @@ Save text changes and realign the Block?`,
 
       },
       setRangeSelection(type, ev) {
-        if (this.block && !this.tc_isShowEdit(this.block._id)) {
-          return false;
-        }
         let checked;
         if (ev === true || ev === false) checked = ev;
         else checked = ev.target && ev.target.checked;

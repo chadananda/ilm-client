@@ -365,7 +365,7 @@
         this.pause = this.parseFloatToFixed(value);
       },
       onFocusout($ev) {
-        if (!/[0-9]/.test($ev.target.value)) {
+        if (/[^\d\.\,]/.test($ev.target.value)) {
           $ev.target.value = this.pause;
         }
       }
