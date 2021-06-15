@@ -3,71 +3,63 @@
   v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
-      <div class="content-background">
-      <div v-for="(viewObj, listIdx) in getListObjs"
-        :class="['row content-scroll-item back']"
-        :key = "viewObj.blockRid"
-        :id="'v-'+ viewObj.blockId"
-        :data-rid="viewObj.blockRid">
 
-        <div class='col'>
-        <BookBlockPreview
+
+        <SvelteBookDisplayInVue
+          v-if="isBookMounted"
+          :parlistO="parlistO"
+          :parlist="parlist"
+          :lang="meta.language"
+          :startId="startId"
+          @setStart="setStartIdIdx"
+          @setEdge="scrolledToEdge"
           ref="viewBlocks"
-          :blockRid = "viewObj.blockRid"
-          :blockId = "viewObj.blockId"
-          :blockO = "parlistO.get(viewObj.blockRid)"
-          :block = "parlist.get(viewObj.blockId)"
-          :mode = "mode"
-        ></BookBlockPreview>
-        </div>
-        <!--<div class='col'>-->
+        />
+        <div v-else class="content-process-run preloader-loading"></div>
 
-      </div>
-      <!--<div class="row"-->
-      </div>
-      <!--<div class="content-background">-->
+
   </div>
   <!--<div class="container-block">-->
 
   <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
-      <div class="row content-scroll-item front"
-        v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
-        v-bind:id="'s-'+ viewObj.blockId"
-        v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
-        <div class='col' v-if="parlist.has(viewObj.blockId) && parlistO.has(viewObj.blockRid)">
-          <BookBlockView ref="blocks"
-              :block="parlist.get(viewObj.blockId)"
-              :blockO="parlistO.get(viewObj.blockRid)"
-              :blockId = "viewObj.blockId"
-              :putBlock ="putBlockProxy"
-              :getBlock ="getBlockProxy"
-              :putBlockPart ="putBlockPartProxy"
-              :putBlockO ="putBlockOProxy"
-              :putNumBlockO ="putNumBlockOProxy"
-              :recorder ="recorder"
-              :blockReindexProcess="blockReindexProcess"
-              :getBloksUntil="getBloksUntil"
-              :allowSetStart="allowSetStart"
-              :allowSetEnd="allowSetEnd"
-              :prevId="parlistO.getInId(viewObj.blockRid)"
-              :mode="mode"
-              :putBlockProofread="putBlockProofreadProxy"
-              :putBlockNarrate="putBlockNarrateProxy"
-              :initRecorder="initRecorder"
-              @stopRecordingAndNext="stopRecordingAndNext"
-              @insertBefore="insertBlockBefore"
-              @insertAfter="insertBlockAfter"
-              @deleteBlock="deleteBlock"
-              :joinBlocks="joinBlocks"
-              @setRangeSelection="setRangeSelection"
-              @blockUpdated="blockUpdated"
-          /></BookBlockView>
+        <div class="row content-scroll-item front"
+          v-for="(viewObj, blockIdx) in parlistO.idsViewArray()"
+          v-bind:id="'s-'+ viewObj.blockId"
+          v-bind:key="viewObj.blockId"><!--{{parlistO.getInId(viewObj.blockRid)}} -> {{viewObj.blockId}}{{viewObj.blockRid}} -> {{parlistO.getOutId(viewObj.blockRid)}}-->
+          <div class='col' v-if="parlist.has(viewObj.blockId) && parlistO.has(viewObj.blockRid)">
+            <BookBlockView ref="blocks"
+                :block="parlist.get(viewObj.blockId)"
+                :blockO="parlistO.get(viewObj.blockRid)"
+                :blockId = "viewObj.blockId"
+                :putBlock ="putBlockProxy"
+                :getBlock ="getBlockProxy"
+                :putBlockPart ="putBlockPartProxy"
+                :putBlockO ="putBlockOProxy"
+                :putNumBlockO ="putNumBlockOProxy"
+                :recorder ="recorder"
+                :blockReindexProcess="blockReindexProcess"
+                :getBloksUntil="getBloksUntil"
+                :allowSetStart="allowSetStart"
+                :allowSetEnd="allowSetEnd"
+                :prevId="parlistO.getInId(viewObj.blockRid)"
+                :mode="mode"
+                :putBlockProofread="putBlockProofreadProxy"
+                :putBlockNarrate="putBlockNarrateProxy"
+                :initRecorder="initRecorder"
+                @stopRecordingAndNext="stopRecordingAndNext"
+                @insertBefore="insertBlockBefore"
+                @insertAfter="insertBlockAfter"
+                @deleteBlock="deleteBlock"
+                :joinBlocks="joinBlocks"
+                @setRangeSelection="setRangeSelection"
+                @blockUpdated="blockUpdated"
+            /></BookBlockView>
+          </div>
+          <!--<div class='col'>-->
         </div>
-        <!--<div class='col'>-->
-      </div>
-      <!--<div class="row"-->
+        <!--<div class="row"-->
       </div>
       <!--<div class="content-background">-->
 
@@ -88,18 +80,21 @@
 
 import { mapGetters, mapState, mapActions } from 'vuex'
 import BookBlockView from './BookBlockView'
-import BookBlockPreview   from './BookBlockPreview';
-import InfiniteLoading from 'vue-infinite-loading'
+//import BookBlockPreview   from './BookBlockPreview';
+//import InfiniteLoading from 'vue-infinite-loading'
 import Vue from 'vue'
 import access from "../../mixins/access.js"
 import taskControls from '../../mixins/task_controls.js'
 import mediaStreamRecorder from 'recordrtc'
 import api_config from '../../mixins/api_config.js'
 import axios from 'axios'
-import { BookBlock }    from '../../store/bookBlock';
+import { BookBlock, setBlockParnum }    from '../../store/bookBlock';
 import { BookBlocks }    from '../../store/bookBlocks';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
+
+import SvelteBookDisplay from "./BookEdit_Display.svelte";
+import toVue from "svelte-adapter/vue";
 
 import VueHotkey from 'v-hotkey';
 Vue.use(VueHotkey);
@@ -136,7 +131,9 @@ export default {
       lazyLoaderDir: 'up',
       isNeedUp: true,
       isNeedDown: true,
-      scrollToId: null
+      scrollToId: null,
+
+      isBookMounted: false,
 
     }
   },
@@ -244,7 +241,7 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, BookBlockPreview, vueSlider
+      BookBlockView, SvelteBookDisplayInVue: toVue(SvelteBookDisplay, {height: '100%'}, "div"), vueSlider
   },
   methods: {
     ...mapActions([
@@ -253,6 +250,29 @@ export default {
     'putNumBlockOBatch',
 
     'searchBlocksChain', 'putBlock', 'getBlock', 'getBlocks', 'putBlockPart', 'setMetaData', 'freeze', 'unfreeze', 'tc_loadBookTask', 'addBlockLock', 'clearBlockLock', 'setBlockSelection', 'recountApprovedInRange', 'loadBookToc', 'setCurrentBookCounters', 'loadBlocksChain', 'getCurrentJobInfo', 'updateBookVersion', 'insertBlock', 'blocksJoin', 'removeBlock', 'putBlockProofread', 'putBlockNarrate', 'getProcessQueue', 'applyTasksQueue', 'saveBlockAudio', 'clearAudioTasks', 'revertAudio', 'discardAudioChanges']),
+
+    setStartIdIdx(ev) {
+      //console.log('setStartIdIdx', 'this.startId:', this.startId, 'ev.detail.blockId:', ev.detail.blockId, 'update:', (this.startId !== ev.detail.blockId));
+      if (this.startId !== ev.detail.blockId) {
+        this.onScrollEv = true;
+        let params = {};
+        for (let p in this.$route.params) {
+          params[p] = this.$route.params[p];
+        }
+        params.block = ev.detail.blockId;
+        this.startId = ev.detail.blockId;
+        this.$router.push({
+          name: this.$route.name,
+          params: params
+        });
+      }
+    },
+
+    scrolledToEdge(ev) {
+      this.$store.commit('set_taskBlockMapAllowNext', !ev.detail.endReached);
+      this.startReached = ev.detail.startReached;
+      this.endReached = ev.detail.endReached;
+    },
 
     test(ev) {
         console.log('test', ev);
@@ -2534,12 +2554,12 @@ export default {
         if (this.meta._id && initBlocks.blocks && initBlocks.blocks.length) {
           this.tc_loadBookTask()
           .then(()=>{
-            this.loadPreparedBookDown(this.parlistO.idsArray())
-            .then(()=>{
+            //this.loadPreparedBookDown(this.parlistO.idsArray())
+            //.then(()=>{
               this.loadBookBlocks({bookId: this.meta._id})
               .then((res)=>{
                 this.parlistO.updateLookupsList(this.meta._id, res);
-                //console.log('res.blocks', res.blocks[0]);
+                //console.log('res.blocks', res.blocks);
                 if (res.blocks && res.blocks.length > 0) {
                   res.blocks.forEach((el, idx, arr)=>{
                     if (!this.parlist.has(el._id)) {
@@ -2549,19 +2569,20 @@ export default {
                     }
                     //this.parlistO.setLoaded(el._id);
                   });
+                  this.isBookMounted = true;
                   this.$store.commit('set_taskBlockMap');
                   //this.parlistO.refresh();
-                  if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
-                    Vue.nextTick(() => {
-                      this.handleScroll();
-                      this.scrollToBlock(initBlocks.blocks[0].blockid);
-                    })
-                  }
+//                   if (initBlocks.blocks && initBlocks.blocks[0] && initBlocks.meta && initBlocks.blocks[0].rid !== initBlocks.meta.out) {
+//                     Vue.nextTick(() => {
+//                       this.handleScroll();
+//                       this.scrollToBlock(initBlocks.blocks[0].blockid);
+//                     })
+//                   }
                 }
 
                 //this.lazyLoad();
               });
-            });
+            //});
           });
         } else {
 
@@ -2869,12 +2890,12 @@ export default {
       width: 100%;
 
       &.back {
-        margin-right: -50%;
+        /*margin-right: -50%;*/
       }
       &.front {
         position: relative;
         top: 0px;
-        margin-left: -50%;
+        /*margin-left: -50%;*/
 
         .content-background {
           background: white;
@@ -3232,6 +3253,13 @@ div.merge-subblocks {
    -webkit-mask-image: url(/static/merge-blocks.svg);
    mask-image: url(/static/merge-blocks.svg);
    cursor: pointer;
+}
+
+.container-fluid {
+  /*padding-top: 15px;*/
+  /*overflow-y: auto;*/
+  padding: 0px;
+  margin: 0px;
 }
 
 </style>

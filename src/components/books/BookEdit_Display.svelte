@@ -25,7 +25,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
 </template>
 
 <script>
-  import { beforeUpdate, createEventDispatcher, tick } from 'svelte';//onMount,tick
+  import { /*beforeUpdate,*/ onMount, createEventDispatcher, tick } from 'svelte';//onMount,tick
   import VirtualList from '../generic/VirtualList.svelte';
   import BookBlockDisplay from './BookBlockDisplay.svelte';
 
@@ -44,7 +44,6 @@ bind:startReached={startReached} bind:endReached={endReached} >
   let endReached = false;
   let startIdIdx = 0;
   let fntCounter = 0;
-  let loadedBookId = '';
   let intBlocks = [];
   let itemHeight = false;
 
@@ -86,15 +85,10 @@ bind:startReached={startReached} bind:endReached={endReached} >
     }
   }
 
-  beforeUpdate(/*async */() => {
-    //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId, 'reloadBook', reloadBook);
-    //loadedBookId = parlistO.meta.bookid;
-    if (parlistO.meta.bookid && blocks.length && loadedBookId === '' || (loadedBookId !== '' && loadedBookId !== parlistO.meta.bookid)) {
+  onMount(/*async */() => {
+    //console.log(`onMount: ${true}`);
+    if (parlistO.meta.bookid && blocks.length) {
 
-      //fntCounter = 0; uncomment for through numeration
-      loadedBookId = parlistO.meta.bookid;
-      //console.log('beforeUpdate, loadedBookId', loadedBookId);
-      //console.log('beforeUpdate, blocks.length', blocks.length);
       for (let i = 0; i < blocks.length; i++) {
         fntCounter = 0;
         blocks[i].blockView = blockView(blocks[i].blockRid);
@@ -108,14 +102,19 @@ bind:startReached={startReached} bind:endReached={endReached} >
       if (startIdIdx > 0) {
         vListStartFrom = startIdIdx;
       }
+    } else {
+
     }
   });
 
-  /*onMount(async () => {
-    console.log('onMount1', 'blocks.length:', blocks.length);
-    await tick();
-    console.log('onMount2', 'blocks.length:', blocks.length);
-  });*/
+//   beforeUpdate(/*async */() => {
+//     console.log('beforeUpdate');
+//
+//     //console.log('beforeUpdate', 'blocks.length:', blocks.length, 'parlistO.meta.bookid:', parlistO.meta.bookid, 'loadedBookId:', loadedBookId/*, 'reloadBook', reloadBook*/);
+//     //loadedBookId = parlistO.meta.bookid;
+//
+//     //console.log(`blocks[0]:`, parlist.get('test_test_2_en-bl48').content);
+//   });
 
   const timestamp = (new Date()).toJSON();
 
