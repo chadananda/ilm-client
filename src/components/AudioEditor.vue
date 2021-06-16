@@ -1101,26 +1101,29 @@
         },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
-          if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
-          if (this.isModifiedComputed && this.mode === 'block') {
-            this.showOnExitMessage();
-          } else {
-            if (autosave && this.isModifiedComputed && this.mode === 'file') {
-              this.save();
-            }
-            if (this.plEventEmitter) {
-              this.plEventEmitter.emit('automaticscroll', false);
-              this.plEventEmitter.emit('clear');
-              this._clearWordSelection();
-            }
-            this._setDefaults();
-            this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
-            this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
-            $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
-            $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
-            this.$root.$off('for-audioeditor:select', this.select);
-            this.$root.$off('for-audioeditor:reload-text', this._setText);
-          }
+          return this.isPlaying ? this.pause() : Promise.resolve()
+            .then(() => {
+              if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
+              if (this.isModifiedComputed && this.mode === 'block') {
+                this.showOnExitMessage();
+              } else {
+                if (autosave && this.isModifiedComputed && this.mode === 'file') {
+                  this.save();
+                }
+                if (this.plEventEmitter) {
+                  this.plEventEmitter.emit('automaticscroll', false);
+                  this.plEventEmitter.emit('clear');
+                  this._clearWordSelection();
+                }
+                this._setDefaults();
+                this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+                this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+                $('body').off('mouseup', '.playlist-overlay.state-select', this._showSelectionBordersOnClick);
+                $(`#content-${this.blockId}`).off('click', 'w', this.showSelection);
+                this.$root.$off('for-audioeditor:select', this.select);
+                this.$root.$off('for-audioeditor:reload-text', this._setText);
+              }
+            });
         },
         forceClose() {
           this.setProcessRun(false);
@@ -1587,23 +1590,26 @@
         discardAndExit() {
           //this.discardOnExit = true;
           //this.hideModal('onExitMessage');
-          if (this.mode == 'file') {
-            this.selection = this.origFilePositions;
-          } else if (this.mode == 'block') {
-            this.isModified = false;
-          }
-          if (this.pendingLoad) {
-            if (this.plEventEmitter) {
-              this.plEventEmitter.emit('automaticscroll', false);
-              this._clearWordSelection();
-            }
-            this._setDefaults();
-            this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
-            this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
-            this.load(...this.pendingLoad);
-          } else {
-            this.close();
-          }
+          return this.isPlaying ? this.pause() : Promise.resolve()
+            .then(() => {
+              if (this.mode == 'file') {
+                this.selection = this.origFilePositions;
+              } else if (this.mode == 'block') {
+                this.isModified = false;
+              }
+              if (this.pendingLoad) {
+                if (this.plEventEmitter) {
+                  this.plEventEmitter.emit('automaticscroll', false);
+                  this._clearWordSelection();
+                }
+                this._setDefaults();
+                this.$root.$emit('from-audioeditor:closed', this.blockId, this.audiofileId);
+                this.$root.$emit('from-audioeditor:close', this.blockId, this.audiofileId);
+                this.load(...this.pendingLoad);
+              } else {
+                this.close();
+              }
+            })
         },
         checkExitState() {
           //this.hideModal('onExitMessage');
@@ -2202,10 +2208,10 @@ Discard unsaved audio changes?`,
           }
         },
         setSelectionStart(val, event) {
-          this.contextPosition = null;
           //if (this.mode == 'file') {
             if (this.audiosourceEditor) {
               let start = val !== null ? val : (this.contextPosition + $('.playlist-tracks').scrollLeft()) * this.audiosourceEditor.samplesPerPixel /  this.audiosourceEditor.sampleRate;
+              this.contextPosition = null;
               start = this._round(start, 2);
               if (start == this.selection.start) {
                 return Promise.resolve();
