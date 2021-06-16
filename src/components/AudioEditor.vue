@@ -1101,8 +1101,8 @@
         },
         close(autosave = true) {
           //console.log('AudioEditor close', autosave);
-          return this.isPlaying ? this.pause() : Promise.resolve()
-            .then(() => {
+          //return this.isPlaying ? this.pause() : Promise.resolve()
+            //.then(() => {
               if (this.audiosourceEditor) this.audiosourceEditor.stopAnimation();
               if (this.isModifiedComputed && this.mode === 'block') {
                 this.showOnExitMessage();
@@ -1123,7 +1123,7 @@
                 this.$root.$off('for-audioeditor:select', this.select);
                 this.$root.$off('for-audioeditor:reload-text', this._setText);
               }
-            });
+            //});
         },
         forceClose() {
           this.setProcessRun(false);
@@ -1590,8 +1590,8 @@
         discardAndExit() {
           //this.discardOnExit = true;
           //this.hideModal('onExitMessage');
-          return this.isPlaying ? this.pause() : Promise.resolve()
-            .then(() => {
+          //return this.isPlaying ? this.pause() : Promise.resolve()
+            //.then(() => {
               if (this.mode == 'file') {
                 this.selection = this.origFilePositions;
               } else if (this.mode == 'block') {
@@ -1609,7 +1609,7 @@
               } else {
                 this.close();
               }
-            })
+            //})
         },
         checkExitState() {
           //this.hideModal('onExitMessage');
