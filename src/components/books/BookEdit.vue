@@ -5,12 +5,13 @@
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
 
-        <SvelteBookDisplayInVue
+        <SvelteBookPreviewInVue
           v-if="isBookMounted"
           :parlistO="parlistO"
           :parlist="parlist"
           :lang="meta.language"
           :startId="startId"
+          :updBlocks="previewUpdBlocks"
           @setStart="setStartIdIdx"
           @setEdge="scrolledToEdge"
           ref="viewBlocks"
@@ -93,7 +94,7 @@ import { BookBlocks }    from '../../store/bookBlocks';
 import _ from 'lodash';
 import vueSlider from 'vue-slider-component';
 
-import SvelteBookDisplay from "./BookEdit_Display.svelte";
+import SvelteBookPreview from "./BookEdit_Preview.svelte";
 import toVue from "svelte-adapter/vue";
 
 import VueHotkey from 'v-hotkey';
@@ -134,6 +135,7 @@ export default {
       scrollToId: null,
 
       isBookMounted: false,
+      previewUpdBlocks: []
 
     }
   },
@@ -241,7 +243,7 @@ export default {
   },
   mixins: [access, taskControls, api_config],
   components: {
-      BookBlockView, SvelteBookDisplayInVue: toVue(SvelteBookDisplay, {height: '100%'}, "div"), vueSlider
+      BookBlockView, SvelteBookPreviewInVue: toVue(SvelteBookPreview, {height: '100%'}, "div"), vueSlider
   },
   methods: {
     ...mapActions([
@@ -296,18 +298,17 @@ export default {
     },
 
     refreshPreviewTmpl(idsArray) {
-      //console.time('refreshPreviewTmpl');
       //console.log('refreshPreviewTmpl', idsArray);
       if (this.$refs.viewBlocks) {
-        this.$refs.viewBlocks.forEach((blockRef, idx)=>{
-          if (idsArray.indexOf(blockRef.blockId) > -1) {
-            this.parlistO.setLoaded(blockRef.blockRid);
-            blockRef.$forceUpdate();
-          }
-        })
+        this.previewUpdBlocks = [...idsArray];
+//         this.$refs.viewBlocks.forEach((blockRef, idx)=>{
+//           if (idsArray.indexOf(blockRef.blockId) > -1) {
+//             this.parlistO.setLoaded(blockRef.blockRid);
+//             blockRef.update();
+//           }
+//         })
 
       }
-      //console.timeEnd('refreshPreviewTmpl');
     },
 
     loadBookMeta() {
