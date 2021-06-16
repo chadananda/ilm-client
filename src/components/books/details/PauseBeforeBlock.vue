@@ -104,12 +104,18 @@
         this.$emit('setPauseBefore', this.blockType, val);
       },
       pauseValueChange(val) {
+          //console.log(val, this.selectedBlock.pause_before, this.pauseUpdateEmitted);
         if (this.pauseUpdateEmitted) {
-          //console.log('ON INPUT', val, typeof val);
-          val = this.parseFloatToFixed(val);
-          //if (this.pause != val) {
-            this.$emit('setPauseBefore', this.blockType, val);
-          //}
+          let blk = Array.isArray(this.blockTypesInRange) ? this.blockTypesInRange.find(b => {
+            return b.pause_before != val;
+          }) : false;
+          if (blk) {
+            //console.log('ON INPUT', val, typeof val);
+            val = this.parseFloatToFixed(val);
+            //if (this.pause != val) {
+              this.$emit('setPauseBefore', this.blockType, val);
+            //}
+          }
         }
       },
       pauseDragEnd(val) {
