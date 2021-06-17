@@ -2071,11 +2071,14 @@ export const store = new Vuex.Store({
               oldBlock.parts = response.data.parts;
               oldBlock.footnotes = response.data.footnotes;
               oldBlock.status = response.data.status;
+              oldBlock.type = response.data.type;
+              oldBlock.classes = response.data.classes;
               store.commit('set_storeList', oldBlock);
               state.storeListO.refresh();
 
               state.storeListO.updBlockByRid(response.data.id, {
-                status: response.data.status
+                status: response.data.status,
+                type: response.data.type
               });
             }
             return Promise.resolve(response.data);

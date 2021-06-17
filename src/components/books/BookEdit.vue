@@ -731,7 +731,7 @@ export default {
       this.updateVisibleBlocks();
       this.refreshPreviewTmpl([block.blockid]);
       this.$store.commit('set_storeList', new BookBlock(block));
-      this.parlistO.getBlockByRid(block.id).type = block.type;
+      //this.parlistO.getBlockByRid(block.id).type = block.type;
       Vue.nextTick(()=>{
         this.$root.$emit('from-block-edit:set-style-switch');
       });
