@@ -2682,6 +2682,9 @@ Save text changes and realign the Block?`,
             if (this.mode === 'narrate') {// after block was moved from narrator
               this.destroyEditor(true);
             }
+            if (this.isChecked) {// block approval can change block styles, e.g. pause_before
+              this.$root.$emit('from-block-edit:set-style');
+            }
           }
         })
         .catch(err => {
