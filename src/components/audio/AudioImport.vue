@@ -224,7 +224,7 @@ export default {
                 reportHtml+= `<li>${report.replaced.files.length} audio file(s) replaced on the matching blocks. No follow-up required</li>`;
               }
               if (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) {
-                reportHtml+= `<li>${report.aligned.files.length} audio file(s) realigned with the matching blocks. Word positioning need to be verified<ul class="audiofiles-list">`;
+                reportHtml+= `<li>${report.aligned.files.length} audio file(s) realigned with the matching blocks. Word alignment need to be verified<ul class="audiofiles-list">`;
                 report.aligned.files.forEach(filename => {
                   reportHtml+= `<li>${filename}</li>`;
                 })
@@ -500,7 +500,7 @@ export default {
           reportHtml+= `${report.replaced.files.length} audio file(s) replaced on the matching blocks. No follow-up required` + '\n\n';
         }
         if (report.aligned && Array.isArray(report.aligned.files) && report.aligned.files.length > 0) {
-          reportHtml+= `${report.aligned.files.length} audio file(s) realigned with the matching blocks. Word positioning need to be verified\n`;
+          reportHtml+= `${report.aligned.files.length} audio file(s) realigned with the matching blocks. Word alignment need to be verified\n`;
           report.aligned.files.forEach(filename => {
             reportHtml+= ` - ${filename}\n`;
           })

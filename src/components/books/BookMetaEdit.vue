@@ -83,7 +83,7 @@
 
                 <tr class='title'>
                   <td>Title</td>
-                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,400)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
+                  <td><input v-model='currentBook.title' v-on:change="updateWithDisabling('title',$event,)" :disabled="!allowMetadataEdit" v-bind:class="{ 'text-danger': requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title'] }">
                       <span v-if="requiredFields[currentBook.bookid] && requiredFields[currentBook.bookid]['title']" class="validation-error">Define Title</span>
                   </td>
                 </tr>
@@ -273,7 +273,7 @@
                   <legend>Book styles</legend>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', '')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', '') } : {}">
                       <i v-if="!currentBook.styles || !currentBook.styles.global || currentBook.styles.global === ''"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -281,7 +281,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', 'global-ocean')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', 'global-ocean') } : {}">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ocean'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -289,7 +289,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('styles.global', 'global-ffa')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('styles.global', 'global-ffa') } : {}">
                       <i v-if="currentBook.styles && currentBook.styles.global === 'global-ffa'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -301,7 +301,7 @@
                   <legend>Automatic numeration</legend>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'x')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'x') } : {}">
                       <i v-if="currentBook.numbering === 'x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -309,7 +309,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'x_x')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'x_x') } : {}">
                       <i v-if="currentBook.numbering === 'x_x'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -317,7 +317,7 @@
                   </div>
                   <div>
                     <label class="style-label"
-                      @click="liveUpdate('numbering', 'none')">
+                      v-on="!proofreadModeReadOnly ? { click: () => liveUpdate('numbering', 'none') } : {}">
                       <i v-if="currentBook.numbering === 'none'"
                         class="fa fa-check-circle-o"></i>
                       <i v-else class="fa fa-circle-o"></i>
@@ -327,7 +327,7 @@
 
                 </vue-tab>
 
-                <vue-tab :title="blockType"
+                <vue-tab :title="prepareStyleTabLabel(blockType)"
                   :disabled="!(styleTabs.has(blockType))"
                   v-for="(val, blockType) in blockTypes"
                   :id="'block-type-'+blockType" :key="blockType">
@@ -568,8 +568,11 @@ export default {
         'Public', 'Hidden', 'Encumbered', 'Research', 'Private'
       ],
       styleTitles: {
-        'title_style': 'type',
-        'header_level': 'type',
+        'title_style': 'Subtype',
+        'header_level': 'Subtype',
+      },
+      styleTabLabels: {
+        'hr': 'line'
       },
       styleNotNumbered: ['sitalcent', 'editor-note', 'signature', 'reference'],
       languages: Languages,
@@ -677,10 +680,12 @@ export default {
       mode: 'bookMode',
       aligningBlocks: 'aligningBlocks'
     }),
-      proofreadModeReadOnly: {
-        get() {
-            return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
-        }
+    proofreadModeReadOnly: {
+      get() {
+          // return this.mode === 'proofread' || (this._is('proofer') && ['Collection'].indexOf(this.$route.name) > -1) ;
+          // ILM-3992:
+          return this.mode === 'proofread'  ;
+      }
     },
     collectionsList: {
       get() {
@@ -742,6 +747,10 @@ export default {
     },
     allowMetadataEdit: {
       get() {
+        //do not allow to edit metadata while book is in Publish Queue:      
+        if (this.currentBookMeta.isInTheQueueOfPublication === true || this.currentBookMeta.isIntheProcessOfPublication === true)
+            return false;
+
         return this.tc_allowMetadataEdit();
       }
     }
@@ -1045,14 +1054,16 @@ export default {
       if(!debounceTime)
         debounceTime = false;
 
-      return this.update(key, event, debounceTime,true);
+      return this.update(key, event, debounceTime, true);
     },
 
-    update(key, event, debounceTime,disable){
+    update(key, event, debounceTime, disable){
       if(!debounceTime)
         debounceTime = false;
       if(!disable)
         disable = false;
+
+      console.log('here', debounceTime, disable);
 
 
       if(key =='difficulty'){
@@ -1102,12 +1113,12 @@ export default {
       }
     },
 
-
-      liveUpdate (key, value, event) {
-        // Removed regards with ILM-3683
-        //if(this.proofreadModeReadOnly)
-        //    return ;
-
+    liveUpdate (key, value, event) {
+      // Removed regards with ILM-3683:
+      //bad conflict fix
+      //  if(this.proofreadModeReadOnly)
+      //      return ;
+      //bad conflict fix
 
         if( this.requiredFields[this.currentBook.bookid] && this.requiredFields[this.currentBook.bookid][key] ) {
           if (key != 'author'){
@@ -1133,7 +1144,6 @@ export default {
             } catch (err){
             }
         }
-
 
       var keys = key.split('.');
       key = keys[0];
@@ -1605,32 +1615,32 @@ export default {
                   }
                 else pBlock.classes[styleKey] = '';
                 //console.log(oBlock.blockid, 'isNumber', oBlock.isNumber,  'updateNum', updateNum);
-                if (pBlock.isChanged || pBlock.isAudioChanged) {
-                  pBlock.checked = false;
-                  pBlock.checked = true;
-                  if (oBlock.isNumber !== updateNum) {
-                    oBlock.isNumber = updateNum;
-                    updatePromises.push(this.putNumBlock({blockid: pBlock.blockid, isNumber: updateNum, classes: pBlock.classes}));
-                    updateNums.push(oBlock.rid)
-                  }
-                  this.$root.$emit('from-styles:styles-change-' + pBlock.blockid, pBlock.classes);
+                if (oBlock.isNumber !== updateNum) {
+                  updateNums.push(oBlock.rid);
+                  pBlock.isNumber = updateNum;
+                  oBlock.isNumber = updateNum;
+                  updatePromises.push(this.putNumBlock(pBlock));
                 } else {
-                  //pBlock.partUpdate = true;
-                  if (oBlock.isNumber !== updateNum) {
-                    updateNums.push(oBlock.rid);
-                    pBlock.isNumber = updateNum;
-                    oBlock.isNumber = updateNum;
-                    updatePromises.push(this.putNumBlock(pBlock));
-                  } else {
-                    //pBlock.status = pBlock.status || {};
-                    //pBlock.status.marked = false;
-                    updatePromises.push(this.putBlockPart([{
-                      blockid: pBlock.blockid,
-                      bookid: pBlock.bookid,
-                      classes: pBlock.classes//,
-                      //status: pBlock.status
-                    }]));
+                  //pBlock.status = pBlock.status || {};
+                  //pBlock.status.marked = false;
+                  console.log(styleKey, styleVal, pBlock.isChanged, pBlock.content);
+                  let updateBody = {
+                    blockid: pBlock.blockid,
+                    bookid: pBlock.bookid,
+                    classes: pBlock.classes//,
+                    //status: pBlock.status
+                  };
+                  let isCouplet = styleKey === "whitespace" && styleVal === "couplet";
+                  if (isCouplet) {// send content for update, to parse content for couplet
+                    updateBody['content'] = pBlock.content;
                   }
+                  updatePromises.push(this.putBlockPart([updateBody, false, pBlock.getIsChanged() || pBlock.getIsAudioChanged()])
+                    .then(() => {
+                      if (isCouplet) {
+                        this.$root.$emit(`block-state-refresh-${pBlock.blockid}`);
+                      }
+                      return Promise.resolve();
+                    }));
                 }
               }
             }
@@ -1789,6 +1799,13 @@ export default {
     },
     downloadExportFlac() {
         return this.API_URL + 'export/' + this.currentBook._id + '/exportFlac';
+    },
+    prepareStyleTabLabel(title) {
+      if (this.styleTabLabels.hasOwnProperty(title)) {
+        let caption = this.styleTabLabels[title];
+        return caption; 
+      }
+      return title; 
     },
     styleCaption(type, key) {
       if (this.styleTitles.hasOwnProperty(`${type}_${key}`)) {
@@ -2358,6 +2375,9 @@ Vue.filter('prettyBytes', function (num) {
 </style>
 
 <style lang="less">
+  div.block-style-tabs .nav-tabs > li > a {
+    margin: 0 !important;
+  }
 
   .styles-catalogue {
     li.tab {

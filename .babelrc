@@ -1,13 +1,16 @@
 {
   "presets": [
-    ["env", { "modules": false }],
-    "stage-2"
+    "@babel/preset-env"
   ],
-  "plugins": ["transform-es2015-modules-commonjs"],
+  "plugins": [
+    "@babel/plugin-transform-modules-commonjs"
+  ],
   "comments": false,
   "env": {
     "test": {
-      "plugins": [ "istanbul" ]
+      "plugins": [
+        "istanbul"
+      ]
     }
   }
 }

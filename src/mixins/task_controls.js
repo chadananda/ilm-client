@@ -378,7 +378,7 @@ export default {
       }
     },
     tc_allowMetadataEdit() {
-      if (this.adminOrLibrarian || this._is('editor', true)) {
+      if (this.adminOrLibrarian || this._is('editor', true) || this._is('proofer', true)) {
         return true;
       }
       return false;

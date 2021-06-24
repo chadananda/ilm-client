@@ -175,18 +175,18 @@ bind:startReached={startReached} bind:endReached={endReached} >
       //viewObj.content = block.content
 
       viewObj.content = block.content.replace(
-        /[\s]*?<sup[\s]*?data-pg[\s]*?=[\s]*?['"]+(.*?)['"]+.*?>.*?<\/sup>/mig,
+        /<sup\s*data-pg\s*=\s*['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
         '<span data-pg="$1"></span>'
       );
       //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
       viewObj.content = viewObj.content.replace(
-        /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
+        /<sup(?=\s)\s*class=['"]{1}service-info['"]{1}\s*data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
         '<span class="service-info" data-pg="$1"></span>'
       );
 
       let ftnIdx = 0;
       viewObj.content = viewObj.content.replace(
-        /[\s]*?<sup[\s]*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
+        /<sup\s*data-idx\s*=\s*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
         (idx)=>{
           if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
             viewObj.footnotes[ftnIdx].ftnIdx = fntCounter;
@@ -197,7 +197,7 @@ bind:startReached={startReached} bind:endReached={endReached} >
       );
       //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
       viewObj.content = viewObj.content.replace(
-        /[\s]*?<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx[\s]*?=[\s]*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
+        /<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx\s*=\s*['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
         (idx)=>{
           if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
             viewObj.footnotes[ftnIdx].ftnIdx = fntCounter;

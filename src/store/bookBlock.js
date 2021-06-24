@@ -53,7 +53,7 @@ let BlockTypes = {
       isInToc: ['on', 'off']
     },
     size: ['', 'xx-small', 'x-small', 'small', 'large', 'x-large', 'xx-large'],
-    style: ['', 'subtitle', 'author', 'translator', 'copyright', 'allcaps'],
+    style: ['', 'subtitle', 'author', 'translator', 'copyright'],
     align: ['', 'left', 'center', 'right', 'justify'],
     padding: [
       '',
@@ -134,7 +134,7 @@ let BlockTypes = {
       'underline' /*, 'rulebelow', 'bookgraphic'*/
     ],
     align: ['', 'left', 'center', 'right', 'justify'],
-    whitespace: ['', 'list', 'verse', 'pre'],
+    whitespace: ['', 'list', 'verse', 'couplet'],
     author: [
       '',
       'bab',
@@ -194,6 +194,15 @@ let BlockTypes = {
   }
 };
 let BlockTypesAlias = {
+  type: {
+    values: {
+      'title': 'title',
+      'header': 'header',
+      'par': 'paragraph',
+      'illustration': 'illustration',
+      'hr': 'divider line'
+    }
+  },
   title: {
     'table of contents': {
       values: {
@@ -203,7 +212,12 @@ let BlockTypesAlias = {
     style: {
       title: 'type',
       values: {
-        'none': 'title'
+        '': ' book title',
+        'none': ' book title',
+        'subtitle': 'subtitle',
+        'author': 'author',
+        'translator': 'translator',
+        'copyright': 'copyright'
       }
     }
   },
@@ -212,7 +226,7 @@ let BlockTypesAlias = {
     level: {
       title: 'type',
       values: {
-        h2: 'header',
+        h2: 'chapter header',
         h3: 'subheader',
         h4: 'sub subheader'
       }
@@ -245,7 +259,7 @@ class BookBlock {
     this.index = typeof init.index !== 'undefined' ? init.index : '';
 
     this.tag = init.tag || '';
-    this.content = typeof init.content !== 'undefined' ? init.content : '';
+    this.content = typeof init.content !== 'undefined' && init.content ? init.content : '';
     this.type = init.type || 'par';
     this.classes = init.classes || {};
     if (Array.isArray(this.classes)) this.classes = {};
@@ -333,11 +347,12 @@ class BookBlock {
     }
 
     this.audioHash = init.audioHash || null;
-    
+
     this.trimmed_silence = init.trimmed_silence;
     this.pause_before = init.pause_before;
     this.sync_changes = init.sync_changes || [];// changes from synschronization
     this.audio_quality = init.audio_quality || '';
+    this.wordsRange = init.wordsRange || {};
   }
 
   clean() {
@@ -632,13 +647,15 @@ class BookBlock {
   }
 
   getAudiosrc(ver = false, full = true) {
+    let path;
     if (!ver || !this.audiosrc_ver) {
-      return this.audiosrc;
+      path = this.audiosrc;
+    } else  {
+      path =
+        typeof this.audiosrc_ver[ver] === 'undefined'
+          ? this.audiosrc
+          : this.audiosrc_ver[ver];
     }
-    let path =
-      typeof this.audiosrc_ver[ver] === 'undefined'
-        ? this.audiosrc
-        : this.audiosrc_ver[ver];
     if (!path) {
       return false;
     }
@@ -902,6 +919,14 @@ class BookBlock {
     if (typeof val !== 'undefined') this.classes[classVal] = val;
     if (val === '') delete this.classes[classVal];
   }
+  
+  hasClass(type, val) {
+    if (!Array.isArray(val)) {
+      return this.classes instanceof Object && this.classes[type] && this.classes[type] === val;
+    } else {
+      return this.classes instanceof Object && val.includes(this.classes[type]);
+    }
+  }
 
   set(field, value) {
     if (!this.history[field]) {
@@ -974,7 +999,7 @@ class BookBlock {
     });
     return part ? true : false;
   }
-  
+
   getIsSplittedBlock() {
     //Vue.prototype.globalJobInfo.id
     if (this.voicework === 'narration' && !Vue.prototype.globalJobInfo.text_cleanup && Array.isArray(this.parts) && this.parts.length > 1 && !(Vue.prototype.globalJobInfo.mastering || Vue.prototype.globalJobInfo.mastering_complete)) {
@@ -982,11 +1007,11 @@ class BookBlock {
     }
     return false;
   }
-  
+
   setUpdated(val) {
     this.updated = val;
   }
-  
+
   setPauseBefore(val) {
     this.pause_before = val;
   }
@@ -995,12 +1020,35 @@ class BookBlock {
       this.parts[partIdx].content_changed = value;
     }
   }
-  addFootnote(pos) {
-    this.footnotes.splice(pos, 0, new FootNote({}));
+  addFootnote(pos, data = {}) {
+    this.footnotes.splice(pos, 0, new FootNote(data));
     this.setChanged(true);
   }
   setChanged(val) {
     this.isChanged = val;
+  }
+  
+  hasChangedPart() {
+    if (Array.isArray(this.parts) && this.parts.length > 0) {
+      let p = this.parts.find(p => {
+        return p.isChanged || p.isAudioChanged;
+      });
+      return p ? true : false;
+    }
+    return false;
+  }
+  clearHistory() {
+    this.history = {};
+  }
+  clearPartHistory(partIdx) {
+    Object.keys(this.history).forEach(k => {
+      if (k.indexOf(`parts.${partIdx}`) === 0) {
+        delete this.history[k];
+      }
+    });
+  }
+  getContent() {
+    return this.content;
   }
 }
 
@@ -1023,6 +1071,7 @@ class FootNote {
   constructor(init) {
     this.content = init.content || '<p></p>';
     this.voicework = init.voicework || 'no_audio';
+    this.language = init.language || '';
   }
 }
 

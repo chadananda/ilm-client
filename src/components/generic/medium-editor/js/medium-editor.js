@@ -1578,6 +1578,23 @@ MediumEditor.extensions = {};
 
         replaceStringAt: function (input, position, replace) {
             return input.substring(0, position) + replace + (position >= input.length ? '' : input.substring(position + 1));
+        },
+
+        insertTextAtCursor: function (text) {
+            if (text === ' ') {
+                text = '\u00A0';// insert &nbsp;, otherwise it can be ignored
+            }
+            let selection = window.getSelection(),
+            range = selection.getRangeAt(0),
+            node = document.createTextNode(text);
+            range.deleteContents();
+            range.insertNode(node);
+
+            for (let position = 0; position !== text.length; position++) {
+                selection.modify('move', 'right', 'character');
+            }
+            node.parentNode.normalize();// merge neighbour text elements
+            //console.log(rootNode);
         }
     };
 
@@ -6981,6 +6998,16 @@ MediumEditor.extensions = {};
                 }
             }
             return false;
+        } else {
+            let element = document.getSelection().anchorNode,
+            rootNode = element.parentNode;
+            while (rootNode.nodeName !== 'DIV') {
+                rootNode = rootNode.parentNode;
+            }
+            let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line']);
+            if (isList) {// when adding content to contenteditable element with style whitespace: pre-line, browser removes line breaks
+                return false;
+            }
         }
         return false;
     }
@@ -7037,7 +7064,7 @@ MediumEditor.extensions = {};
             } else if (element.parentNode.nodeName === 'DIV') {// click inside usual text node
                 if (isList) {
                     element.nodeValue = selection + br + (afterSelection.length > 0 || element.nextSibling || selection.match(new RegExp(`${br}$`)) ? afterSelection : br);
-                    MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 ? selection.length + 1 : selection.length + 1);
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, element, afterSelection.length === 0 ? selection.length : selection.length);
                 } else {
                     if (element.nodeName === 'BR') {
                         //console.log('HERE1');
@@ -7047,7 +7074,9 @@ MediumEditor.extensions = {};
                         let partOne = document.createTextNode(selection),
                         partTwo = document.createElement('br'),
                         partThree = document.createTextNode(afterSelection);
-                        if (afterSelection.trim().length === 0 && !element.nextSibling) {
+                        if (selection.trim().length === 0 && afterSelection.trim().length === 0 ) {
+                            parentNode.insertBefore(partTwo, element);
+                        } else if (afterSelection.trim().length === 0 && !element.nextSibling) {
                             let partFour = document.createElement('br');
                             parentNode.replaceChild(partFour, element);
                             parentNode.insertBefore(partTwo, partFour);
@@ -7066,6 +7095,9 @@ MediumEditor.extensions = {};
                 }
             } else {// click inside text node, which parent is not main div and not <w>, e.g. <i>Some text f<u>o<ENTER_HERE>r</u> line <ENTER_HERE>br<u>e</u>ak testing.</i>
                 //console.log(element.parentNode.nodeName);
+                if (parentNode.innerText && parentNode.innerText.length > 0 && selection.trim().length === 0 && afterSelection.trim().length === 0) {
+                    selection = parentNode.innerText;
+                }
                 let baseNode = parentNode.parentNode,
                 partOne = document.createTextNode(selection),
                 containerOne = document.createElement(parentNode.nodeName),
@@ -7127,13 +7159,25 @@ MediumEditor.extensions = {};
                     baseNode.replaceChild(partTwo, parentNode);
                     containerOne.appendChild(partOne);
                     baseNode.insertBefore(containerOne, partTwo);
-                    MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
+                    let nextSibling = partTwo.nextSibling;
+                    if (!nextSibling && partTwo.parentNode.nodeName !== 'DIV' && partTwo.parentNode.nextSibling) {
+                        nextSibling = partTwo.parentNode.nextSibling;
+                    }
+                    let moveTo;
+                    if (nextSibling) {
+                        moveTo = nextSibling.childNodes.length > 0 ? nextSibling.childNodes[0] : nextSibling;
+                    } else {
+                        moveTo = partTwo;
+                    }
+                    MediumEditor.selection.moveCursor(this.options.ownerDocument, moveTo, 0);
+                    //MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo.nextSibling ? partTwo.nextSibling : partTwo, 0);
                     //console.log('HERE5');// end of block + <br><br> - cursor not moved
                     //console.log(partOne, partTwo);
-                    if (!partTwo.nextSibling) {
+                    if (!nextSibling) {
                         let partThree = partTwo.cloneNode();
                         baseNode.insertBefore(partThree, partTwo);
                         //console.log('HERE6');
+                        //MediumEditor.selection.moveCursor(this.options.ownerDocument, partTwo, 0);
                     }
                 }
             }
@@ -7146,6 +7190,25 @@ MediumEditor.extensions = {};
             });
 
             rootNode.dispatchEvent(eventInput);// run event for the element events handling
+        } else {
+            let element = document.getSelection().anchorNode,
+            rootNode = element.parentNode;
+            while (rootNode.nodeName !== 'DIV') {
+                rootNode = rootNode.parentNode;
+            }
+            let isList = MediumEditor.util.isElementWhitespaceStyle(rootNode, ['pre-line']);
+            if (isList) {// when adding content to conteneditable element with style whitespace: pre-line browser replaces line breaks
+                //console.log(MediumEditor.util.getKeyCode(event));
+                MediumEditor.util.insertTextAtCursor(String.fromCharCode(MediumEditor.util.getKeyCode(event)));
+                event.preventDefault();
+                var eventInput = new Event('input', {
+                    bubbles: true,
+                    cancelable: true
+                });
+
+                rootNode.dispatchEvent(eventInput);// run event for the element events handling
+                return false;
+            }
         }
     }
 
