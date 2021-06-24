@@ -1312,6 +1312,14 @@
             }, 100)
           }
         }
+      },
+      "currentBookid": {
+        handler(val) {
+          this.selections = [];
+          this.playing = false;
+          this.renaming = false;
+          this.audioOpening = false;
+        }
       }
     }
   }
