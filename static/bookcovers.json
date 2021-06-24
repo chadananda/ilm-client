@@ -14,7 +14,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/2ecc71",
+    "src": "/static/bookcovers/90x115/2ecc71.png",
     "title": {
       "text": "Sample Title",
       "top": 10,
@@ -28,7 +28,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/1abc9c",
+    "src": "/static/bookcovers/90x115/1abc9c.png",
     "title": {
       "text": "Sample Title",
       "top": 10,
@@ -42,7 +42,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/2ecc71",
+    "src": "/static/bookcovers/90x115/2ecc71.png",
     "title": {
       "text": "Sample Title",
       "top": 10,
@@ -56,7 +56,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/1abc9c",
+    "src": "/static/bookcovers/90x115/1abc9c.png",
     "title": {
       "text": "Sample Title",
       "top": 10,
@@ -70,7 +70,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/2ecc71",
+    "src": "/static/bookcovers/90x115/2ecc71.png",
     "title": {
       "text": "Sample Title",
       "top": 10,
@@ -84,7 +84,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/1abc9c",
+    "src": "/static/bookcovers/90x115/1abc9c.png",
     "title": {
       "text": "Sample Title",
       "top": 10,
@@ -98,7 +98,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/f1c40f",
+    "src": "/static/bookcovers/90x115/f1c40f.png",
     "title": {
       "text": "Sample Title",
       "top": 10,
@@ -112,7 +112,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/f39c12",
+    "src": "/static/bookcovers/90x115/f39c12.png",
     "title": {
       "text": "Sample Title",
       "top": 10,
@@ -126,7 +126,7 @@
       "scale": 1
     }
   }, {
-    "src": "https://placehold.it/90x115/e67e22",
+    "src": "/static/bookcovers/90x115/e67e22.png",
     "title": {
       "text": "Sample Title",
       "top": 10,

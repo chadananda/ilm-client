@@ -3239,5 +3239,16 @@ div.merge-subblocks {
    mask-image: url(/static/merge-blocks.svg);
    cursor: pointer;
 }
+.circle-preloader {
+  background: url(/static/preloader-snake-transparent-tiny.gif);
+  display: inline-block;
+  width: 19px;
+  height: 19px;
+  background-size: 19px;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: absolute;
+  left: 0px;
+}
 
 </style>

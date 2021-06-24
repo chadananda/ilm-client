@@ -240,6 +240,7 @@ export const store = new Vuex.Store({
     updateAudiobookProgress: false,
     coupletSeparator: '',
     selectedBlocks: [],
+    updatingNumeration: false
   },
 
   getters: {
@@ -522,6 +523,9 @@ export const store = new Vuex.Store({
     },
     selectedBlocks: state => {
       return state.selectedBlocks;
+    },
+    updatingNumeration: state => {
+      return state.updatingNumeration;
     }
   },
 
@@ -2310,8 +2314,10 @@ export const store = new Vuex.Store({
       let rid = encodeURIComponent(params.rid);
       let bookId = encodeURIComponent(params.bookId);
       let req = state.API_URL + `books/blocks/num/${bookId}/${rid}`;
+      state.updatingNumeration = true;
       return axios.put(req, params)
       .then((response) => {
+        state.updatingNumeration = false;
         if (response.data.updated && response.data.updated > 0) {
           let block = state.storeListO.getBlockByRid(params.rid);
           if (block) {

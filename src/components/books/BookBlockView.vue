@@ -126,12 +126,13 @@
                   <div v-if="isNumbered"
                     :class="['parnum-row', {'-locked': blockO.isManual==true}]">
 
-                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='header'"
-                      @input="setNumVal" v-model="blockO.secnum"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly || updatingNumeration ? 'disabled' : false" v-if="block.type=='header'"
+                      v-on:change="setNumVal" v-model="blockO.secnum"
                       class="num" type="text" maxlength="12" size="12"/>
-                    <input :disabled="!allowEditing || proofreadModeReadOnly ? 'disabled' : false" v-if="block.type=='par'"
-                      @input="setNumVal" v-model="blockO.parnum"
+                    <input :disabled="!allowEditing || proofreadModeReadOnly || updatingNumeration ? 'disabled' : false" v-if="block.type=='par'"
+                      v-on:change="setNumVal" v-model="blockO.parnum"
                       class="num" type="text" maxlength="12" size="12"/>
+                    <div class="circle-preloader" v-if="updatingNumeration"></div>
 
                   </div>
                   <!--<div v-else class="parnum-row"></div>-->
@@ -1126,7 +1127,8 @@ export default {
           currentBookCounters: 'currentBookCounters',
           audioTasksQueue: 'audioTasksQueue',
           audioEditorLockedSimultaneous: 'audioEditorLockedSimultaneous',
-          blockLockedSimultaneous: 'blockLockedSimultaneous'
+          blockLockedSimultaneous: 'blockLockedSimultaneous',
+          updatingNumeration: 'updatingNumeration'
       }),
     ...mapGetters('uploadImage', {
       tempImage: 'file'
