@@ -190,6 +190,7 @@ export default {
           tasks_list.push(Object.assign({}, this.tc_userTasks.list[jobId].tasks[_t]));
           //detect priority:
           if (this.priorityTasks.includes(this.tc_userTasks.list[jobId].tasks[_t].type)){
+            if (priority > 1) priority_secondary = 0; //ILM-3913
             priority = 1;
             priority_secondary++;
           } else if (this.tc_userTasks.list[jobId].tasks[_t].type == 'text-cleanup'){
