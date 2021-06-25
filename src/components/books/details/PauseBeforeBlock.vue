@@ -136,13 +136,14 @@
               if (v === 'none') {
                 v = 0;
               }
-              return v;
+              return this.parseFloatToFixed(v);
             });
           }
         }
         this.range = range.sort((a, b) => {
-          return parseFloat(a) > parseFloat(b) ? 1 : -1;
+          return a > b ? 1 : -1;
         });
+        //console.log('recalc range', this.pause, this.range[0], reset_pause);
         if (this.range.length === 1 && this.pause !== this.range[0] && reset_pause) {
           this.pauseUpdateEmitted = false;
           this.pause = this.range[0];
@@ -158,6 +159,7 @@
           val = 0;
         }
         let changedVal = this.pause != val;
+        //console.log('reset', this.pause, val);
         this.pause = val;
         if (!changedVal) {
           this.pauseUpdateEmitted = true;
