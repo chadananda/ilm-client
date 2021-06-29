@@ -576,69 +576,71 @@
                   limit: {x:[0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
                   onDrag: function(element, x, y, event) {
                     //console.log(event.buttons, event.which)
-                    if (!event.buttons) {
-                      self.dragRight.stop();
-                      event.preventDefault();
-                      self._showSelectionBorders();
-                      return false;
-                    }
-                    self.wordSelectionMode = false;
-                    if ($('[id="resize-selection-left"]').position().left >= x) {
-                      let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
-                      self.selection.start = start-1;
-                      self._setSelectionOnWaveform();
-                      return false;
-                    }
-                    let startX = 0;
-                    if (self.selection && typeof self.selection.start !== 'undefined') {
-                      startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
-                    } else {
-                      startX = $('[id="resize-selection-left"]').position().left;
-                    }
-                    if ($('.selection.segment').length > 0) {
-                      $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
-                    }
+                    self.pause()
+                      .then(() => {
+                        if (!event.buttons) {
+                          self.dragRight.stop();
+                          event.preventDefault();
+                          self._showSelectionBorders();
+                          return false;
+                        }
+                        self.wordSelectionMode = false;
+                        if ($('[id="resize-selection-left"]').position().left >= x) {
+                          let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                          self.selection.start = start-1;
+                          self._setSelectionOnWaveform();
+                          return false;
+                        }
+                        let startX = 0;
+                        if (self.selection && typeof self.selection.start !== 'undefined') {
+                          startX = self.selection.start / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
+                        } else {
+                          startX = $('[id="resize-selection-left"]').position().left;
+                        }
+                        if ($('.selection.segment').length > 0) {
+                          $('.selection.segment').css('width', x - $('.selection.segment')[0].offsetLeft)
+                        }
 
-                    if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
-                      self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                      if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
-                        self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-                      } else {
-                        let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                        self.plEventEmitter.emit('select', self.selection.start, startSec);
-                      }
-                    }
-                    //self.cursorPosition = self.selection.start;
+                        if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
+                          self.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                          if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
+                            self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
+                          } else {
+                            let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                            self.plEventEmitter.emit('select', self.selection.start, startSec);
+                          }
+                        }
+                        //self.cursorPosition = self.selection.start;
+                      })
                   }
                 })
                 self.dragLeft = new Draggable (document.getElementById('resize-selection-left'), {
                   limit: {x: [0, $('.channel-0').length ? $('.channel-0').width() : 10000], y: [0, 0]},
                   onDrag: function(element, x, y, event) {
-                    self.wordSelectionMode = false;
-                    if ($('[id="resize-selection-right"]').position().left <= x) {
-                      let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
-                      self.selection.end = start+1;
-                      self._setSelectionOnWaveform();
-                      return false;
-                    }
-                    $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
-                    $('.selection.segment').css('left', x - 5)
-                    let startX = 0;
-                    if (self.selection && typeof self.selection.end !== 'undefined') {
-                      startX = self.selection.end / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
-                    } else {
-                      startX = $('[id="resize-selection-right"]').position().left;
-                    }
-                    if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
-                      self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                      if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
-                        self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-                      } else {
-                        let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                        self.plEventEmitter.emit('select', startSec, self.selection.end);
-                      }
-                    }
-                    self.cursorPosition = self.selection.start;
+                    self.pause()
+                      .then(() => {
+                        self.wordSelectionMode = false;
+                        if ($('[id="resize-selection-right"]').position().left <= x) {
+                          let start = x * self.audiosourceEditor.samplesPerPixel /  self.audiosourceEditor.sampleRate;
+                          self.selection.end = start+1;
+                          self._setSelectionOnWaveform();
+                          return false;
+                        }
+                        $('.selection.segment').css('width', $('[id="resize-selection-right"]').position().left - $('[id="resize-selection-left"]').position().left)
+                        $('.selection.segment').css('left', x - 5)
+                        let startX = 0;
+                        if (self.selection && typeof self.selection.end !== 'undefined') {
+                          startX = self.selection.end / (self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate);
+                        } else {
+                          startX = $('[id="resize-selection-right"]').position().left;
+                        }
+                        if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
+                          self.audiosourceEditor.activeTrack.stateObj.startX = startX;
+                          let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                          self.plEventEmitter.emit('select', startSec, self.selection.end);
+                        }
+                        self.cursorPosition = self.selection.start;
+                      });
                   }
                 })
                 if (self.mode === 'file') {
