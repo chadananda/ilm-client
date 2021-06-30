@@ -603,12 +603,8 @@
 
                         if (typeof self.audiosourceEditor.activeTrack !== 'undefined') {
                           self.audiosourceEditor.activeTrack.stateObj.startX = startX;
-                          if (typeof self.audiosourceEditor.activeTrack.stateObj.emitSelection !== 'undefined') {
-                            self.audiosourceEditor.activeTrack.stateObj.emitSelection(x);
-                          } else {
-                            let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
-                            self.plEventEmitter.emit('select', self.selection.start, startSec);
-                          }
+                          let startSec = x * self.audiosourceEditor.samplesPerPixel / self.audiosourceEditor.sampleRate;
+                          self.plEventEmitter.emit('select', self.selection.start, startSec);
                         }
                         //self.cursorPosition = self.selection.start;
                       })
