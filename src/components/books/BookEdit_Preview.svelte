@@ -2,34 +2,21 @@
 
 <div class="bview-container">
   {#if intBlocks.length > 0}
-    <!--<VirtualList items={intBlocks} let:item
-      bind:start={startBlockIdx} bind:end={endBlockIdx}
-      bind:startFrom={vListStartFrom} bind:scrollTo={vListScrollTo}
-      bind:startReached={startReached} bind:endReached={endReached} >
-        <div class='card'>
-        {item.idx}->{item.blockRid}->{item.blockId}<br/>
-        <BookBlockDisplay
-          blockRid="{item.blockRid}"
-          block="{item.blockView}"
-          blockListObj="{item}"
-          lang="{lang}"
-        />
-        </div>
-    </VirtualList>-->
 
     <VirtualScrollList
       bind:this={list}
       data={intBlocks}
       key="blockId"
       let:data
+      on:scroll="{setStartIdIdx}"
     >
 
-    <div class='card'>
-      <BookBlockPreview {data}/>
-    </div>
+      <!--<div class='card'>-->
+        <BookBlockPreview {data}/>
+      <!--</div>-->
+
 
     </VirtualScrollList>
-
 
   {:else}
     <div class="content-process-run preloader-loading"></div>
@@ -43,11 +30,13 @@
   //import VirtualList from '../generic/VirtualList.svelte';
   import VirtualScrollList    from "../generic/svelte-virtual-scroll-list"
   //import BookBlockDisplay from './BookBlockDisplay.svelte';
-  import BookBlockPreview from './BookBlockPreview.svelte'
+  import BookBlockPreview from './BookBlockPreview.svelte';
 
-  export let lang = 'en';
+  export let mode = '';
   export let parlistO = {};
   export let parlist = {};
+  export let meta = {};
+  export let jobInfo = {};
   export let startId;
   export let hotkeyScrollTo = false;
   export let updBlocks = [];
@@ -55,6 +44,7 @@
   let list;
 
   let blocks = parlistO.listObjs;
+  const lang = meta.language || 'en';
   let startBlockIdx = 0;
   let endBlockIdx = 0;
   let vListStartFrom = false;
@@ -65,6 +55,10 @@
   let fntCounter = 0;
   let intBlocks = [];
   let itemHeight = false;
+
+  const setStartIdIdx = (a)=>{
+    console.log(`setStartIdIdx: `, a);
+  }
 
   const dispatch = createEventDispatcher();
 
@@ -182,6 +176,31 @@
     return false;
   }
 
+  const isSplittedBlock = (block, inJobInfo) => {
+      if (block.voicework === 'narration' && !inJobInfo.text_cleanup && Array.isArray(block.parts) && block.parts.length > 1 && !(inJobInfo.mastering || inJobInfo.mastering_complete)) {
+        return true;
+      }
+      return false;
+  }
+
+  const getBlockLang = (block, inMeta) => {
+    if (block.language && block.language.length) {
+      return block.language;
+    } else {
+      return inMeta.language;
+    }
+  }
+
+  const parnumComp = (block) => {
+    if (block.type == 'header' && block.isNumber && !block.isHidden) {
+      return block.secnum.toString();
+    }
+    if (block.type == 'par' && block.isNumber && !block.isHidden) {
+      return block.parnum.toString();
+    }
+    return '';
+  }
+
   const blockView = (blockRid) => {
     let block = blockFull(blockRid);
     let blockO = parlistO.getBlockByRid(blockRid);
@@ -193,9 +212,10 @@
           return process.env.ILM_API + block.illustration + '?' + timestamp;
         }
       }
+      viewObj.mode = mode;
       viewObj.getClass = block.getClass;
-      viewObj.blockid = block.blockid;
-      viewObj.classes = block.classes;
+      viewObj.blockId = block.blockid;
+      viewObj.classes = block.getClass(viewObj.mode);
       viewObj.type = block.type;
       viewObj.isNumber = blockO.isNumber;
       viewObj.isHidden = blockO.isHidden;
@@ -205,6 +225,10 @@
       viewObj.illustration_height = block.illustration_height;
       viewObj.illustration_width = block.illustration_width;
       viewObj.description = block.description;
+      viewObj.voicework = block.voicework;
+      viewObj.language = getBlockLang(block, meta);
+      viewObj.isSplitted = isSplittedBlock(block, jobInfo);
+      viewObj.parnumComp = parnumComp(block);
 
       //viewObj.content = block.content
 
@@ -241,6 +265,18 @@
         }
       );
 
+      viewObj.blockParts = viewObj.isSplitted ? block.parts : [
+        {
+          content: viewObj.content,
+          blockId: viewObj.blockId,
+          audiosrc: block.audiosrc,
+          audiosrc_ver: block.audiosrc_ver,
+          manual_boundaries: block.manual_boundaries
+        }
+      ];
+
+      viewObj.isCompleted = false;
+
       viewObj.viewOutPaddings = getOutPaddings(block);
       viewObj.viewIllustration = getIllustration(block);
       viewObj.viewParnum = getParnum(viewObj);
@@ -259,13 +295,12 @@
     width: 100%;
   }
 
-  .card {
+/*  .card {
     position: relative;
-    /*min-height: 5em;*/
   }
 
   .card::after {
     clear: both;
     display: block;
-  }
+  }*/
 </style>

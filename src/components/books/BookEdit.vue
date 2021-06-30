@@ -4,24 +4,25 @@
 
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
-
-        <SvelteBookPreviewInVue
-          v-if="isBookMounted"
-          :parlistO="parlistO"
-          :parlist="parlist"
-          :lang="meta.language"
-          :startId="startId"
-          :updBlocks="previewUpdBlocks"
-          @setStart="setStartIdIdx"
-          @setEdge="scrolledToEdge"
-          ref="viewBlocks"
-        />
-        <div v-else class="content-process-run preloader-loading"></div>
-
+    <SvelteBookPreviewInVue
+      v-if="isBookMounted"
+      class="content-background"
+      :parlistO="parlistO"
+      :parlist="parlist"
+      :mode="mode"
+      :meta="meta"
+      :jobInfo="currentJobInfo"
+      :startId="startId"
+      :updBlocks="previewUpdBlocks"
+      @setStart="setStartIdIdx"
+      @setEdge="scrolledToEdge"
+      ref="viewBlocks"
+    />
+    <div v-else class="content-process-run preloader-loading"></div>
 
   </div>
   <!--<div class="container-block">-->
-
+   <!--style="display: none"-->
   <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
