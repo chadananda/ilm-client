@@ -4638,8 +4638,8 @@ Save text changes and realign the Block?`,
             if (recollect) {
               this.$root.$emit('from-block-edit:set-style');
             }
+            this.block.sync_changes = [];
           }
-          this.block.sync_changes = [];
         },
         deep: true
       },
