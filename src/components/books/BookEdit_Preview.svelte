@@ -4,7 +4,7 @@
   {#if intBlocks.length > 0}
 
     <VirtualScrollList
-      bind:this={list}
+      bind:this={virtualPreviewlist}
       data={intBlocks}
       key="blockId"
       let:data
@@ -41,7 +41,7 @@
   export let hotkeyScrollTo = false;
   export let updBlocks = [];
 
-  let list;
+  let virtualPreviewlist;
 
   let blocks = parlistO.listObjs;
   const lang = meta.language || 'en';
@@ -56,8 +56,10 @@
   let intBlocks = [];
   let itemHeight = false;
 
-  const setStartIdIdx = (a)=>{
-    console.log(`setStartIdIdx: `, a);
+  const setStartIdIdx = (event)=>{
+    console.log(`setStartIdIdx: `, event);
+    console.log(`virtualPreviewlist: `, virtualPreviewlist);
+    console.log(`virtualPreviewlist.getOffset(): `, virtualPreviewlist.getOffset());
   }
 
   const dispatch = createEventDispatcher();
