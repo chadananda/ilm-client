@@ -8,7 +8,7 @@
       data={intBlocks}
       key="blockId"
       let:data
-      on:scroll="{setStartIdIdx}"
+      on:scroll="{vsListScroll}"
     >
 
       <!--<div class='card'>-->
@@ -56,38 +56,56 @@
   let intBlocks = [];
   let itemHeight = false;
 
-  const setStartIdIdx = (event)=>{
-    console.log(`setStartIdIdx: `, event);
-    console.log(`virtualPreviewlist: `, virtualPreviewlist);
-    console.log(`virtualPreviewlist.getOffset(): `, virtualPreviewlist.getOffset());
-  }
-
   const dispatch = createEventDispatcher();
 
-  $: scrolledTo(startBlockIdx);
-  function scrolledTo(startBlockIdx) {
-    if (blocks[startBlockIdx]) {
-      if (vListStartFrom) {
-        vListStartFrom = false;
-        return;
-      }
-      if (vListScrollTo) {
-        vListScrollTo = false;
-        return;
-      }
-      dispatch('setStart', {
-        blockIdx: startBlockIdx,
-        blockId: blocks[startBlockIdx].blockId,
-        blockRid: blocks[startBlockIdx].blockRid
-      });
-    }
+  const vsListScroll = (event)=>{
+    //console.log(`vsListScroll: `, event);
+    //console.log(`virtualPreviewlist: `, virtualPreviewlist);
+    //console.log(`virtualPreviewlist.getOffset(): `, virtualPreviewlist.getOffset());
+    dispatch('onScroll',
+      Object.assign(
+        event.detail.range,
+        {
+          offset: virtualPreviewlist.getOffset(),
+          height: virtualPreviewlist.getClientSize()
+        }
+      )
+    );
   }
+
+//   $: scrolledTo(startBlockIdx);
+//   function scrolledTo(startBlockIdx) {
+//     if (blocks[startBlockIdx]) {
+//       if (vListStartFrom) {
+//         vListStartFrom = false;
+//         return;
+//       }
+//       if (vListScrollTo) {
+//         vListScrollTo = false;
+//         return;
+//       }
+//       dispatch('setStart', {
+//         blockIdx: startBlockIdx,
+//         blockId: blocks[startBlockIdx].blockId,
+//         blockRid: blocks[startBlockIdx].blockRid
+//       });
+//     }
+//   }
 
   $: update(updBlocks);
   function update(updBlocks) {
     console.log(`updBlocks:`, updBlocks);
     for (let i = 0; i < blocks.length; i++) {
       fntCounter = 0;
+      if (updBlocks.indexOf(blocks[i].blockId) > -1) {
+        console.log(`blocks[${i}]: `, blocks[i]);
+
+
+//         intBlocks[i] = Object.assign(intBlocks[i], {
+//           blockView: blockView(blocks[i].blockRid)
+//         })
+      }
+
       blocks[i].blockView = blockView(blocks[i].blockRid);
       blocks[i].visible = blocks[i].loaded;
       blocks[i].idx = i;
@@ -96,6 +114,7 @@
       }
     }
     intBlocks = blocks;
+    //updBlocks = [];
   }
 
   $: scrolledToEdge(startReached, endReached);

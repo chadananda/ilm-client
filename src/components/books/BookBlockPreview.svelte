@@ -26,7 +26,7 @@
               {#if blockView.mode !== 'narrate'}
                 <div class="table-row-flex controls-top">
                   <div class="par-ctrl -par-num">
-                    <label class="par-num" class:has-num="{blockView.viewParnum.length}">{blockView.viewParnum}<input style="display:none" type="text"/></label>
+                    <label class="par-num" class:has-num="{blockView.viewParnum.length}">{blockView.viewParnum}-/-{block.blockId}<input style="display:none" type="text"/></label>
                   </div>
                 </div>
                 <div class="table-row-flex controls-top">

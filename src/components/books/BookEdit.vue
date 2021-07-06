@@ -14,9 +14,9 @@
       :jobInfo="currentJobInfo"
       :startId="startId"
       :updBlocks="previewUpdBlocks"
+      @onScroll="testScroll"
       @setStart="setStartIdIdx"
       @setEdge="scrolledToEdge"
-      ref="viewBlocks"
     />
     <div v-else class="content-process-run preloader-loading"></div>
 
@@ -300,7 +300,7 @@ export default {
 
     refreshPreviewTmpl(idsArray) {
       //console.log('refreshPreviewTmpl', idsArray);
-      if (this.$refs.viewBlocks) {
+      //if (this.$refs.viewBlocks) {
         this.previewUpdBlocks = [...idsArray];
 //         this.$refs.viewBlocks.forEach((blockRef, idx)=>{
 //           if (idsArray.indexOf(blockRef.blockId) > -1) {
@@ -309,7 +309,7 @@ export default {
 //           }
 //         })
 
-      }
+      //}
     },
 
     loadBookMeta() {
@@ -1701,10 +1701,27 @@ export default {
     checkVisible(elm, viewHeight = false) {
       var rect = elm.getBoundingClientRect();
       if (!viewHeight) viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-      return !(rect.bottom < initialTopOffset+30 || rect.top - viewHeight >= 0);
+      //return !(rect.bottom < initialTopOffset+30 || rect.top - viewHeight >= 0);
+      return !(rect.bottom < (-200 + initialTopOffset) || rect.top - viewHeight >= 200);
+    },
+
+    checkVisibleItems(viewHeight = false) {
+      const previewItems = [...document.querySelectorAll('.virtual-scroll-item')];
+      return previewItems
+      .filter((previewDomItem)=>{
+        return this.checkVisible(previewDomItem, viewHeight);
+      })
+      .map((previewDomItem)=>{
+        const wrapper = previewDomItem.firstChild;
+        return {
+          id: wrapper.getAttribute('id'),
+          rid: wrapper.dataset.rid
+        }
+      })
     },
 
     updatePositions() {
+      console.log(`updatePositions: `, this.$refs.contentScrollWrapRef.scrollTo);
       if (this.$refs.contentScrollWrapRef) {
         let currScroll = this.$refs.contentScrollWrapRef.scrollTop;
         var editors = document.getElementsByClassName('medium-editor-toolbar-active');
@@ -1715,13 +1732,21 @@ export default {
       }
     },
 
+    testScroll: _.debounce(function (ev) {
+      console.log(`testScroll: `, ev.detail);
+      this.screenTop = initialTopOffset - ev.detail.offset;
+      const visibleBlocks = this.checkVisibleItems(ev.detail.height)
+      console.log(`testScroll.visibleBlocks: `, visibleBlocks);
+    }, 10),
+
     smoothHandleScroll: _.debounce(function (ev) {
-      ev.stopPropagation();
-      //console.log('smoothHandleScroll', ev);
-      this.handleScroll();
+//       ev.stopPropagation();
+//       console.log('smoothHandleScroll', ev);
+//       this.handleScroll();
     }, 100),
 
     handleScroll(force = false) {
+      console.log('handleScroll', (new Date()).toJSON())
       if (!this.$refs.viewBlocks || !this.$refs.viewBlocks.length) {
         return false;
       }
@@ -2856,8 +2881,8 @@ export default {
     display:flex;
 
     /*position: relative;*/
-    overflow-y: auto; /*hidden;*/
-    overflow-x: auto;
+    overflow-y: hidden; /*hidden;*/
+    overflow-x: hidden;
 
     &.recording-background {
       /*background-color: rgba(0,0,0,0.5);*/
