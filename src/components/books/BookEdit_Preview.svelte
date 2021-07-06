@@ -97,21 +97,23 @@
     console.log(`updBlocks:`, updBlocks);
     for (let i = 0; i < blocks.length; i++) {
       fntCounter = 0;
-      if (updBlocks.indexOf(blocks[i].blockId) > -1) {
-        console.log(`blocks[${i}]: `, blocks[i]);
-
-
-//         intBlocks[i] = Object.assign(intBlocks[i], {
-//           blockView: blockView(blocks[i].blockRid)
-//         })
-      }
+//       if (updBlocks.indexOf(blocks[i].blockId) > -1) {
+//         console.log(`blocks[${i}]: `, blocks[i]);
+//           intBlocks[i].blockView = blockView(blocks[i].blockRid);
+// //         blocks[i].visible = blocks[i].loaded;
+// //         blocks[i].idx = i;
+//
+// //         intBlocks[i] = Object.assign(intBlocks[i], {
+// //           blockView: blockView(blocks[i].blockRid)
+// //         })
+//       }
 
       blocks[i].blockView = blockView(blocks[i].blockRid);
-      blocks[i].visible = blocks[i].loaded;
-      blocks[i].idx = i;
-      if (startId && blocks[i].blockId == startId) {
-        startIdIdx = i;
-      }
+//       blocks[i].visible = blocks[i].loaded;
+//       blocks[i].idx = i;
+//       if (startId && blocks[i].blockId == startId) {
+//         startIdIdx = i;
+//       }
     }
     intBlocks = blocks;
     //updBlocks = [];
