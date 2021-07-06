@@ -23,7 +23,7 @@
               {#if data.blockView.mode !== 'narrate'}
                 <div class="table-row-flex controls-top">
                   <div class="par-ctrl -par-num">
-                    <label class="par-num" class:has-num="{data.blockView.viewParnum.length}">{data.blockView.viewParnum}-/-{data.blockId}<input style="display:none" type="text"/></label>
+                    <label class="par-num" class:has-num="{data.blockView.viewParnum.length}">{data.blockView.viewParnum}<input style="display:none" type="text"/></label>
                   </div>
                 </div>
                 <div class="table-row-flex controls-top">
@@ -39,7 +39,8 @@
                 <div class="table-cell -content-wrapper">
 
                   {#if data.blockView.type === 'illustration'}
-                    <div class="table-body illustration-block">
+                    <div class="table-body illustration-block illustration">
+                    <div class="ilm-upload-image">
                       {#if data.blockView.viewIllustration}
                         {#if data.blockView.viewIllustration}
                           <img alt="{data.blockId}" class="{data.blockView.classes}"
@@ -52,21 +53,23 @@
                             <div class="bview-empty-image">No image</div>
                           </div>
                         {/if}
-                        <div class="table-row drag-uploader no-picture" >
+                        <div class="preview-ilm-file-upload"></div>
+                        <!--<div class="table-row drag-uploader no-picture" >
                           <div class="preview-container"></div>
-                        </div>
+                        </div>-->
                         <!--, {'__hidden': isChanged && !isIllustrationChanged}]
                         v-if="allowEditing"-->
-                        {#if data.blockView.description}
-                          <div class="table-row content-description {data.blockView.classes}">
-                            <div class="content-wrap-desc description">
-                              {@html data.blockView.description}
-                            </div>
-                          </div>
-                        {/if}
                       {/if}
                     </div>
+                    </div>
                     <!--<div class="table-body illustration-block">-->
+                    {#if data.blockView.description}
+                      <div class="table-row content-description {data.blockView.classes}">
+                        <div class="content-wrap-desc description">
+                          {@html data.blockView.description}
+                        </div>
+                      </div>
+                    {/if}
 
                   {:else if data.blockView.type === 'hr'}
                     <hr class="{data.blockView.classes}"/>

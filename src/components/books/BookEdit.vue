@@ -1,7 +1,7 @@
 <template>
 <div :class="['content-scroll-wrapper']"
-  v-hotkey="keymap" ref="contentScrollWrapRef" v-on:scroll.passive="smoothHandleScroll($event); updatePositions();">
-
+  v-hotkey="keymap" ref="contentScrollWrapRef">
+  <!--v-on:scroll.passive="smoothHandleScroll($event); updatePositions();"-->
   <div :class="['container-block back ilm-book-styles ilm-global-style', metaStyles]">
 
     <SvelteBookPreviewInVue
@@ -22,7 +22,7 @@
 
   </div>
   <!--<div class="container-block">-->
-   <!--style="display: none"-->
+
   <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
@@ -1715,7 +1715,8 @@ export default {
         const wrapper = previewDomItem.firstChild;
         return {
           id: wrapper.getAttribute('id'),
-          rid: wrapper.dataset.rid
+          rid: wrapper.dataset.rid,
+          top: wrapper.getBoundingClientRect().top
         }
       })
     },
@@ -1732,11 +1733,14 @@ export default {
       }
     },
 
-    testScroll: _.debounce(function (ev) {
-      console.log(`testScroll: `, ev.detail);
-      this.screenTop = initialTopOffset - ev.detail.offset;
+    testScroll: _.throttle(function (ev) {
+      //console.log(`testScroll: `, ev.detail);
+//       this.screenTop = initialTopOffset - (ev.detail.offset - ev.detail.padFront);
       const visibleBlocks = this.checkVisibleItems(ev.detail.height)
-      console.log(`testScroll.visibleBlocks: `, visibleBlocks);
+      //console.log(`testScroll.visibleBlocks: `, visibleBlocks, visibleBlocks[0].rid);
+      this.parlistO.setStartId(visibleBlocks[0].rid);
+      this.screenTop = visibleBlocks[0].top;// - initialTopOffset;
+      //console.log(`parlistO.idsViewArray(): `, this.parlistO.idsViewArray());
     }, 10),
 
     smoothHandleScroll: _.debounce(function (ev) {
@@ -2880,7 +2884,6 @@ export default {
 
     display:flex;
 
-    /*position: relative;*/
     overflow-y: hidden; /*hidden;*/
     overflow-x: hidden;
 
@@ -2921,7 +2924,6 @@ export default {
       }
       &.front {
         position: relative;
-        top: 0px;
         /*margin-left: -50%;*/
 
         .content-background {
@@ -3026,10 +3028,12 @@ export default {
     height: 100px;
   }
 
-  .table-row .illustration-block img {
+/*  .table-row .illustration-block img {
     border: solid white 2px;
+    border: none;
     max-width: 100%;
-  }
+    padding: 0 60px 2em;
+  }*/
 
   .content-wrap-desc.description {
     min-height: 30px;
@@ -3079,6 +3083,13 @@ export default {
         visibility: hidden;
       }
     }
+  }
+
+  .preview-ilm-file-upload {
+    height: 75px;
+    width: 80%;
+    margin: 24px auto;
+    background-color: lightgray;
   }
 }
 .ilm-block {

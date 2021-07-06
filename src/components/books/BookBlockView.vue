@@ -1455,9 +1455,9 @@ export default {
     }),
       getClassValue(elType,  elKey) {
         let objValues = {};
-        if (elType == 'type'){ 
+        if (elType == 'type'){
             objValues = BlockTypesAlias.type.values
-        } else if (elType == 'title'){ 
+        } else if (elType == 'title'){
             objValues = BlockTypesAlias.title.style.values
         } else if (elType == 'header') {
              objValues = BlockTypesAlias.header.level.values
@@ -3447,7 +3447,7 @@ Save text changes and realign the Block?`,
               this.block.content = this.$refs.blocks[0].clearBlockContent();
             }
             this.$forceUpdate();
-          } 
+          }
 
           if (type === 'type' && event && event.target) {
             this.block.type = event.target.value;
@@ -3819,7 +3819,7 @@ Save text changes and realign the Block?`,
 
         this.voiceworkUpdating = true;
 
-        
+
         return this.changeBlocksVoicework([this.block, this.voiceworkChange, this.voiceworkUpdateType])
           .then(response => {
             this.voiceworkUpdating = false;
@@ -5013,7 +5013,7 @@ Save text changes and realign the Block?`,
     .illustration-block {
       padding-bottom: 30px;
       img {
-        border: solid grey 2px;
+        /*border: solid grey 2px;*/
         /*max-height: 85vh;*/
         padding: 4px;
       }

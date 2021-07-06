@@ -94,7 +94,7 @@
 
   $: update(updBlocks);
   function update(updBlocks) {
-    console.log(`updBlocks:`, updBlocks);
+    //console.log(`updBlocks:`, updBlocks);
     for (let i = 0; i < blocks.length; i++) {
       fntCounter = 0;
 //       if (updBlocks.indexOf(blocks[i].blockId) > -1) {
@@ -196,7 +196,7 @@
         return block.parnum;
       }
     }
-    return false;
+    return '';
   }
 
   const isSplittedBlock = (block, inJobInfo) => {
