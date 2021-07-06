@@ -23,7 +23,8 @@
   </div>
   <!--<div class="container-block">-->
 
-  <div v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
+  <div v-on:wheel="scrollPreview($event)"
+    v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
         <div class="row content-scroll-item front"
@@ -1733,15 +1734,31 @@ export default {
       }
     },
 
-    testScroll: _.throttle(function (ev) {
-      //console.log(`testScroll: `, ev.detail);
-//       this.screenTop = initialTopOffset - (ev.detail.offset - ev.detail.padFront);
+    testScroll(ev) {
+      //this.screenTop = initialTopOffset - ev.detail.offset;
+      //this.resetScroll(ev);
       const visibleBlocks = this.checkVisibleItems(ev.detail.height)
-      //console.log(`testScroll.visibleBlocks: `, visibleBlocks, visibleBlocks[0].rid);
       this.parlistO.setStartId(visibleBlocks[0].rid);
-      this.screenTop = visibleBlocks[0].top;// - initialTopOffset;
-      //console.log(`parlistO.idsViewArray(): `, this.parlistO.idsViewArray());
-    }, 10),
+      this.screenTop = visibleBlocks[0].top;
+
+    },
+
+    resetScroll: _.debounce(function (ev) {
+      const visibleBlocks = this.checkVisibleItems(ev.detail.height);
+      this.parlistO.setStartId(visibleBlocks[0].rid);
+      this.screenTop = visibleBlocks[0].top;
+    }, 100),
+
+    scrollPreview(ev){
+      const viewContainer = document.querySelector('.bview-container > div');
+      /*Mouse wheel scrolled down*/
+      if (ev.deltaY > 0)
+        viewContainer.scrollTop += 50;
+
+      /*Mouse wheel scrolled up*/
+      else
+        viewContainer.scrollTop -= 50;
+    },
 
     smoothHandleScroll: _.debounce(function (ev) {
 //       ev.stopPropagation();
@@ -2920,11 +2937,14 @@ export default {
       width: 100%;
 
       &.back {
-        /*margin-right: -50%;*/
+        margin-right: -50%;
       }
       &.front {
         position: relative;
-        /*margin-left: -50%;*/
+        margin-left: -50%;
+        left: -15px;
+        padding-left: 15px;
+        opacity: 0.5;
 
         .content-background {
           background: white;

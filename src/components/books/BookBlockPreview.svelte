@@ -43,9 +43,11 @@
                     <div class="ilm-upload-image">
                       {#if data.blockView.viewIllustration}
                         {#if data.blockView.viewIllustration}
+                          <!--src="{data.blockView.viewIllustration}"-->
                           <img alt="{data.blockId}" class="{data.blockView.classes}"
-                          src="{data.blockView.viewIllustration}"
+                          src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
                           height="{data.blockView.illustration_height}"
+                          width="50"
                           data-width="{data.blockView.illustration_width}"
                           data-height="{data.blockView.illustration_height}"/>
                         {:else}
