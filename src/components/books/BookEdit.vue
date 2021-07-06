@@ -1707,7 +1707,7 @@ export default {
     },
 
     checkVisibleItems(viewHeight = false) {
-      const previewItems = [...document.querySelectorAll('.virtual-scroll-item')];
+      const previewItems = [...document.querySelectorAll('svelte-virtual-list-row')];
       return previewItems
       .filter((previewDomItem)=>{
         return this.checkVisible(previewDomItem, viewHeight);
@@ -1735,29 +1735,34 @@ export default {
     },
 
     testScroll(ev) {
+      //console.log(`testScroll: `, ev.detail);
       //this.screenTop = initialTopOffset - ev.detail.offset;
       //this.resetScroll(ev);
       const visibleBlocks = this.checkVisibleItems(ev.detail.height)
-      this.parlistO.setStartId(visibleBlocks[0].rid);
-      this.screenTop = visibleBlocks[0].top;
+      if (visibleBlocks.length) {
+        this.parlistO.setStartId(visibleBlocks[0].rid);
+        this.screenTop = visibleBlocks[0].top;
+      }
 
     },
 
     resetScroll: _.debounce(function (ev) {
-      const visibleBlocks = this.checkVisibleItems(ev.detail.height);
-      this.parlistO.setStartId(visibleBlocks[0].rid);
-      this.screenTop = visibleBlocks[0].top;
-    }, 100),
+      const visibleBlocks = this.checkVisibleItems(ev.detail.height)
+      if (visibleBlocks.length) {
+        this.parlistO.setStartId(visibleBlocks[0].rid);
+        this.screenTop = visibleBlocks[0].top;
+      }
+    }, 5),
 
     scrollPreview(ev){
-      const viewContainer = document.querySelector('.bview-container > div');
+      const viewContainer = document.querySelector('svelte-virtual-list-viewport');
       /*Mouse wheel scrolled down*/
       if (ev.deltaY > 0)
-        viewContainer.scrollTop += 50;
+        viewContainer.scrollTop += 60;
 
       /*Mouse wheel scrolled up*/
       else
-        viewContainer.scrollTop -= 50;
+        viewContainer.scrollTop -= 60;
     },
 
     smoothHandleScroll: _.debounce(function (ev) {

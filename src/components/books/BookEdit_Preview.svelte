@@ -3,20 +3,19 @@
 <div class="bview-container">
   {#if intBlocks.length > 0}
 
-    <VirtualScrollList
+    <VirtualList
       bind:this={virtualPreviewlist}
-      data={intBlocks}
-      key="blockId"
-      let:data
+      items={intBlocks}
+      let:item
       on:scroll="{vsListScroll}"
     >
 
       <!--<div class='card'>-->
-        <BookBlockPreview {data}/>
+        <BookBlockPreview {item}/>
       <!--</div>-->
 
 
-    </VirtualScrollList>
+    </VirtualList>
 
   {:else}
     <div class="content-process-run preloader-loading"></div>
@@ -27,8 +26,8 @@
 
 <script>
   import { /*beforeUpdate,*/ onMount, createEventDispatcher, tick } from 'svelte';
-  //import VirtualList from '../generic/VirtualList.svelte';
-  import VirtualScrollList    from "../generic/svelte-virtual-scroll-list"
+  import VirtualList from '../generic/VirtualList.svelte';
+  //import VirtualScrollList    from "../generic/svelte-virtual-scroll-list"
   //import BookBlockDisplay from './BookBlockDisplay.svelte';
   import BookBlockPreview from './BookBlockPreview.svelte';
 
@@ -66,8 +65,8 @@
       Object.assign(
         event.detail.range,
         {
-          offset: virtualPreviewlist.getOffset(),
-          height: virtualPreviewlist.getClientSize()
+          offset: 0,//virtualPreviewlist.getOffset(),
+          height: event.detail.clientHeight//virtualPreviewlist.getClientSize()
         }
       )
     );

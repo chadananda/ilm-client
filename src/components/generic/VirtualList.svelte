@@ -17,7 +17,7 @@
 </svelte-virtual-list-viewport>
 
 <script>
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, createEventDispatcher } from 'svelte';
 
   // props
   export let items;
@@ -32,6 +32,8 @@
 
   export let startReached = false;
   export let endReached = false;
+
+  const dispatch = createEventDispatcher();
 
   // local state
   let height_map = [];
@@ -227,6 +229,8 @@
       const d = actual_height - expected_height;
       viewport.scrollTo(0, scrollTop + d);
     }
+
+    dispatch("scroll", {event, range: {}, clientHeight: viewport.clientHeight});
 
     return true;
 
