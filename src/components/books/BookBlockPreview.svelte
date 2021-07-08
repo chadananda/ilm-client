@@ -137,6 +137,10 @@
 </div>
 <!--<div id="{block.blockId}"-->
 
-<style>
-
+<style lang='less'>
+.block-preview {
+  .table-row-flex.controls-top .par-ctrl.-par-num label.par-num {
+    top: 5px;
+  }
+}
 </style>
