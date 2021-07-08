@@ -22,9 +22,10 @@
 
   </div>
   <!--<div class="container-block">-->
-
-  <div v-on:wheel="scrollPreview($event)"
-    v-bind:style="{ top: screenTop + 'px', 'margin-top': '-84px' }"
+  <!-- top: screenTop + 'px', -->
+  <div ref="editContainer"
+    v-on:wheel="scrollPreview($event)"
+    v-bind:style="{'top': initialTopOffset + 'px', 'margin-top': -initialTopOffset + 'px'}"
     :class="['container-block front ilm-book-styles ilm-global-style', metaStyles]" >
       <div class="content-background">
         <div class="row content-scroll-item front"
@@ -125,7 +126,10 @@ export default {
       onScrollEv: false,
 
       screenTop: initialTopOffset,
+      initialTopOffset: initialTopOffset,
       scrollPrev: 0,
+
+      prevOffset: 0,
 
       scrollBarTop: 0,
       scrollBarBlockHeight: 150,
@@ -1709,9 +1713,9 @@ export default {
     checkVisibleItems(viewHeight = false) {
       const previewItems = [...document.querySelectorAll('svelte-virtual-list-row')];
       return previewItems
-      .filter((previewDomItem)=>{
-        return this.checkVisible(previewDomItem, viewHeight);
-      })
+//       .filter((previewDomItem)=>{
+//         return this.checkVisible(previewDomItem, viewHeight);
+//       })
       .map((previewDomItem)=>{
         const wrapper = previewDomItem.firstChild;
         return {
@@ -1723,7 +1727,7 @@ export default {
     },
 
     updatePositions() {
-      console.log(`updatePositions: `, this.$refs.contentScrollWrapRef.scrollTo);
+      //console.log(`updatePositions: `, this.$refs.contentScrollWrapRef.scrollTo);
       if (this.$refs.contentScrollWrapRef) {
         let currScroll = this.$refs.contentScrollWrapRef.scrollTop;
         var editors = document.getElementsByClassName('medium-editor-toolbar-active');
@@ -1735,34 +1739,44 @@ export default {
     },
 
     testScroll(ev) {
-      //console.log(`testScroll: `, ev.detail);
-      //this.screenTop = initialTopOffset - ev.detail.offset;
-      //this.resetScroll(ev);
-      const visibleBlocks = this.checkVisibleItems(ev.detail.height)
-      if (visibleBlocks.length) {
-        this.parlistO.setStartId(visibleBlocks[0].rid);
-        this.screenTop = visibleBlocks[0].top;
-      }
+
+      let deltaOffset = this.prevOffset - ev.detail.offset;
+      this.prevOffset = ev.detail.offset;
+
+      this.$refs.editContainer.style.top = `${this.$refs.editContainer.offsetTop + deltaOffset}px`;
+
+      this.resetScroll(ev);
+//       const visibleBlocks = this.checkVisibleItems(ev.detail.height)
+//       if (visibleBlocks.length) {
+//         this.parlistO.setStartId(visibleBlocks[0].rid);
+//         this.screenTop = visibleBlocks[0].top;
+//       }
 
     },
 
     resetScroll: _.debounce(function (ev) {
       const visibleBlocks = this.checkVisibleItems(ev.detail.height)
       if (visibleBlocks.length) {
-        this.parlistO.setStartId(visibleBlocks[0].rid);
-        this.screenTop = visibleBlocks[0].top;
+
+        if (this.parlistO.setStartId(visibleBlocks[0].rid)) {
+          this.startId = visibleBlocks[0].id;
+          this.$refs.editContainer.style.top = `${visibleBlocks[0].top}px`;
+          this.prevOffset = ev.detail.offset;
+        }
+        //this.$refs.editContainer.style.top = `${visibleBlocks[0].top}px`;
+        //this.screenTop = visibleBlocks[0].top;
       }
-    }, 5),
+    }, 200),
 
     scrollPreview(ev){
       const viewContainer = document.querySelector('svelte-virtual-list-viewport');
       /*Mouse wheel scrolled down*/
       if (ev.deltaY > 0)
-        viewContainer.scrollTop += 60;
+        viewContainer.scrollTop += 55;
 
       /*Mouse wheel scrolled up*/
       else
-        viewContainer.scrollTop -= 60;
+        viewContainer.scrollTop -= 55;
     },
 
     smoothHandleScroll: _.debounce(function (ev) {
@@ -2949,7 +2963,7 @@ export default {
         margin-left: -50%;
         left: -15px;
         padding-left: 15px;
-        opacity: 0.5;
+        /*opacity: 0.5;*/
 
         .content-background {
           background: white;

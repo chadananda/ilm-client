@@ -89,6 +89,32 @@
               <!--<div class="table-row ilm-block">-->
 
               <div class="table-body -content"></div>
+
+              {#if item.blockView.footnotes.length > 0 && item.blockView.mode !== 'narrate'}
+              <div class="table-row content-footnotes">
+                {#each item.blockView.footnotes as ftn, ftnIdx}
+                <div class="table-body footnote">
+
+                  <div class="table-row controls-top"
+                       class:completed="{item.blockView.isCompleted}">
+                  </div>
+
+                  <div class="table-row">
+                    <div class="table-cell -num">{ftnIdx+1}.</div>
+                    <div class="content-wrap-footn-preview table-cell -text -langftn-{item.blockView.language}">
+                        {@html ftn.content}
+                    </div>
+                    <div class="table-cell -control"></div>
+                  </div>
+                  <!--<div class="table-row">-->
+
+                </div>
+                <!--<div class="table-body footnote"-->
+                {/each}
+              </div>
+              <!--<div class="table-row content-footnotes"-->
+              {/if}
+
               <div class="table-row controls-bottom"></div>
 
             </div>

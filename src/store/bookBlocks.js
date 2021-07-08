@@ -51,7 +51,7 @@ class BookBlocks {
       this.listIdsCache.rid = this.startRId;
       this.listIdsCache.list = [];
       let seqId = this.startRId;
-      for (var i=0; i<=9; i++) {
+      for (var i=0; i<=6; i++) {
         if (this.lookupList.hasOwnProperty(seqId)) {
           this.listIdsCache.list.push({blockRid: seqId, blockId: this.lookupList[seqId].blockid});
           seqId = this.lookupList[seqId].out;
@@ -194,6 +194,7 @@ class BookBlocks {
     if (this.startId && this.startId == blockId) return false;
 
     if (blockId.charAt(0) == '#') { // Orient RID
+      if (this.startId && this.startId == this.lookupList[blockId].blockid) return false;
       this.startId = this.lookupList[blockId].blockid;
       this.startRId = blockId;
     } else {

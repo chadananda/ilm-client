@@ -65,7 +65,7 @@
       Object.assign(
         event.detail.range,
         {
-          offset: 0,//virtualPreviewlist.getOffset(),
+          offset: event.detail.offset,//virtualPreviewlist.getOffset(),
           height: event.detail.clientHeight//virtualPreviewlist.getClientSize()
         }
       )
@@ -115,7 +115,7 @@
 //       }
     }
     intBlocks = blocks;
-    //updBlocks = [];
+    updBlocks = [];
   }
 
   $: scrolledToEdge(startReached, endReached);
@@ -252,40 +252,40 @@
       viewObj.isSplitted = isSplittedBlock(block, jobInfo);
       viewObj.parnumComp = parnumComp(block);
 
-      //viewObj.content = block.content
+      viewObj.content = block.content;
 
-      viewObj.content = block.content.replace(
-        /<sup\s*data-pg\s*=\s*['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
-        '<span data-pg="$1"></span>'
-      );
-      //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
-      viewObj.content = viewObj.content.replace(
-        /<sup(?=\s)\s*class=['"]{1}service-info['"]{1}\s*data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
-        '<span class="service-info" data-pg="$1"></span>'
-      );
+//       viewObj.content = block.content.replace(
+//         /<sup\s*data-pg\s*=\s*['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
+//         '<span data-pg="$1"></span>'
+//       );
+//       //<sup class="service-info" data-pg="xxiii"><w class="service-info" data-sugg="">pg </w><w class="service-info" data-sugg="">xxiii</w></sup>
+//       viewObj.content = viewObj.content.replace(
+//         /<sup(?=\s)\s*class=['"]{1}service-info['"]{1}\s*data-pg=['"]{1}(.*?)['"]{1}[^>]*>.*?<\/sup>/mig,
+//         '<span class="service-info" data-pg="$1"></span>'
+//       );
 
-      let ftnIdx = 0;
-      viewObj.content = viewObj.content.replace(
-        /<sup\s*data-idx\s*=\s*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
-        (idx)=>{
-          if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
-            viewObj.footnotes[ftnIdx].ftnIdx = fntCounter;
-          }
-          ftnIdx++;
-          return `<sup data-idx="${fntCounter++}">[${fntCounter}]</sup>`
-        }
-      );
+//       let ftnIdx = 0;
+//       viewObj.content = viewObj.content.replace(
+//         /<sup\s*data-idx\s*=\s*?['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
+//         (idx)=>{
+//           if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
+//             viewObj.footnotes[ftnIdx].ftnIdx = fntCounter;
+//           }
+//           ftnIdx++;
+//           return `<sup data-idx="${fntCounter++}">[${fntCounter}]</sup>`
+//         }
+//       );
       //<sup class="service-info" data-idx="2"><w class="service-info" data-sugg="">2</w></sup>
-      viewObj.content = viewObj.content.replace(
-        /<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx\s*=\s*['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
-        (idx)=>{
-          if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
-            viewObj.footnotes[ftnIdx].ftnIdx = fntCounter;
-          }
-          ftnIdx++;
-          return `<sup class="service-info" data-idx="${fntCounter++}">[${fntCounter}]</sup>`
-        }
-      );
+//       viewObj.content = viewObj.content.replace(
+//         /<sup(?=\s)\s*?class=['"]{1}service-info['"]{1}\s*?data-idx\s*=\s*['"]+(.*?)['"]+[^>]*>.*?<\/sup>/mig,
+//         (idx)=>{
+//           if (typeof viewObj.footnotes[ftnIdx] !== 'undefined') {
+//             viewObj.footnotes[ftnIdx].ftnIdx = fntCounter;
+//           }
+//           ftnIdx++;
+//           return `<sup class="service-info" data-idx="${fntCounter++}">[${fntCounter}]</sup>`
+//         }
+//       );
 
       viewObj.blockParts = viewObj.isSplitted ? block.parts : [
         {

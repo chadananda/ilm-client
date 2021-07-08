@@ -230,7 +230,13 @@
       viewport.scrollTo(0, scrollTop + d);
     }
 
-    dispatch("scroll", {event, range: {}, clientHeight: viewport.clientHeight});
+    dispatch("scroll", {
+      event,
+      range: {},
+      offset: scrollTop,
+      top: top,
+      clientHeight: viewport.clientHeight
+    });
 
     return true;
 

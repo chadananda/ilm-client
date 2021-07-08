@@ -43,7 +43,7 @@
                   :class="['content-wrap-footn-preview table-cell -text', {'js-hidden': blockO.loaded !== true}, '-langftn-' + getFtnLang(footnote.language)]"
                   v-html="footnote.content">
                 </div>
-                <div class="table-cell -control"></div>
+            <div class="table-cell -control"></div>
               </div>
               <!--<div class="table-row">-->
 
